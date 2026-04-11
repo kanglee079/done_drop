@@ -1,70 +1,56 @@
-import 'dart:io';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:uuid/uuid.dart';
+import 'image_service.dart';
 
-/// Service for uploading images to Firebase Storage.
+export 'image_service.dart';
+
+/// UploadService - DEPRECATED
+/// Use ImageService instead for Firestore + local cache support.
+/// This class is kept for backward compatibility.
+@Deprecated('Use ImageService.instance instead')
 class UploadService {
   UploadService._();
   static final UploadService instance = UploadService._();
 
-  final _storage = FirebaseStorage.instance;
-
-  /// Upload a moment image to Firebase Storage.
-  /// Returns the download URL on success.
-  ///
-  /// Path format: moments/{userId}/{momentId}/{fileName}
+  /// Upload a moment image.
+  /// Returns the image ID.
+  @Deprecated('Use ImageService.instance.uploadMomentImage instead')
   Future<String> uploadMomentImage({
     required String userId,
     required String momentId,
     required String localFilePath,
     String? contentType,
   }) async {
-    final ext = localFilePath.split('.').last.toLowerCase();
-    final fileName = '${const Uuid().v4()}.$ext';
-    final ref = _storage.ref().child('moments').child(userId).child(momentId).child(fileName);
-
-    final metadata = SettableMetadata(
-      contentType: contentType ?? 'image/${ext == 'jpg' ? 'jpeg' : ext}',
-      cacheControl: 'private',
+    return ImageService.instance.uploadMomentImage(
+      userId: userId,
+      momentId: momentId,
+      localFilePath: localFilePath,
     );
-
-    await ref.putFile(File(localFilePath), metadata);
-    return ref.getDownloadURL();
   }
 
-  /// Upload an avatar image.
-  /// Returns the download URL on success.
+  /// Upload an avatar.
+  /// Returns a data URL.
+  @Deprecated('Use ImageService.instance.uploadAvatar instead')
   Future<String> uploadAvatar({
     required String userId,
     required String localFilePath,
   }) async {
-    final ext = localFilePath.split('.').last.toLowerCase();
-    final ref = _storage.ref().child('avatars').child('$userId.$ext');
-
-    final metadata = SettableMetadata(
-      contentType: 'image/${ext == 'jpg' ? 'jpeg' : ext}',
-      cacheControl: 'private',
+    return ImageService.instance.uploadAvatar(
+      userId: userId,
+      localFilePath: localFilePath,
     );
-
-    await ref.putFile(File(localFilePath), metadata);
-    return ref.getDownloadURL();
   }
 
-  /// Upload a circle cover photo.
-  /// Returns the download URL on success.
+  /// Upload a circle cover.
+  /// Returns the image ID.
+  @Deprecated('Use ImageService.instance.uploadCircleCover instead')
   Future<String> uploadCircleCover({
     required String circleId,
     required String localFilePath,
+    required String userId,
   }) async {
-    final ext = localFilePath.split('.').last.toLowerCase();
-    final ref = _storage.ref().child('circles').child(circleId).child('cover.$ext');
-
-    final metadata = SettableMetadata(
-      contentType: 'image/${ext == 'jpg' ? 'jpeg' : ext}',
-      cacheControl: 'private',
+    return ImageService.instance.uploadCircleCover(
+      circleId: circleId,
+      localFilePath: localFilePath,
+      userId: userId,
     );
-
-    await ref.putFile(File(localFilePath), metadata);
-    return ref.getDownloadURL();
   }
 }

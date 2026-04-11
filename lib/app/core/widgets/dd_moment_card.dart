@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:done_drop/app/core/widgets/dd_image.dart';
+import 'package:done_drop/app/core/widgets/dd_avatar.dart';
 import '../../../core/theme/theme.dart';
 
 /// DoneDrop Moment Card — Primary card component for feed/memory wall
@@ -48,13 +49,13 @@ class DDMomentCard extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  CachedNetworkImage(
-                    imageUrl: imageUrl,
+                  DDImage(
+                    source: imageUrl,
                     fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
+                    placeholder: Container(
                       color: AppColors.surfaceContainerHigh,
                     ),
-                    errorWidget: (context, url, error) => Container(
+                    errorWidget: Container(
                       color: AppColors.surfaceContainerHigh,
                       child: const Icon(Icons.image_not_supported,
                           color: AppColors.outline),
@@ -140,15 +141,9 @@ class DDMomentCard extends StatelessWidget {
                             width: 24,
                             height: 24,
                             margin: const EdgeInsets.only(right: AppSizes.space8),
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: AppColors.surfaceContainerHigh,
-                            ),
-                            child: ClipOval(
-                              child: CachedNetworkImage(
-                                imageUrl: ownerAvatar!,
-                                fit: BoxFit.cover,
-                              ),
+                            child: DDAvatar(
+                              imageUrl: ownerAvatar,
+                              size: 24,
                             ),
                           ),
                         Expanded(

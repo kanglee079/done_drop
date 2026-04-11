@@ -5,7 +5,7 @@ import 'package:done_drop/features/auth/presentation/controllers/auth_controller
 import 'package:done_drop/features/auth/repositories/user_profile_repository.dart';
 import 'package:done_drop/core/models/user_profile.dart';
 import 'package:done_drop/core/theme/theme.dart';
-import 'package:done_drop/core/services/upload_service.dart';
+import 'package:done_drop/core/services/image_service.dart';
 import 'package:done_drop/core/services/analytics_service.dart';
 import 'package:done_drop/core/errors/result.dart';
 
@@ -15,7 +15,7 @@ class ProfileController extends GetxController {
 
   AuthController get _authController => Get.find<AuthController>();
   UserProfileRepository get _userProfileRepo => Get.find<UserProfileRepository>();
-  UploadService get _uploadService => UploadService.instance;
+  ImageService get _imageService => ImageService.instance;
 
   String? get _userId => _authController.firebaseUser?.uid;
 
@@ -69,10 +69,15 @@ class ProfileController extends GetxController {
     errorMessage.value = null;
 
     try {
-      final url = await _uploadService.uploadAvatar(userId: uid, localFilePath: picked.path);
+      // Use ImageService to save to Firestore + local cache
+      final dataUrl = await _imageService.uploadAvatar(
+        userId: uid,
+        localFilePath: picked.path,
+      );
+
       final current = profile.value;
       if (current != null) {
-        final updated = current.copyWith(avatarUrl: url);
+        final updated = current.copyWith(avatarUrl: dataUrl);
         await _userProfileRepo.updateUserProfile(updated);
       }
     } catch (e) {

@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:done_drop/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:done_drop/firebase/repositories/moment_repository.dart';
 import 'package:done_drop/core/models/moment.dart';
-import 'package:done_drop/core/services/upload_service.dart';
+import 'package:done_drop/core/services/image_service.dart';
 import 'package:done_drop/core/services/analytics_service.dart';
 import 'package:done_drop/app/routes/app_routes.dart';
 
@@ -12,7 +12,7 @@ class MomentController extends GetxController {
 
   MomentRepository get _momentRepo => Get.find<MomentRepository>();
   AuthController get _authController => Get.find<AuthController>();
-  UploadService get _uploadService => UploadService.instance;
+  ImageService get _imageService => ImageService.instance;
 
   // Post form state
   final captionController = TextEditingController();
@@ -57,8 +57,8 @@ class MomentController extends GetxController {
       final momentId = 'moment_${DateTime.now().millisecondsSinceEpoch}';
       final now = DateTime.now();
 
-      // Upload image to Firebase Storage
-      final imageUrl = await _uploadService.uploadMomentImage(
+      // Upload image to Firestore + cache locally
+      final imageId = await _imageService.uploadMomentImage(
         userId: uid,
         momentId: momentId,
         localFilePath: _imagePath!,
@@ -69,7 +69,7 @@ class MomentController extends GetxController {
         id: momentId,
         ownerId: uid,
         visibility: visibility.value,
-        imageUrl: imageUrl,
+        imageUrl: imageId, // Store image ID instead of URL
         caption: caption,
         category: selectedCategory.value.isEmpty ? null : selectedCategory.value,
         circleId: visibility.value == 'circle' ? selectedCircleId.value : null,

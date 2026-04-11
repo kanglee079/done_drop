@@ -32,6 +32,7 @@ dependencies:
   # ── Image / Camera ──────────────────────────────────────
   image_picker: ^1.1.2
   image_cropper: ^8.0.2
+  image: ^4.8.0
 
   # ── Navigation & Deep Links ─────────────────────────────
   # go_deep_link: handled via Firebase Dynamic Links in Phase 9

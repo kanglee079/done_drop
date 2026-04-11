@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:done_drop/app/core/widgets/dd_image.dart';
 import '../../../core/theme/theme.dart';
 
 /// DoneDrop Avatar — User profile image
@@ -31,11 +31,11 @@ class DDAvatar extends StatelessWidget {
       ),
       child: ClipOval(
         child: imageUrl != null && imageUrl!.isNotEmpty
-            ? CachedNetworkImage(
-                imageUrl: imageUrl!,
+            ? DDImage(
+                source: imageUrl,
+                width: size,
+                height: size,
                 fit: BoxFit.cover,
-                placeholder: (context, url) => _placeholder(),
-                errorWidget: (context, url, error) => _placeholder(),
               )
             : _placeholder(),
       ),
