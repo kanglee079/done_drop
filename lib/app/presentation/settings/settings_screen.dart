@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../core/theme/theme.dart';
-import '../../routes/app_routes.dart';
+import 'package:done_drop/core/theme/theme.dart';
+import 'package:done_drop/app/routes/app_routes.dart';
+import 'package:done_drop/app/presentation/settings/settings_controller.dart';
 
 /// DoneDrop Settings Screen
 class SettingsScreen extends StatelessWidget {
@@ -9,150 +10,194 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.surface,
-      appBar: AppBar(
-        backgroundColor: AppColors.surface.withValues(alpha: 0.85),
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.primary),
-          onPressed: () => Get.back(),
-        ),
-        title: Text(
-          'The Archive',
-          style: TextStyle(
-            fontFamily: 'Newsreader',
-            fontSize: 18,
-            fontStyle: FontStyle.italic,
-            color: AppColors.primary,
+    return GetBuilder<SettingsController>(
+      init: SettingsController(),
+      builder: (ctrl) {
+        return Scaffold(
+          backgroundColor: AppColors.surface,
+          appBar: AppBar(
+            backgroundColor: AppColors.surface.withValues(alpha: 0.85),
+            surfaceTintColor: Colors.transparent,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back, color: AppColors.primary),
+              onPressed: () => Get.back(),
+            ),
+            title: Text(
+              'The Archive',
+              style: TextStyle(
+                fontFamily: AppTypography.serifFamily,
+                fontSize: 18,
+                fontStyle: FontStyle.italic,
+                color: AppColors.primary,
+              ),
+            ),
+            centerTitle: true,
           ),
-        ),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSizes.space24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Settings',
-              style: TextStyle(
-                fontFamily: 'Newsreader',
-                fontSize: 32,
-                fontWeight: FontWeight.w600,
-                color: AppColors.onSurface,
-              ),
-            ),
-            const SizedBox(height: AppSizes.space8),
-            Text(
-              'Curate your personal experience',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: AppSizes.space32),
-            // Premium banner
-            GestureDetector(
-              onTap: () => Get.toNamed(AppRoutes.premium),
-              child: Container(
-                padding: const EdgeInsets.all(AppSizes.space24),
-                decoration: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
-                  borderRadius: AppSizes.borderRadiusLg,
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSizes.space24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Settings',
+                  style: TextStyle(
+                    fontFamily: AppTypography.serifFamily,
+                    fontSize: 32,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.onSurface,
+                  ),
                 ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.auto_awesome, color: Colors.white, size: 28),
-                    const SizedBox(width: AppSizes.space16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text(
-                            'DoneDrop Premium',
-                            style: TextStyle(
-                              fontFamily: 'Newsreader',
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Unlock unlimited circles and premium themes.',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.white70,
-                            ),
-                          ),
-                        ],
-                      ),
+                const SizedBox(height: AppSizes.space8),
+                Text(
+                  'Curate your personal experience',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: AppSizes.space32),
+                // Premium banner
+                GestureDetector(
+                  onTap: () => Get.toNamed(AppRoutes.premium),
+                  child: Container(
+                    padding: const EdgeInsets.all(AppSizes.space24),
+                    decoration: BoxDecoration(
+                      gradient: AppColors.primaryGradient,
+                      borderRadius: AppSizes.borderRadiusLg,
                     ),
-                    const Icon(Icons.chevron_right, color: Colors.white),
-                  ],
+                    child: Row(
+                      children: [
+                        const Icon(Icons.auto_awesome, color: Colors.white, size: 28),
+                        const SizedBox(width: AppSizes.space16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'DoneDrop Premium',
+                                style: TextStyle(
+                                  fontFamily: AppTypography.serifFamily,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Unlock unlimited circles and premium themes.',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Icon(Icons.chevron_right, color: Colors.white),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(height: AppSizes.space32),
+                // Notification settings
+                Text(
+                  'Preferences',
+                  style: TextStyle(
+                    fontFamily: AppTypography.serifFamily,
+                    fontSize: 18,
+                    fontStyle: FontStyle.italic,
+                    color: AppColors.onSurface,
+                  ),
+                ),
+                const SizedBox(height: AppSizes.space16),
+                Obx(() => _SettingsTile(
+                  title: 'Moment Reminders',
+                  desc: 'Daily gentle nudges to capture your day',
+                  trailing: Switch(
+                    value: ctrl.momentReminders.value,
+                    onChanged: ctrl.toggleMomentReminders,
+                    activeTrackColor: AppColors.primary,
+                    thumbColor: WidgetStateProperty.all(Colors.white),
+                  ),
+                )),
+                Obx(() => _SettingsTile(
+                  title: 'Circle Activity',
+                  desc: 'Notifications when others drop moments',
+                  trailing: Switch(
+                    value: ctrl.circleActivity.value,
+                    onChanged: ctrl.toggleCircleActivity,
+                    activeTrackColor: AppColors.primary,
+                    thumbColor: WidgetStateProperty.all(Colors.white),
+                  ),
+                )),
+                _SettingsTile(
+                  title: 'Schedule & Preferences',
+                  desc: 'Reminder time, recap day, and more',
+                  trailing: const Icon(Icons.chevron_right, color: AppColors.outline),
+                  onTap: () => Get.toNamed(AppRoutes.notificationSettings),
+                ),
+                const SizedBox(height: AppSizes.space24),
+                Text(
+                  'Privacy & Circles',
+                  style: TextStyle(
+                    fontFamily: AppTypography.serifFamily,
+                    fontSize: 18,
+                    fontStyle: FontStyle.italic,
+                    color: AppColors.onSurface,
+                  ),
+                ),
+                const SizedBox(height: AppSizes.space16),
+                _SettingsTile(
+                  title: 'Profile',
+                  desc: ctrl.userEmail.isNotEmpty
+                      ? ctrl.userEmail
+                      : 'Edit your name, avatar, and bio',
+                  trailing: const Icon(Icons.chevron_right, color: AppColors.outline),
+                  onTap: () => Get.toNamed(AppRoutes.profile),
+                ),
+                _SettingsTile(
+                  title: 'Visibility',
+                  desc: 'Current setting: Personal Only',
+                  trailing: const Icon(Icons.chevron_right, color: AppColors.outline),
+                  onTap: () {},
+                ),
+                _SettingsTile(
+                  title: 'Sign Out',
+                  desc: 'Sign out of your account',
+                  trailing: const Icon(Icons.logout, color: AppColors.outline),
+                  onTap: () => _showSignOutDialog(context, ctrl),
+                ),
+                const SizedBox(height: AppSizes.space48),
+              ],
             ),
-            const SizedBox(height: AppSizes.space32),
-            // Notification settings
-            Text(
-              'Preferences',
-              style: TextStyle(
-                fontFamily: 'Newsreader',
-                fontSize: 18,
-                fontStyle: FontStyle.italic,
-                color: AppColors.onSurface,
-              ),
-            ),
-            const SizedBox(height: AppSizes.space16),
-            _SettingsTile(
-              title: 'Moment Reminders',
-              desc: 'Daily gentle nudges to capture your day',
-              trailing: Switch(
-                value: true,
-                onChanged: (_) {},
-                activeTrackColor: AppColors.primary,
-                thumbColor: WidgetStateProperty.all(Colors.white),
-              ),
-            ),
-            _SettingsTile(
-              title: 'Circle Activity',
-              desc: 'Notifications when others drop moments',
-              trailing: Switch(
-                value: false,
-                onChanged: (_) {},
-                activeTrackColor: AppColors.primary,
-                thumbColor: WidgetStateProperty.all(Colors.white),
-              ),
-            ),
-            const SizedBox(height: AppSizes.space24),
-            Text(
-              'Privacy & Circles',
-              style: TextStyle(
-                fontFamily: 'Newsreader',
-                fontSize: 18,
-                fontStyle: FontStyle.italic,
-                color: AppColors.onSurface,
-              ),
-            ),
-            const SizedBox(height: AppSizes.space16),
-            _SettingsTile(
-              title: 'Visibility',
-              desc: 'Current setting: Personal Only',
-              trailing: const Icon(Icons.chevron_right, color: AppColors.outline),
-              onTap: () {},
-            ),
-            _SettingsTile(
-              title: 'Account',
-              desc: 'Email, password, sign out',
-              trailing: const Icon(Icons.chevron_right, color: AppColors.outline),
-              onTap: () {},
-            ),
-            const SizedBox(height: AppSizes.space48),
-          ],
-        ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showSignOutDialog(BuildContext context, SettingsController ctrl) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: Text('Sign Out', style: TextStyle(color: AppColors.onSurface)),
+        content: Text('Are you sure you want to sign out?',
+            style: TextStyle(color: AppColors.onSurfaceVariant)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              ctrl.signOut();
+            },
+            child: Text('Sign Out', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
       ),
     );
   }

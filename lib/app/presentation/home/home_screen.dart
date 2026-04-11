@@ -3,6 +3,9 @@ import 'package:get/get.dart';
 import '../../../core/theme/theme.dart';
 import '../../routes/app_routes.dart';
 import '../../core/widgets/widgets.dart';
+import 'home_controller.dart';
+import '../friends/friends_controller.dart';
+import 'task_controller.dart';
 
 /// DoneDrop Home Screen — Today view
 class HomeScreen extends StatefulWidget {
@@ -42,7 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Text(
           'DoneDrop',
           style: TextStyle(
-            fontFamily: 'Newsreader',
+            fontFamily: AppTypography.serifFamily,
             fontSize: 22,
             fontStyle: FontStyle.italic,
             color: AppColors.primary,
@@ -88,163 +91,181 @@ class _HomeScreenState extends State<HomeScreen> {
 class _TodayTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSizes.space24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Streak indicator
-          Container(
-            padding: const EdgeInsets.all(AppSizes.space20),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceContainerLow,
-              borderRadius: AppSizes.borderRadiusLg,
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Your Reflection Journey',
-                        style: TextStyle(
-                          fontFamily: 'Newsreader',
-                          fontSize: 18,
-                          fontStyle: FontStyle.italic,
-                          color: AppColors.primary,
-                        ),
+    return GetBuilder<HomeController>(
+      builder: (ctrl) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSizes.space24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Streak indicator
+              Container(
+                padding: const EdgeInsets.all(AppSizes.space20),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceContainerLow,
+                  borderRadius: AppSizes.borderRadiusLg,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Your Reflection Journey',
+                            style: TextStyle(
+                              fontFamily: AppTypography.serifFamily,
+                              fontSize: 18,
+                              fontStyle: FontStyle.italic,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Build your daily habit',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: AppColors.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '7-day reflection streak',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: AppColors.onSurfaceVariant,
+                    ),
+                    Row(
+                      children: List.generate(7, (i) {
+                        return Container(
+                          width: 8,
+                          height: 32,
+                          margin: const EdgeInsets.only(left: 4),
+                          decoration: BoxDecoration(
+                            color: i < 3
+                                ? AppColors.primary
+                                : AppColors.primaryContainer.withValues(alpha: 0.4),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        );
+                      }),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSizes.space32),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "Today's Focus",
+                    style: TextStyle(
+                      fontFamily: AppTypography.serifFamily,
+                      fontSize: 28,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.onSurface,
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSizes.space12,
+                      vertical: AppSizes.space4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.tertiaryFixed,
+                      borderRadius: AppSizes.borderRadiusFull,
+                    ),
+                    child: Text(
+                      'May 24',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.onTertiaryFixed,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSizes.space24),
+
+              // Task list from Firestore
+              Obx(() {
+                final tasks = ctrl.tasks;
+                if (tasks.isEmpty) {
+                  return Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(AppSizes.space20),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceContainerLow,
+                          borderRadius: AppSizes.borderRadiusMd,
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.lightbulb_outline, color: AppColors.primary),
+                            const SizedBox(width: AppSizes.space12),
+                            Expanded(
+                              child: Text(
+                                'No tasks yet. Capture your first moment to start building your streak!',
+                                style: TextStyle(fontSize: 13, color: AppColors.onSurfaceVariant),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
+                  );
+                }
+                return Column(
+                  children: tasks.map((task) => _TaskItem(
+                    title: task.title,
+                    desc: task.category ?? '',
+                    isDone: false,
+                    onDone: () {
+                      ctrl.archiveTask(task.id);
+                      Get.toNamed(AppRoutes.capture);
+                    },
+                  )).toList(),
+                );
+              }),
+              const SizedBox(height: AppSizes.space24),
+              GestureDetector(
+                onTap: () => Get.toNamed(AppRoutes.recap),
+                child: Container(
+                  padding: const EdgeInsets.all(AppSizes.space20),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceContainerLow,
+                    borderRadius: AppSizes.borderRadiusLg,
                   ),
-                ),
-                Row(
-                  children: List.generate(7, (i) {
-                    return Container(
-                      width: 8,
-                      height: 32,
-                      margin: const EdgeInsets.only(left: 4),
-                      decoration: BoxDecoration(
-                        color: i < 6
-                            ? AppColors.primary
-                            : AppColors.primaryContainer.withValues(alpha: 0.4),
-                        borderRadius: BorderRadius.circular(4),
+                  child: Row(
+                    children: [
+                      Icon(Icons.auto_awesome, color: AppColors.primary, size: 24),
+                      const SizedBox(width: AppSizes.space12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Your Week in Moments',
+                              style: TextStyle(
+                                fontFamily: AppTypography.serifFamily,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.onSurface,
+                              ),
+                            ),
+                            Text(
+                              'View your weekly recap',
+                              style: TextStyle(fontSize: 12, color: AppColors.onSurfaceVariant),
+                            ),
+                          ],
+                        ),
                       ),
-                    );
-                  }),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSizes.space32),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                "Today's Focus",
-                style: TextStyle(
-                  fontFamily: 'Newsreader',
-                  fontSize: 28,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.onSurface,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSizes.space12,
-                  vertical: AppSizes.space4,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.tertiaryFixed,
-                  borderRadius: AppSizes.borderRadiusFull,
-                ),
-                child: Text(
-                  'May 24',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.onTertiaryFixed,
+                      Icon(Icons.chevron_right, color: AppColors.outline),
+                    ],
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AppSizes.space24),
-          // Task list
-          _TaskItem(
-            title: 'Morning intentionality session',
-            desc: '15 minutes of silent reflection before the day starts.',
-            isDone: false,
-            onToggle: () {},
-            onDone: () => Get.toNamed(AppRoutes.capture),
-          ),
-          _TaskItem(
-            title: 'Complete the weekly heirloom review',
-            desc: 'Sorting through last week\'s captured moments.',
-            isDone: true,
-            onToggle: () {},
-            onDone: () {},
-          ),
-          _TaskItem(
-            title: 'Afternoon tea & sketching',
-            desc: 'A moment of creative pause in the conservatory.',
-            isDone: false,
-            onToggle: () {},
-            onDone: () => Get.toNamed(AppRoutes.capture),
-          ),
-          const SizedBox(height: AppSizes.space24),
-          GestureDetector(
-            onTap: () => Get.toNamed(AppRoutes.recap),
-            child: Container(
-              padding: const EdgeInsets.all(AppSizes.space20),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceContainerLow,
-                borderRadius: AppSizes.borderRadiusLg,
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.auto_awesome,
-                      color: AppColors.primary, size: 24),
-                  const SizedBox(width: AppSizes.space12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Your Week in Moments',
-                          style: TextStyle(
-                            fontFamily: 'Newsreader',
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.onSurface,
-                          ),
-                        ),
-                        Text(
-                          '12 moments · 7-day streak',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppColors.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(Icons.chevron_right,
-                      color: AppColors.outline),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -254,14 +275,14 @@ class _TaskItem extends StatelessWidget {
     required this.title,
     required this.desc,
     required this.isDone,
-    required this.onToggle,
+    this.onToggle,
     required this.onDone,
   });
 
   final String title;
   final String desc;
   final bool isDone;
-  final VoidCallback onToggle;
+  final VoidCallback? onToggle;
   final VoidCallback onDone;
 
   @override
@@ -272,7 +293,7 @@ class _TaskItem extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           GestureDetector(
-            onTap: isDone ? onToggle : onDone,
+            onTap: (isDone && onToggle != null) ? onToggle : onDone,
             child: Container(
               width: 24,
               height: 24,
@@ -332,6 +353,9 @@ class _TaskItem extends StatelessWidget {
 class _FeedTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    // Get or create a FriendsController to watch request count
+    final friendsCtrl = Get.put(FriendsController(Get.find()));
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -342,7 +366,7 @@ class _FeedTab extends StatelessWidget {
           Text(
             'Circle Feed',
             style: TextStyle(
-              fontFamily: 'Newsreader',
+              fontFamily: AppTypography.serifFamily,
               fontSize: 24,
               fontWeight: FontWeight.w600,
               color: AppColors.onSurface,
@@ -350,7 +374,7 @@ class _FeedTab extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Join or create a circle to see\nshared moments here.',
+            'Share moments privately with\nfriends or circles.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14,
@@ -371,6 +395,15 @@ class _FeedTab extends StatelessWidget {
             onPressed: () => Get.toNamed(AppRoutes.joinCircle),
             isExpanded: false,
           ),
+          const SizedBox(height: AppSizes.space12),
+          Obx(() => DDSecondaryButton(
+            label: friendsCtrl.hasPendingRequests
+                ? 'Friends (${friendsCtrl.pendingRequestCount.value} pending)'
+                : 'Friends',
+            icon: Icons.people_outline,
+            onPressed: () => Get.toNamed(AppRoutes.friends),
+            isExpanded: false,
+          )),
         ],
       ),
     );
@@ -382,13 +415,14 @@ class _WallTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Navigate to the full MemoryWallScreen with real data
     return Center(
       child: DDEmptyState(
         title: 'Your Memory Wall',
         description: 'Your personal museum of moments will appear here.',
         icon: Icons.auto_awesome_mosaic_outlined,
-        actionLabel: 'Create your first moment',
-        onAction: () => Get.toNamed(AppRoutes.capture),
+        actionLabel: 'View your moments',
+        onAction: () => Get.toNamed(AppRoutes.memoryWall),
       ),
     );
   }
@@ -407,7 +441,7 @@ class _SettingsTab extends StatelessWidget {
           Text(
             'Settings',
             style: TextStyle(
-              fontFamily: 'Newsreader',
+              fontFamily: AppTypography.serifFamily,
               fontSize: 24,
               fontWeight: FontWeight.w600,
               color: AppColors.onSurface,

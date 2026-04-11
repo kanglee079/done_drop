@@ -4,12 +4,28 @@ import '../../../core/errors/result.dart';
 import '../../../core/errors/failures.dart';
 import 'auth_provider.dart';
 
+/// IMPORTANT: Replace 'REPLACE_WITH_YOUR_GOOGLE_WEB_CLIENT_ID' with the actual Web Client ID from:
+/// Firebase Console → Authentication → Sign-in method → Google → Web SDK configuration
+///
+/// To find it:
+/// 1. Go to Firebase Console → Project Settings → Your apps → Web app
+/// 2. Or: Firebase Console → Authentication → Sign-in method → Google → Web SDK configuration
+/// 3. Copy the "Web client ID" (looks like: xxxxxxxx-xxxxxxxxxxxxxxxx.apps.googleusercontent.com)
 class FirebaseAuthProvider implements AuthProvider {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  // TODO(xikang): Replace with your real Google Web Client ID before releasing.
+  // Get it from Firebase Console → Authentication → Sign-in method → Google → Web SDK configuration
+  static const String _googleWebClientId =
+      'REPLACE_WITH_YOUR_GOOGLE_WEB_CLIENT_ID';
+
   final GoogleSignIn _googleSignIn = GoogleSignIn(
-    serverClientId: 'YOUR_WEB_CLIENT_ID', // Replace after Firebase setup
+    serverClientId: _googleWebClientId,
     scopes: ['email', 'profile'],
   );
+
+  bool get _isGoogleSignInConfigured =>
+      _googleWebClientId != 'REPLACE_WITH_YOUR_GOOGLE_WEB_CLIENT_ID';
 
   @override
   Future<Result<UserCredential>> signInWithEmail(String email, String password) async {
@@ -43,6 +59,16 @@ class FirebaseAuthProvider implements AuthProvider {
 
   @override
   Future<Result<UserCredential>> signInWithGoogle() async {
+    if (!_isGoogleSignInConfigured) {
+      return Result.failure(
+        AppFailure.unexpected(
+          'Google Sign-In is not configured. '
+          'Set _googleWebClientId in firebase_auth_provider.dart with your '
+          'Web Client ID from Firebase Console → Authentication → '
+          'Sign-in method → Google → Web SDK configuration.',
+        ),
+      );
+    }
     try {
       final googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {

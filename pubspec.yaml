@@ -12,7 +12,6 @@ dependencies:
 
   # ── UI & Icons ──────────────────────────────────────────
   cupertino_icons: ^1.0.8
-  google_fonts: ^6.2.1
   flutter_svg: ^2.0.16
   cached_network_image: ^3.4.1
   shimmer: ^3.0.0
@@ -72,3 +71,24 @@ flutter:
     - assets/images/
     - assets/icons/
     - assets/animations/
+
+  fonts:
+    - family: Manrope
+      fonts:
+        - asset: assets/fonts/manrope_regular.woff2
+        - asset: assets/fonts/manrope_regular.woff2
+          weight: 600
+        - asset: assets/fonts/manrope_regular.woff2
+          weight: 700
+    - family: Newsreader
+      fonts:
+        - asset: assets/fonts/newsreader_regular.woff2
+        - asset: assets/fonts/newsreader_regular.woff2
+          weight: 600
+        - asset: assets/fonts/newsreader_regular.woff2
+          weight: 700
+        - asset: assets/fonts/newsreader_italic.woff2
+          style: italic
+        - asset: assets/fonts/newsreader_semi_bold_italic.woff2
+          style: italic
+          weight: 600

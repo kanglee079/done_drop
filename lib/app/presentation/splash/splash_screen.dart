@@ -1,10 +1,21 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../core/theme/theme.dart';
-import '../../../core/services/storage_service.dart';
-import '../../routes/app_routes.dart';
+import 'package:done_drop/core/theme/theme.dart';
+import 'package:done_drop/app/routes/app_routes.dart';
+import 'package:done_drop/features/auth/data/onboarding_service.dart';
+import 'package:done_drop/features/auth/presentation/controllers/auth_controller.dart';
 
 /// DoneDrop Splash Screen
+///
+/// Routing logic (single source of truth):
+/// - NOT logged in + onboarding NOT complete → /onboarding
+/// - NOT logged in + onboarding complete  → /sign-in
+/// - Logged in (any onboarding state)     → /home
+///
+/// Previously this screen used StorageService.userId which was never written,
+/// causing every user to be redirected to /sign-in even when logged in via Firebase.
+/// Now correctly uses AuthController.firebaseUser (FirebaseAuth as source of truth).
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -16,6 +27,7 @@ class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fade;
+  bool _hasNavigated = false;
 
   @override
   void initState() {
@@ -28,20 +40,27 @@ class _SplashScreenState extends State<SplashScreen>
       CurvedAnimation(parent: _controller, curve: Curves.easeOut),
     );
     _controller.forward();
-    _checkAuth();
+
+    // Delay navigation to allow animation + auth state to settle
+    Future.delayed(const Duration(milliseconds: 1500), _navigate);
   }
 
-  Future<void> _checkAuth() async {
-    await Future.delayed(const Duration(milliseconds: 2000));
-    final isOnboarding = StorageService.instance.isOnboardingComplete;
-    final userId = StorageService.instance.userId;
+  void _navigate() {
+    if (!mounted) return;
 
-    if (!isOnboarding) {
-      Get.offAllNamed(AppRoutes.onboarding);
-    } else if (userId == null) {
-      Get.offAllNamed(AppRoutes.signIn);
-    } else {
+    final authController = Get.find<AuthController>();
+    final onboardingService = Get.find<OnboardingService>();
+
+    if (_hasNavigated) return;
+    _hasNavigated = true;
+
+    if (authController.isLoggedIn) {
+      // Logged in → go to home (onboarding state doesn't matter once logged in)
       Get.offAllNamed(AppRoutes.home);
+    } else if (!onboardingService.hasCompletedOnboarding) {
+      Get.offAllNamed(AppRoutes.onboarding);
+    } else {
+      Get.offAllNamed(AppRoutes.signIn);
     }
   }
 
@@ -63,12 +82,8 @@ class _SplashScreenState extends State<SplashScreen>
             children: [
               Text(
                 'DoneDrop',
-                style: TextStyle(
-                  fontFamily: 'Newsreader',
-                  fontSize: 48,
-                  fontWeight: FontWeight.w700,
+                style: AppTypography.displayLarge(color: AppColors.primary).copyWith(
                   fontStyle: FontStyle.italic,
-                  color: AppColors.primary,
                   letterSpacing: -1,
                 ),
               ),
@@ -76,9 +91,7 @@ class _SplashScreenState extends State<SplashScreen>
               Text(
                 'Complete it. Capture it.\nShare the moment.',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppColors.onSurfaceVariant,
+                style: AppTypography.bodyMedium(color: AppColors.onSurfaceVariant).copyWith(
                   height: 1.5,
                 ),
               ),

@@ -34,7 +34,7 @@ class SuccessScreen extends StatelessWidget {
               Text(
                 'Moment Captured',
                 style: TextStyle(
-                  fontFamily: 'Newsreader',
+                  fontFamily: AppTypography.serifFamily,
                   fontSize: 40,
                   fontWeight: FontWeight.w700,
                   fontStyle: FontStyle.italic,

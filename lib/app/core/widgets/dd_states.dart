@@ -37,8 +37,8 @@ class DDEmptyState extends StatelessWidget {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontFamily: 'Newsreader',
+              style: TextStyle(
+                fontFamily: AppTypography.serifFamily,
                 fontSize: 24,
                 fontWeight: FontWeight.w600,
                 color: AppColors.onSurface,
@@ -116,8 +116,8 @@ class DDErrorState extends StatelessWidget {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontFamily: 'Newsreader',
+              style: TextStyle(
+                fontFamily: AppTypography.serifFamily,
                 fontSize: 24,
                 fontWeight: FontWeight.w600,
                 color: AppColors.onSurface,
@@ -201,8 +201,8 @@ class DDPermissionState extends StatelessWidget {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontFamily: 'Newsreader',
+              style: TextStyle(
+                fontFamily: AppTypography.serifFamily,
                 fontSize: 22,
                 fontWeight: FontWeight.w600,
                 color: AppColors.onSurface,

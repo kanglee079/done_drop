@@ -23,7 +23,7 @@ class SignInScreen extends GetView<SignInController> {
                 child: Text(
                   'DoneDrop',
                   style: TextStyle(
-                    fontFamily: 'Newsreader',
+                    fontFamily: AppTypography.serifFamily,
                     fontSize: 48,
                     fontWeight: FontWeight.w700,
                     fontStyle: FontStyle.italic,

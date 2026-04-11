@@ -1,19 +1,38 @@
+import 'dart:async';
+import 'package:get/get.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
-/// DoneDrop Connectivity Service
-class ConnectivityService {
-  ConnectivityService._();
-  static ConnectivityService get instance => ConnectivityService._();
+/// Service that monitors network connectivity.
+/// Exposes a reactive `isOnline` stream so any widget can listen.
+class ConnectivityService extends GetxService {
+  ConnectivityService();
 
-  final Connectivity _connectivity = Connectivity();
+  final _connectivity = Connectivity();
+  final RxBool isOnline = true.obs;
+  StreamSubscription<List<ConnectivityResult>>? _subscription;
 
-  Future<bool> get isConnected async {
+  Future<ConnectivityService> init() async {
+    // Check initial state
     final results = await _connectivity.checkConnectivity();
-    return results.any((r) => r != ConnectivityResult.none);
+    _updateStatus(results);
+
+    // Listen for changes
+    _subscription = _connectivity.onConnectivityChanged.listen(_updateStatus);
+
+    return this;
   }
 
-  Stream<bool> get onConnectivityChanged =>
-      _connectivity.onConnectivityChanged.map(
-        (results) => results.any((r) => r != ConnectivityResult.none),
-      );
+  void _updateStatus(List<ConnectivityResult> results) {
+    final hasConnection = results.any((r) =>
+        r == ConnectivityResult.wifi ||
+        r == ConnectivityResult.mobile ||
+        r == ConnectivityResult.ethernet);
+    isOnline.value = hasConnection;
+  }
+
+  @override
+  void onClose() {
+    _subscription?.cancel();
+    super.onClose();
+  }
 }

@@ -5,6 +5,7 @@ import 'package:done_drop/features/auth/presentation/controllers/onboarding_cont
 class OnboardingBinding extends Bindings {
   @override
   void dependencies() {
+    // OnboardingService is already registered globally in main.dart
     Get.lazyPut<OnboardingController>(
       () => OnboardingController(Get.find<OnboardingService>()),
     );

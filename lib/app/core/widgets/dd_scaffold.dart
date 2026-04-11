@@ -52,7 +52,7 @@ class DDAppBar extends StatelessWidget implements PreferredSizeWidget {
                         ? Text(
                             title!,
                             style: TextStyle(
-                              fontFamily: 'Newsreader',
+                              fontFamily: AppTypography.serifFamily,
                               fontSize: 20,
                               fontStyle: FontStyle.italic,
                               color: AppColors.primary,

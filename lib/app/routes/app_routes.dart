@@ -18,8 +18,11 @@ abstract class AppRoutes {
   static const momentDetail = '/moment/:id';
   static const recap = '/recap';
   static const settings = '/settings';
+  static const notificationSettings = '/settings/notifications';
   static const profile = '/profile';
   static const premium = '/premium';
   static const report = '/report/:targetType/:targetId';
   static const blocked = '/blocked';
+  static const friends = '/friends';
+  static const addFriend = '/friends/add';
 }

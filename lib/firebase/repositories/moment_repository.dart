@@ -67,6 +67,18 @@ class MomentRepository {
             snap.docs.map((d) => Moment.fromFirestore(d.data())).toList());
   }
 
+  /// Sync version: fetch circle moments once (used by FeedController).
+  Future<List<Moment>> getCircleMomentsSync(String circleId, {int limit = 50}) async {
+    final snap = await _col
+        .where('circleId', isEqualTo: circleId)
+        .where('visibility', isEqualTo: 'circle')
+        .where('isDeleted', isEqualTo: false)
+        .orderBy('createdAt', descending: true)
+        .limit(limit)
+        .get();
+    return snap.docs.map((d) => Moment.fromFirestore(d.data())).toList();
+  }
+
   // ── Reactions ─────────────────────────────────────────────────────────
   Future<void> addReaction(Reaction reaction) async {
     await _reactionCol.doc(reaction.id).set(reaction.toFirestore());

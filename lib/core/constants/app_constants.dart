@@ -27,7 +27,13 @@ class AppConstants {
   static const String colTaskTemplates = 'task_templates';
   static const String colWeeklyRecaps = 'weekly_recaps';
   static const String colReports = 'reports';
-  static const String colBlockRelations = 'block_relations';
+  static const String colFriendRequests = 'friend_requests';
+
+  // ── Friend Request Status ──────────────────────────────────────────────
+  static const String friendStatusPending = 'pending';
+  static const String friendStatusAccepted = 'accepted';
+  static const String friendStatusDeclined = 'declined';
+  static const String friendStatusCancelled = 'cancelled';
 
   // ── Limits ──────────────────────────────────────────────────────────────
   static const int maxCaptionLength = 300;

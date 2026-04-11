@@ -1,4 +1,4 @@
-package com.example.done_drop
+package com.donedrop.app
 
 import io.flutter.embedding.android.FlutterActivity
 

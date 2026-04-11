@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:done_drop/core/theme/theme.dart';
-import 'package:done_drop/core/services/analytics_service.dart';
 import 'package:done_drop/app/core/widgets/widgets.dart';
 import 'package:done_drop/features/auth/presentation/controllers/onboarding_controller.dart';
 
@@ -42,7 +41,7 @@ class OnboardingScreen extends GetView<OnboardingController> {
                 onPageChanged: controller.onPageChanged,
                 children: [
                   _WelcomePage(),
-                  _UseCasePage(),
+                  _UseCasePage(controller: controller),
                   _PermissionsPage(),
                 ],
               ),
@@ -80,12 +79,8 @@ class _WelcomePage extends StatelessWidget {
         children: [
           Text(
             'DoneDrop',
-            style: TextStyle(
-              fontFamily: 'Newsreader',
-              fontSize: 56,
-              fontWeight: FontWeight.w700,
+            style: AppTypography.displayLarge(color: AppColors.primary).copyWith(
               fontStyle: FontStyle.italic,
-              color: AppColors.primary,
               letterSpacing: -1,
             ),
           ),
@@ -93,23 +88,13 @@ class _WelcomePage extends StatelessWidget {
           Text(
             'Life is a collection of done moments.',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: 'Newsreader',
-              fontSize: 24,
-              fontWeight: FontWeight.w600,
-              color: AppColors.onSurface,
-              height: 1.3,
-            ),
+            style: AppTypography.headlineMedium(color: AppColors.onSurface),
           ),
           const SizedBox(height: AppSizes.space16),
           Text(
             'A curated space to preserve the small wins, the big adventures, and everything that matters in between.',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 16,
-              color: AppColors.onSurfaceVariant,
-              height: 1.6,
-            ),
+            style: AppTypography.bodyMedium(color: AppColors.onSurfaceVariant),
           ),
         ],
       ),
@@ -118,6 +103,10 @@ class _WelcomePage extends StatelessWidget {
 }
 
 class _UseCasePage extends StatelessWidget {
+  const _UseCasePage({required this.controller});
+
+  final OnboardingController controller;
+
   @override
   Widget build(BuildContext context) {
     final useCases = const [
@@ -172,7 +161,7 @@ class _UseCasePage extends StatelessWidget {
               children: useCases.map((uc) {
                 return GestureDetector(
                   onTap: () {
-                    AnalyticsService.instance.useCaseSelected(uc['key'] as String);
+                    controller.selectUseCase(uc['key'] as String);
                   },
                   child: Container(
                     padding: const EdgeInsets.all(AppSizes.space20),
@@ -182,27 +171,37 @@ class _UseCasePage extends StatelessWidget {
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
                           uc['icon'] as IconData,
                           color: AppColors.primary,
                           size: 28,
                         ),
-                        const Spacer(),
+                        const SizedBox(height: AppSizes.space12),
                         Text(
                           uc['label'] as String,
                           style: const TextStyle(
+                            fontFamily: 'Manrope',
                             fontWeight: FontWeight.w700,
-                            fontSize: 16,
+                            fontSize: 15,
                             color: AppColors.onSurface,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          uc['desc'] as String,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.onSurfaceVariant,
+                        Flexible(
+                          child: Text(
+                            uc['desc'] as String,
+                            style: const TextStyle(
+                              fontFamily: 'Manrope',
+                              fontSize: 12,
+                              color: AppColors.onSurfaceVariant,
+                              height: 1.35,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
@@ -238,12 +237,7 @@ class _PermissionsPage extends StatelessWidget {
           const SizedBox(height: AppSizes.space32),
           Text(
             'Camera Access',
-            style: TextStyle(
-              fontFamily: 'Newsreader',
-              fontSize: 28,
-              fontWeight: FontWeight.w700,
-              color: AppColors.onSurface,
-            ),
+            style: AppTypography.headlineMedium(color: AppColors.onSurface),
           ),
           const SizedBox(height: AppSizes.space16),
           Text(

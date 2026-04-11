@@ -122,8 +122,8 @@ class DDMomentCard extends StatelessWidget {
                   if (caption != null && caption!.isNotEmpty) ...[
                     Text(
                       '"$caption"',
-                      style: const TextStyle(
-                        fontFamily: 'Newsreader',
+                      style: TextStyle(
+                        fontFamily: AppTypography.serifFamily,
                         fontSize: 18,
                         fontStyle: FontStyle.italic,
                         color: AppColors.onSurface,

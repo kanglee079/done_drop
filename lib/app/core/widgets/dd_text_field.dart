@@ -20,6 +20,7 @@ class DDTextField extends StatelessWidget {
     this.maxLength,
     this.autofocus = false,
     this.autocorrect,
+    this.textCapitalization,
   });
 
   final TextEditingController? controller;
@@ -38,6 +39,7 @@ class DDTextField extends StatelessWidget {
   final int? maxLength;
   final bool autofocus;
   final bool? autocorrect;
+  final TextCapitalization? textCapitalization;
 
   @override
   Widget build(BuildContext context) {
@@ -68,6 +70,7 @@ class DDTextField extends StatelessWidget {
           maxLength: maxLength,
           autofocus: autofocus,
           autocorrect: autocorrect ?? true,
+          textCapitalization: textCapitalization ?? TextCapitalization.none,
           style: const TextStyle(
             fontSize: 15,
             color: AppColors.onSurface,

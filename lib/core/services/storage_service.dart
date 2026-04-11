@@ -3,9 +3,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// DoneDrop Local Storage Service using SharedPreferences
 class StorageService {
   StorageService._();
-  static StorageService get instance => StorageService._();
+  static final StorageService _instance = StorageService._();
+  static StorageService get instance => _instance;
 
   SharedPreferences? _prefs;
+
+  bool get isInitialized => _prefs != null;
+
+  SharedPreferences get prefs => _p;
 
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
@@ -39,12 +44,6 @@ class StorageService {
   Future<bool> clear() => _p.clear();
 
   bool containsKey(String key) => _p.containsKey(key);
-
-  // ── Onboarding ──────────────────────────────────────────────────────────
-  bool get isOnboardingComplete => getBool('onboarding_complete') ?? false;
-
-  Future<bool> setOnboardingComplete(bool value) =>
-      setBool('onboarding_complete', value);
 
   // ── Auth ─────────────────────────────────────────────────────────────────
   String? get userId => getString('user_id');

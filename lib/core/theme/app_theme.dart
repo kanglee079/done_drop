@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 import 'app_sizes.dart';
 
@@ -9,6 +8,37 @@ class AppTheme {
   AppTheme._();
 
   static const _darkModePrimaryAccent = Color(0xFFD9C1BB);
+
+  static const String _newsreaderFamily = 'Newsreader';
+  static const String _manropeFamily = 'Manrope';
+
+  static TextStyle _newsreaderText({
+    double? fontSize,
+    FontWeight? fontWeight,
+    FontStyle? fontStyle,
+    Color? color,
+  }) {
+    return TextStyle(
+      fontFamily: _newsreaderFamily,
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      fontStyle: fontStyle,
+      color: color,
+    );
+  }
+
+  static TextStyle _manropeText({
+    double? fontSize,
+    FontWeight? fontWeight,
+    Color? color,
+  }) {
+    return TextStyle(
+      fontFamily: _manropeFamily,
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      color: color,
+    );
+  }
 
   // ── Light Theme ──────────────────────────────────────────────────────────
   static ThemeData get light => ThemeData(
@@ -53,7 +83,7 @@ class AppTheme {
           elevation: 0,
           centerTitle: true,
           systemOverlayStyle: SystemUiOverlayStyle.dark,
-          titleTextStyle: GoogleFonts.newsreader(
+          titleTextStyle: _newsreaderText(
             fontSize: 20,
             fontWeight: FontWeight.w600,
             fontStyle: FontStyle.italic,
@@ -81,10 +111,9 @@ class AppTheme {
             shape: RoundedRectangleBorder(
               borderRadius: AppSizes.borderRadiusMd,
             ),
-            textStyle: GoogleFonts.manrope(
+            textStyle: _manropeText(
               fontSize: 14,
               fontWeight: FontWeight.w700,
-              letterSpacing: 0.5,
             ),
           ),
         ),
@@ -99,7 +128,7 @@ class AppTheme {
               borderRadius: AppSizes.borderRadiusMd,
             ),
             side: BorderSide.none,
-            textStyle: GoogleFonts.manrope(
+            textStyle: _manropeText(
               fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
@@ -108,7 +137,7 @@ class AppTheme {
         textButtonTheme: TextButtonThemeData(
           style: TextButton.styleFrom(
             foregroundColor: AppColors.primary,
-            textStyle: GoogleFonts.manrope(
+            textStyle: _manropeText(
               fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
@@ -125,7 +154,7 @@ class AppTheme {
             horizontal: 16,
             vertical: 16,
           ),
-          hintStyle: GoogleFonts.manrope(
+          hintStyle: _manropeText(
             fontSize: 14,
             color: AppColors.outline,
           ),
@@ -133,7 +162,7 @@ class AppTheme {
         chipTheme: ChipThemeData(
           backgroundColor: AppColors.surfaceContainerLow,
           selectedColor: AppColors.primaryContainer,
-          labelStyle: GoogleFonts.manrope(
+          labelStyle: _manropeText(
             fontSize: 12,
             fontWeight: FontWeight.w600,
           ),
@@ -160,13 +189,13 @@ class AppTheme {
           indicatorColor: AppColors.primary,
           labelTextStyle: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.selected)) {
-              return GoogleFonts.manrope(
+              return _manropeText(
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
                 color: AppColors.onSurface,
               );
             }
-            return GoogleFonts.manrope(
+            return _manropeText(
               fontSize: 10,
               fontWeight: FontWeight.w600,
               color: AppColors.outline,
@@ -187,7 +216,7 @@ class AppTheme {
         ),
         snackBarTheme: SnackBarThemeData(
           backgroundColor: AppColors.inverseSurface,
-          contentTextStyle: GoogleFonts.manrope(
+          contentTextStyle: _manropeText(
             fontSize: 14,
             color: AppColors.inverseOnSurface,
           ),
@@ -207,11 +236,11 @@ class AppTheme {
           type: BottomNavigationBarType.fixed,
           selectedItemColor: AppColors.primary,
           unselectedItemColor: AppColors.outline,
-          selectedLabelStyle: GoogleFonts.manrope(
+          selectedLabelStyle: _manropeText(
             fontSize: 10,
             fontWeight: FontWeight.w700,
           ),
-          unselectedLabelStyle: GoogleFonts.manrope(
+          unselectedLabelStyle: _manropeText(
             fontSize: 10,
             fontWeight: FontWeight.w600,
           ),
@@ -276,7 +305,7 @@ class AppTheme {
           elevation: 0,
           centerTitle: true,
           systemOverlayStyle: SystemUiOverlayStyle.light,
-          titleTextStyle: GoogleFonts.newsreader(
+          titleTextStyle: _newsreaderText(
             fontSize: 20,
             fontWeight: FontWeight.w600,
             fontStyle: FontStyle.italic,
@@ -303,7 +332,7 @@ class AppTheme {
             shape: RoundedRectangleBorder(
               borderRadius: AppSizes.borderRadiusMd,
             ),
-            textStyle: GoogleFonts.manrope(
+            textStyle: _manropeText(
               fontSize: 14,
               fontWeight: FontWeight.w700,
             ),
@@ -317,7 +346,7 @@ class AppTheme {
             horizontal: 16,
             vertical: 16,
           ),
-          hintStyle: GoogleFonts.manrope(
+          hintStyle: _manropeText(
             fontSize: 14,
             color: AppColors.outline,
           ),
@@ -350,80 +379,20 @@ class AppTheme {
       );
 
   static TextTheme _textTheme(Color color) => TextTheme(
-        displayLarge: GoogleFonts.newsreader(
-          fontSize: 56,
-          fontWeight: FontWeight.w700,
-          color: color,
-        ),
-        displayMedium: GoogleFonts.newsreader(
-          fontSize: 45,
-          fontWeight: FontWeight.w700,
-          color: color,
-        ),
-        displaySmall: GoogleFonts.newsreader(
-          fontSize: 36,
-          fontWeight: FontWeight.w600,
-          color: color,
-        ),
-        headlineLarge: GoogleFonts.newsreader(
-          fontSize: 32,
-          fontWeight: FontWeight.w700,
-          color: color,
-        ),
-        headlineMedium: GoogleFonts.newsreader(
-          fontSize: 28,
-          fontWeight: FontWeight.w600,
-          color: color,
-        ),
-        headlineSmall: GoogleFonts.newsreader(
-          fontSize: 24,
-          fontWeight: FontWeight.w600,
-          color: color,
-        ),
-        titleLarge: GoogleFonts.manrope(
-          fontSize: 22,
-          fontWeight: FontWeight.w600,
-          color: color,
-        ),
-        titleMedium: GoogleFonts.manrope(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: color,
-        ),
-        titleSmall: GoogleFonts.manrope(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: color,
-        ),
-        bodyLarge: GoogleFonts.manrope(
-          fontSize: 16,
-          fontWeight: FontWeight.w400,
-          color: color,
-        ),
-        bodyMedium: GoogleFonts.manrope(
-          fontSize: 14,
-          fontWeight: FontWeight.w400,
-          color: color,
-        ),
-        bodySmall: GoogleFonts.manrope(
-          fontSize: 12,
-          fontWeight: FontWeight.w400,
-          color: AppColors.onSurfaceVariant,
-        ),
-        labelLarge: GoogleFonts.manrope(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: color,
-        ),
-        labelMedium: GoogleFonts.manrope(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: color,
-        ),
-        labelSmall: GoogleFonts.manrope(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          color: AppColors.onSurfaceVariant,
-        ),
+        displayLarge: _newsreaderText(fontSize: 56, fontWeight: FontWeight.w700, color: color),
+        displayMedium: _newsreaderText(fontSize: 45, fontWeight: FontWeight.w700, color: color),
+        displaySmall: _newsreaderText(fontSize: 36, fontWeight: FontWeight.w600, color: color),
+        headlineLarge: _newsreaderText(fontSize: 32, fontWeight: FontWeight.w700, color: color),
+        headlineMedium: _newsreaderText(fontSize: 28, fontWeight: FontWeight.w600, color: color),
+        headlineSmall: _newsreaderText(fontSize: 24, fontWeight: FontWeight.w600, color: color),
+        titleLarge: _manropeText(fontSize: 22, fontWeight: FontWeight.w600, color: color),
+        titleMedium: _manropeText(fontSize: 18, fontWeight: FontWeight.w600, color: color),
+        titleSmall: _manropeText(fontSize: 14, fontWeight: FontWeight.w600, color: color),
+        bodyLarge: _manropeText(fontSize: 16, fontWeight: FontWeight.w400, color: color),
+        bodyMedium: _manropeText(fontSize: 14, fontWeight: FontWeight.w400, color: color),
+        bodySmall: _manropeText(fontSize: 12, fontWeight: FontWeight.w400, color: AppColors.onSurfaceVariant),
+        labelLarge: _manropeText(fontSize: 14, fontWeight: FontWeight.w600, color: color),
+        labelMedium: _manropeText(fontSize: 12, fontWeight: FontWeight.w600, color: color),
+        labelSmall: _manropeText(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.onSurfaceVariant),
       );
 }

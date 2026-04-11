@@ -19,7 +19,9 @@ class FirebaseSetup {
       apiKey: apiKey,
       projectId: projectId,
       authDomain: authDomain,
-      storageBucket: storageBucket,
+      storageBucket: storageBucket.contains('://')
+          ? storageBucket.substring(storageBucket.indexOf('://') + 3)
+          : storageBucket,
       messagingSenderId: messagingSenderId,
       measurementId: measurementId,
     );

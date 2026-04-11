@@ -16,6 +16,10 @@ class AuthController extends GetxController {
 
   StreamSubscription<User?>? _authSubscription;
 
+  /// Exposed stream of Firebase auth state changes.
+  /// Use this in SplashScreen and route guards instead of StorageService.userId.
+  Stream<User?> get authStateStream => _authRepo.authStateChanges;
+
   @override
   void onInit() {
     super.onInit();

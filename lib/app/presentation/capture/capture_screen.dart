@@ -57,7 +57,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
         title: Text(
           'Capture',
           style: TextStyle(
-            fontFamily: 'Newsreader',
+            fontFamily: AppTypography.serifFamily,
             fontSize: 20,
             fontStyle: FontStyle.italic,
             color: AppColors.primary,
@@ -74,7 +74,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
               Text(
                 'Capture a Moment',
                 style: TextStyle(
-                  fontFamily: 'Newsreader',
+                  fontFamily: AppTypography.serifFamily,
                   fontSize: 32,
                   fontWeight: FontWeight.w700,
                   color: AppColors.onSurface,

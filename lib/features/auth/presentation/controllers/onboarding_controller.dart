@@ -2,7 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:done_drop/features/auth/data/onboarding_service.dart';
 import 'package:done_drop/app/routes/app_routes.dart';
+import 'package:done_drop/core/services/analytics_service.dart';
 
+/// Controller for OnboardingScreen's 3-page PageView.
+///
+/// IMPORTANT: The actual page content (WelcomePage, UseCasePage, PermissionsPage)
+/// is defined in OnboardingScreen widget, NOT here. The `pages` list below
+/// only defines metadata for the page indicator dots.
+///
+/// Page index → screen content mapping:
+///   0 → _WelcomePage (tagline + value prop)
+///   1 → _UseCasePage (who are you sharing with — personal/couple/friends/squad)
+///   2 → _PermissionsPage (camera access explanation)
 class OnboardingController extends GetxController {
   OnboardingController(this._onboardingService);
   final OnboardingService _onboardingService;
@@ -10,33 +21,25 @@ class OnboardingController extends GetxController {
   final pageController = PageController();
   final currentPage = 0.obs;
 
-  final pages = const [
-    _OnboardingPage(
-      icon: Icons.camera_alt_outlined,
-      title: 'Capture Moments',
-      description:
-          'Take a photo of your accomplishment.\nEvery task completed deserves to be celebrated.',
-    ),
-    _OnboardingPage(
-      icon: Icons.group_outlined,
-      title: 'Share with Your Circle',
-      description:
-          'Build your inner circle.\nShare your wins with those who matter most.',
-    ),
-    _OnboardingPage(
-      icon: Icons.auto_awesome_outlined,
-      title: 'Your Weekly Recap',
-      description:
-          'Get a beautiful weekly summary.\nSee your progress and celebrate every week.',
-    ),
-  ];
+  // Page metadata — must match the 3 pages in OnboardingScreen
+  static const totalPages = 3;
+  static const ctaLabels = ['Get Started', 'Continue', 'Done'];
+
+  /// Which use case the user selected on page 1 (index 1 of the PageView).
+  /// Null if no selection made yet.
+  String? selectedUseCase;
 
   void onPageChanged(int page) {
     currentPage.value = page;
   }
 
+  void selectUseCase(String key) {
+    selectedUseCase = key;
+    AnalyticsService.instance.useCaseSelected(key);
+  }
+
   void nextPage() {
-    if (currentPage.value < pages.length - 1) {
+    if (currentPage.value < totalPages - 1) {
       pageController.nextPage(
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOut,
@@ -60,16 +63,4 @@ class OnboardingController extends GetxController {
     pageController.dispose();
     super.onClose();
   }
-}
-
-class _OnboardingPage {
-  const _OnboardingPage({
-    required this.icon,
-    required this.title,
-    required this.description,
-  });
-
-  final IconData icon;
-  final String title;
-  final String description;
 }
