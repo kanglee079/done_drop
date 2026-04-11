@@ -12,7 +12,12 @@
           "package_name": "com.donedrop.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "690648677853-drkb08ndf0bq5h0rgbkvhj4h1hlm0g8a.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyB2aaQ_3QUKxvxYv2v9pCIv2c0ag86O4f8"
@@ -20,7 +25,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "690648677853-drkb08ndf0bq5h0rgbkvhj4h1hlm0g8a.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
