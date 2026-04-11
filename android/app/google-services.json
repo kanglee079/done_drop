@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "796015993618",
+    "project_id": "donedrop-1d764",
+    "storage_bucket": "donedrop-1d764.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:796015993618:android:6cb32c35a3360eafbfc9cb",
+        "android_client_info": {
+          "package_name": "com.donedrop.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB2aaQ_3QUKxvxYv2v9pCIv2c0ag86O4f8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

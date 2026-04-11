@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DoneDrop | Expand the Circle</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-container": "#e8ded6",
+                    "primary": "#884532",
+                    "error": "#ba1a1a",
+                    "on-primary-fixed": "#3a0a01",
+                    "on-secondary-fixed": "#201b16",
+                    "surface-container-low": "#f4f3f1",
+                    "primary-fixed-dim": "#ffb5a0",
+                    "on-tertiary-fixed": "#0d1f18",
+                    "on-surface-variant": "#53433f",
+                    "tertiary-fixed": "#d2e7dc",
+                    "surface": "#faf9f6",
+                    "surface-container-lowest": "#ffffff",
+                    "on-surface": "#1a1c1a",
+                    "primary-container": "#a65d48",
+                    "tertiary-fixed-dim": "#b7cbc0",
+                    "surface-container": "#efeeeb",
+                    "inverse-on-surface": "#f2f1ee",
+                    "on-primary-container": "#fff4f1",
+                    "surface-container-highest": "#e3e2e0",
+                    "on-background": "#1a1c1a",
+                    "outline": "#86736e",
+                    "surface-variant": "#e3e2e0",
+                    "primary-fixed": "#ffdbd1",
+                    "secondary-fixed": "#ebe0d9",
+                    "on-tertiary-fixed-variant": "#384b42",
+                    "outline-variant": "#d9c1bb",
+                    "on-secondary-container": "#69615b",
+                    "surface-bright": "#faf9f6",
+                    "on-error-container": "#93000a",
+                    "on-tertiary": "#ffffff",
+                    "tertiary": "#4a5c54",
+                    "on-primary": "#ffffff",
+                    "error-container": "#ffdad6",
+                    "surface-dim": "#dbdad7",
+                    "on-primary-fixed-variant": "#733422",
+                    "on-secondary-fixed-variant": "#4c4640",
+                    "surface-tint": "#904b37",
+                    "background": "#faf9f6",
+                    "inverse-primary": "#ffb5a0",
+                    "on-error": "#ffffff",
+                    "surface-container-high": "#e9e8e5",
+                    "on-secondary": "#ffffff",
+                    "secondary-fixed-dim": "#cfc5be",
+                    "inverse-surface": "#2f312f",
+                    "tertiary-container": "#62756c",
+                    "secondary": "#645d57",
+                    "on-tertiary-container": "#e6fbef"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Newsreader"],
+                    "body": ["Manrope"],
+                    "label": ["Manrope"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Manrope', sans-serif; }
+        .font-serif { font-family: 'Newsreader', serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#faf9f6]/80 backdrop-blur-md shadow-[0_20px_40px_rgba(134,115,110,0.06)]">
+<div class="flex justify-between items-center px-6 h-16 w-full max-w-screen-xl mx-auto">
+<div class="w-10 h-10 rounded-full overflow-hidden">
+<img alt="user profile picture" class="w-full h-full object-cover" data-alt="Close up portrait of a smiling woman with natural lighting and soft blurred outdoor background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCswa0djpWihTIlTg-t5UrS-EPZI4KWZUZCvSbrUZ3rqJDn3LJxlq0uXiwPPYh7hSFwrGLiLf6f1l1YwOX7YxdB5kWjjul8NH5QWJoCrfPNfuanpJazSCZjkh15om5Bk-i8_nVHAwEwodggqArw6WyPgxUopnRgbAeu6QZrWQnrprhRZ4rcffOtOCkp5m4gndFVkbXdZAxU1TJwBbLnb9mZLvfdN1WWkGkyS2RrznVbiOqfKMLHFZvhUi4Wfp1aQeHPKshquz84QGE"/>
+</div>
+<h1 class="font-['Newsreader'] font-bold italic text-2xl text-[#884532] tracking-tight">DoneDrop</h1>
+<button class="text-[#86736e] hover:opacity-80 transition-opacity active:scale-95 duration-200">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+</div>
+</header>
+<main class="pt-24 pb-32 px-6 max-w-screen-md mx-auto">
+<!-- Hero Section -->
+<section class="mb-12">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+<div class="max-w-md">
+<span class="bg-tertiary-fixed text-on-tertiary-fixed-variant px-4 py-1 rounded-full text-[11px] font-medium tracking-widest uppercase mb-4 inline-block">Private Circle</span>
+<h2 class="font-serif text-5xl md:text-6xl text-primary font-light italic leading-tight">Expand the Circle</h2>
+<p class="mt-6 text-on-surface-variant font-body leading-relaxed text-lg opacity-90">
+                        Invite those who matter most. Every connection here is a deliberate choice for privacy and shared moments.
+                    </p>
+</div>
+<div class="hidden md:block pb-2">
+<span class="material-symbols-outlined text-outline-variant text-6xl opacity-30" style="font-variation-settings: 'wght' 100;">lock_open</span>
+</div>
+</div>
+</section>
+<!-- Invite Link Bento Card -->
+<div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-12">
+<div class="md:col-span-3 bg-surface-container-lowest p-8 rounded-lg shadow-[0_20px_40px_rgba(134,115,110,0.04)] flex flex-col justify-between">
+<div>
+<h3 class="font-serif text-2xl text-primary-container mb-2">Unique Invite Link</h3>
+<p class="text-sm text-on-surface-variant mb-6">This link expires in 24 hours for security.</p>
+</div>
+<div class="relative group">
+<div class="bg-surface-container-low px-6 py-4 rounded-full flex items-center justify-between overflow-hidden">
+<span class="text-sm font-medium text-outline truncate mr-4">donedrop.app/join/circle-x92k-l1</span>
+<button class="bg-gradient-to-br from-[#884532] to-[#a65d48] text-white px-6 py-2 rounded-full text-sm font-medium hover:opacity-90 transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="content_copy">content_copy</span>
+                            Copy
+                        </button>
+</div>
+</div>
+</div>
+<div class="md:col-span-2 bg-tertiary-fixed/30 p-8 rounded-lg flex flex-col items-center justify-center text-center">
+<span class="material-symbols-outlined text-tertiary text-4xl mb-4" data-icon="qr_code_2">qr_code_2</span>
+<h3 class="font-serif text-xl text-tertiary mb-2">Scan to Join</h3>
+<p class="text-xs text-on-tertiary-fixed-variant leading-relaxed">Present this code to your guest in person.</p>
+<div class="mt-4 w-24 h-24 bg-white p-2 rounded-md shadow-sm">
+<img alt="QR Code" class="w-full h-full object-contain opacity-60" data-alt="Abstract minimalist QR code graphic with soft edges and warm neutral background colors" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCaVD_iRYKhzFs6VbLkjLj2kFkcsA-lExBwdWkTsoNukV4h8BTggyphzDaTk7c3XZAUiD3smvqoVDcQqPGthpt6krF8OEjyHUvpcKSTqeqKCcuqP4IRBf7xyuM29DeJpwG1eZqj_8lFA9pJc14DQVCqeFBB9lS3nqclITO7UbJLvx0fKsvNmG89wPbuFT5j71cElLfj9eT2xhw1FCOi9BU2qq61WxWB6kDNw80m5Amj36PotyG2v66_panxt1Erq9baZOs26zERFuQ"/>
+</div>
+</div>
+</div>
+<!-- Contact Selection -->
+<section class="bg-surface-container-low rounded-lg p-8">
+<div class="flex items-center justify-between mb-8">
+<h3 class="font-serif text-2xl text-on-surface">Suggested Contacts</h3>
+<div class="relative">
+<input class="bg-transparent border-none border-b-2 border-surface-container-highest focus:ring-0 focus:border-primary text-sm w-40 transition-all placeholder:text-outline-variant" placeholder="Search..." type="text"/>
+</div>
+</div>
+<div class="space-y-6">
+<!-- Contact Item 1 -->
+<div class="flex items-center justify-between group cursor-pointer">
+<div class="flex items-center gap-4">
+<div class="w-14 h-14 rounded-full overflow-hidden ring-2 ring-white shadow-sm transition-transform group-hover:scale-105">
+<img alt="contact" class="w-full h-full object-cover" data-alt="Close up studio portrait of a man with short hair against a warm neutral background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBUYs1xEVC1rDciWSBBL-fd-I6L3lf70tciSBAbTxeHmt-lTA1Bwtcq3YOMaDwXoCLTxGmFND5rHMF41rFVrx5b_50Hc9cpPiWv4pQyWvx5fCSOUXp7ExI76pQ9brq_Wa-22U_O_QWOWZJcr0wE53srAIddtH1_K43HuxmlrW01HKkKEu667MptX1IdcYIDofpCFpIzs7-9jzfZaJ2VKrNPjBivTQGwutXUnBCgUALi4r5CnJ8jZb2Y_lTLrs5yxAUIGaytT49XNDU"/>
+</div>
+<div>
+<p class="font-semibold text-on-surface">Julian Thorne</p>
+<p class="text-xs text-outline italic">Recent Circle Participant</p>
+</div>
+</div>
+<button class="bg-surface-container-highest text-on-surface px-6 py-2 rounded-full text-xs font-bold hover:bg-primary hover:text-white transition-all">
+                        Invite
+                    </button>
+</div>
+<!-- Contact Item 2 -->
+<div class="flex items-center justify-between group cursor-pointer">
+<div class="flex items-center gap-4">
+<div class="w-14 h-14 rounded-full overflow-hidden ring-2 ring-white shadow-sm transition-transform group-hover:scale-105">
+<img alt="contact" class="w-full h-full object-cover" data-alt="Portrait of a woman with curly hair looking directly at the camera with a gentle expression" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD7tVwDx_KQEQ9mnHxNGgL1RrTXXPn6qtzzTCN2za9fjUa7rcv_pD93NRjYxySn0BwYS47J0FboKfd2Q8Fq7HGz3rxBQSKWb3INimLm9U-zRYwDmioCA_aHam8OSX4odcrXIl4q38IytZllUAUVM0oNc_gDx2kzwUXufpleHKIe_gqsmVV1Sf2PIYe7OhBlbgQaR9Vv9FWxhnOcZ9jUjyArK_Lw9TcsalbC7cdg2cVugZneuws7XglhK_k9pLUtntc6CBn-TTREZGA"/>
+</div>
+<div>
+<p class="font-semibold text-on-surface">Elena Rossi</p>
+<p class="text-xs text-outline italic">Mutual Connections</p>
+</div>
+</div>
+<button class="bg-surface-container-highest text-on-surface px-6 py-2 rounded-full text-xs font-bold hover:bg-primary hover:text-white transition-all">
+                        Invite
+                    </button>
+</div>
+<!-- Contact Item 3 -->
+<div class="flex items-center justify-between group cursor-pointer">
+<div class="flex items-center gap-4">
+<div class="w-14 h-14 rounded-full overflow-hidden ring-2 ring-white shadow-sm transition-transform group-hover:scale-105">
+<img alt="contact" class="w-full h-full object-cover" data-alt="Portrait of a young man with a slight smile and natural morning light on his face" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjlqDBOVQFD65Fi9O5xI6X6ia1OeNuY5pgqw-CpSo-rB-3xTxbGFF3ynwGtuA5PtA9wMyW9OIx4LJTbl-V38nk6Ad-SW5stEA6-Xk6RZHBezAxYTNTWhWGp_3i6k3DOOQxSSwUB_6EWzX1HvHgxkJXU-dT0ByxGhXLpi_95zii0fiwsI-jOqje-Lf1BWE6qn_B4gLu4q_u8iKj5Ol6jG42CSTUXHp7ckYYwXeMn2KlxBNqzAikHL7CgzZhiIbrEHdHxAlPoPCHlfc"/>
+</div>
+<div>
+<p class="font-semibold text-on-surface">Marcus Chen</p>
+<p class="text-xs text-outline italic">Frequent Contact</p>
+</div>
+</div>
+<button class="bg-surface-container-highest text-on-surface px-6 py-2 rounded-full text-xs font-bold hover:bg-primary hover:text-white transition-all">
+                        Invite
+                    </button>
+</div>
+</div>
+<div class="mt-12 flex flex-col items-center gap-4">
+<p class="text-sm text-outline-variant font-medium">Prefer text or email?</p>
+<div class="flex gap-4">
+<button class="p-4 rounded-full bg-white text-primary shadow-sm hover:shadow-md transition-shadow">
+<span class="material-symbols-outlined" data-icon="mail">mail</span>
+</button>
+<button class="p-4 rounded-full bg-white text-primary shadow-sm hover:shadow-md transition-shadow">
+<span class="material-symbols-outlined" data-icon="sms">sms</span>
+</button>
+<button class="p-4 rounded-full bg-white text-primary shadow-sm hover:shadow-md transition-shadow">
+<span class="material-symbols-outlined" data-icon="more_horiz">more_horiz</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Privacy Assurance -->
+<div class="mt-16 text-center">
+<div class="inline-flex items-center gap-2 text-outline mb-2">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+<span class="text-[10px] uppercase tracking-[0.2em] font-bold">Privacy Guaranteed</span>
+</div>
+<p class="text-xs text-outline-variant max-w-xs mx-auto leading-relaxed">
+                We never store your contacts' data or send unsolicited messages. Only those you explicitly invite will be notified.
+            </p>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 bg-[#faf9f6]/90 backdrop-blur-xl rounded-t-[2rem] shadow-[0_-10px_30px_rgba(134,115,110,0.04)]">
+<div class="flex justify-around items-center px-4 pb-6 pt-3">
+<a class="flex flex-col items-center justify-center text-[#86736e] px-5 py-2 hover:text-[#884532] transition-colors" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="auto_awesome">auto_awesome</span>
+<span class="font-['Manrope'] text-[11px] font-medium tracking-wide uppercase">Moments</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#86736e] px-5 py-2 hover:text-[#884532] transition-colors" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="group">group</span>
+<span class="font-['Manrope'] text-[11px] font-medium tracking-wide uppercase">Circles</span>
+</a>
+<!-- ACTIVE TAB: Invite -->
+<a class="flex flex-col items-center justify-center bg-gradient-to-br from-[#884532] to-[#a65d48] text-white rounded-full px-5 py-2 active:scale-90 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="person_add">person_add</span>
+<span class="font-['Manrope'] text-[11px] font-medium tracking-wide uppercase">Invite</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#86736e] px-5 py-2 hover:text-[#884532] transition-colors" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="account_circle">account_circle</span>
+<span class="font-['Manrope'] text-[11px] font-medium tracking-wide uppercase">Profile</span>
+</a>
+</div>
+</nav>
+</body></html>

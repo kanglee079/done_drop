@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-container": "#e8ded6",
+                    "primary": "#884532",
+                    "error": "#ba1a1a",
+                    "on-primary-fixed": "#3a0a01",
+                    "on-secondary-fixed": "#201b16",
+                    "surface-container-low": "#f4f3f1",
+                    "primary-fixed-dim": "#ffb5a0",
+                    "on-tertiary-fixed": "#0d1f18",
+                    "on-surface-variant": "#53433f",
+                    "tertiary-fixed": "#d2e7dc",
+                    "surface": "#faf9f6",
+                    "surface-container-lowest": "#ffffff",
+                    "on-surface": "#1a1c1a",
+                    "primary-container": "#a65d48",
+                    "tertiary-fixed-dim": "#b7cbc0",
+                    "surface-container": "#efeeeb",
+                    "inverse-on-surface": "#f2f1ee",
+                    "on-primary-container": "#fff4f1",
+                    "surface-container-highest": "#e3e2e0",
+                    "on-background": "#1a1c1a",
+                    "outline": "#86736e",
+                    "surface-variant": "#e3e2e0",
+                    "primary-fixed": "#ffdbd1",
+                    "secondary-fixed": "#ebe0d9",
+                    "on-tertiary-fixed-variant": "#384b42",
+                    "outline-variant": "#d9c1bb",
+                    "on-secondary-container": "#69615b",
+                    "surface-bright": "#faf9f6",
+                    "on-error-container": "#93000a",
+                    "on-tertiary": "#ffffff",
+                    "tertiary": "#4a5c54",
+                    "on-primary": "#ffffff",
+                    "error-container": "#ffdad6",
+                    "surface-dim": "#dbdad7",
+                    "on-primary-fixed-variant": "#733422",
+                    "on-secondary-fixed-variant": "#4c4640",
+                    "surface-tint": "#904b37",
+                    "background": "#faf9f6",
+                    "inverse-primary": "#ffb5a0",
+                    "on-error": "#ffffff",
+                    "surface-container-high": "#e9e8e5",
+                    "on-secondary": "#ffffff",
+                    "secondary-fixed-dim": "#cfc5be",
+                    "inverse-surface": "#2f312f",
+                    "tertiary-container": "#62756c",
+                    "secondary": "#645d57",
+                    "on-tertiary-container": "#e6fbef"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Newsreader"],
+                    "body": ["Manrope"],
+                    "label": ["Manrope"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Manrope', sans-serif;
+            background-color: #faf9f6;
+        }
+        .serif-text {
+            font-family: 'Newsreader', serif;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen flex flex-col">
+<!-- TopAppBar Suppressed for Success State (Focus Journey) -->
+<main class="flex-grow flex flex-col items-center justify-center px-6 py-12 relative overflow-hidden">
+<!-- Abstract Decorative Elements -->
+<div class="absolute top-[-10%] right-[-5%] w-64 h-64 rounded-full bg-tertiary-fixed opacity-30 blur-3xl"></div>
+<div class="absolute bottom-[5%] left-[-10%] w-80 h-80 rounded-full bg-primary-fixed opacity-20 blur-3xl"></div>
+<div class="w-full max-w-lg space-y-12 relative z-10 flex flex-col items-center">
+<!-- Success Icon/Indicator -->
+<div class="flex items-center justify-center w-16 h-16 rounded-full bg-tertiary-fixed text-on-tertiary-fixed mb-2">
+<span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<!-- Headline Section -->
+<div class="text-center space-y-4">
+<h1 class="serif-text text-5xl md:text-6xl font-bold italic text-primary tracking-tight">Moment Captured</h1>
+<p class="text-on-surface-variant text-lg font-medium max-w-xs mx-auto leading-relaxed">Your journey continues, one beautiful drop at a time.</p>
+</div>
+<!-- Preview Card (Asymmetric Editorial Style) -->
+<div class="relative w-full aspect-[4/5] md:aspect-square flex items-center justify-center">
+<!-- Background Offset Layer -->
+<div class="absolute top-4 left-4 w-full h-full bg-surface-container-low rounded-lg -z-10"></div>
+<!-- Main Preview Image -->
+<div class="w-full h-full rounded-lg overflow-hidden shadow-[0_20px_40px_rgba(134,115,110,0.06)] bg-surface-container-lowest p-3">
+<img alt="Moment Preview" class="w-full h-full object-cover rounded-md" data-alt="A cinematic, warm-toned photograph of a single wildflower in a sun-drenched meadow at golden hour with soft bokeh background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxudPH0QpqF8d2YLz-GjG1BFn9leZ7UR-AijxYOo20uUfjt7LHmiB_zFX2gjgoZCU9Vo3_xeCDLuD54zli4pwTuHkGtIkds9FGpfEf5ruta19qdgAA_OmKpQwpEnPrIZzmBtN4n40S83ea73H9d3rzRRe_khfqp3ODPg9VCzY-beDJtSgWgPkpmvEQ40p7dMYh1cuVPkdamSUTM5mPwMXjIg8NhIJFM7GUWyENzm_4hzN_Js_1sO95HQbFo_yzW8DdS2VCzvmUPGg"/>
+<!-- Date-Chip Component -->
+<div class="absolute top-8 right-8 bg-tertiary-fixed/90 backdrop-blur-sm px-4 py-1.5 rounded-full shadow-sm">
+<span class="font-label text-xs font-semibold tracking-widest text-on-tertiary-fixed uppercase">Just Now</span>
+</div>
+</div>
+</div>
+<!-- Motivational Message / Interaction -->
+<div class="text-center space-y-8 w-full max-w-sm">
+<div class="flex items-center justify-center gap-2">
+<span class="h-[1px] w-8 bg-outline-variant opacity-40"></span>
+<p class="serif-text italic text-xl text-outline italic px-4">The art of noticing</p>
+<span class="h-[1px] w-8 bg-outline-variant opacity-40"></span>
+</div>
+<!-- Primary CTA -->
+<div class="flex flex-col gap-4">
+<button class="bg-gradient-to-br from-primary to-primary-container text-white px-8 py-4 rounded-md font-bold tracking-wide shadow-lg hover:opacity-90 transition-opacity active:scale-95 duration-200">
+                        View Feed
+                    </button>
+<button class="text-primary font-bold tracking-wide px-8 py-3 hover:underline underline-offset-8 transition-all">
+                        Return Home
+                    </button>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer Decoration (No Nav Shell as per Task-Focused/Success Rule) -->
+<footer class="h-16 flex items-center justify-center">
+<div class="flex gap-2">
+<div class="w-1.5 h-1.5 rounded-full bg-primary-fixed-dim"></div>
+<div class="w-1.5 h-1.5 rounded-full bg-tertiary-fixed-dim"></div>
+<div class="w-1.5 h-1.5 rounded-full bg-outline-variant opacity-30"></div>
+</div>
+</footer>
+</body></html>

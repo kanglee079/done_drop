@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DoneDrop Settings</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-container": "#e8ded6",
+                    "primary": "#884532",
+                    "error": "#ba1a1a",
+                    "on-primary-fixed": "#3a0a01",
+                    "on-secondary-fixed": "#201b16",
+                    "surface-container-low": "#f4f3f1",
+                    "primary-fixed-dim": "#ffb5a0",
+                    "on-tertiary-fixed": "#0d1f18",
+                    "on-surface-variant": "#53433f",
+                    "tertiary-fixed": "#d2e7dc",
+                    "surface": "#faf9f6",
+                    "surface-container-lowest": "#ffffff",
+                    "on-surface": "#1a1c1a",
+                    "primary-container": "#a65d48",
+                    "tertiary-fixed-dim": "#b7cbc0",
+                    "surface-container": "#efeeeb",
+                    "inverse-on-surface": "#f2f1ee",
+                    "on-primary-container": "#fff4f1",
+                    "surface-container-highest": "#e3e2e0",
+                    "on-background": "#1a1c1a",
+                    "outline": "#86736e",
+                    "surface-variant": "#e3e2e0",
+                    "primary-fixed": "#ffdbd1",
+                    "secondary-fixed": "#ebe0d9",
+                    "on-tertiary-fixed-variant": "#384b42",
+                    "outline-variant": "#d9c1bb",
+                    "on-secondary-container": "#69615b",
+                    "surface-bright": "#faf9f6",
+                    "on-error-container": "#93000a",
+                    "on-tertiary": "#ffffff",
+                    "tertiary": "#4a5c54",
+                    "on-primary": "#ffffff",
+                    "error-container": "#ffdad6",
+                    "surface-dim": "#dbdad7",
+                    "on-primary-fixed-variant": "#733422",
+                    "on-secondary-fixed-variant": "#4c4640",
+                    "surface-tint": "#904b37",
+                    "background": "#faf9f6",
+                    "inverse-primary": "#ffb5a0",
+                    "on-error": "#ffffff",
+                    "surface-container-high": "#e9e8e5",
+                    "on-secondary": "#ffffff",
+                    "secondary-fixed-dim": "#cfc5be",
+                    "inverse-surface": "#2f312f",
+                    "tertiary-container": "#62756c",
+                    "secondary": "#645d57",
+                    "on-tertiary-container": "#e6fbef"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Newsreader"],
+                    "body": ["Manrope"],
+                    "label": ["Manrope"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body {
+            font-family: 'Manrope', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .serif-headline {
+            font-family: 'Newsreader', serif;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface selection:bg-primary-fixed">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#faf9f6]/80 backdrop-blur-md shadow-[0_20px_40px_rgba(134,115,110,0.06)]">
+<div class="flex justify-between items-center px-6 h-16 w-full max-w-screen-xl mx-auto">
+<div class="flex items-center gap-3">
+<img class="w-8 h-8 rounded-full object-cover" data-alt="close up portrait of a smiling woman with warm soft lighting and editorial aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1jwL-1xwliqWmbOiAuxZvotAqHehEz0ZbjGYv2r0s5-P1KUW17kjblP9mS_w13uap3vH4Z_13_OAbQqh5sXJsz2zzZ2uhZOHhmZoz5aMqdYUTFaIBKaLPvS0k_-5gfKKTUdT8Fz-gMFoIJtWO_xKtinhVFNg9-AfNEmkhmFb57d48oU72otQ4H2t3HMSO1YCmE_fECV-3QM2DmTf5w3vScpKzI13y89ze9-JqwnKVZaUvtlXj4anOD6aNr8DEbM4ZqmiTNuilBhY"/>
+<span class="font-['Newsreader'] font-bold italic text-2xl text-[#884532] tracking-tight">DoneDrop</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-[#884532] hover:opacity-80 transition-opacity scale-95 duration-200 transition-transform">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+</div>
+</div>
+</header>
+<main class="pt-24 pb-32 px-6 max-w-screen-md mx-auto">
+<!-- Header Section -->
+<section class="mb-12">
+<h1 class="serif-headline text-4xl font-light italic mb-2">The Archive</h1>
+<p class="text-on-surface-variant font-medium tracking-wide text-sm uppercase">Curate your personal experience</p>
+</section>
+<!-- Profile Section (Asymmetric Layout) -->
+<section class="mb-16">
+<div class="flex flex-col md:flex-row gap-8 items-start">
+<div class="relative group">
+<div class="w-32 h-40 rounded-lg overflow-hidden bg-surface-container shadow-sm transform -rotate-2 group-hover:rotate-0 transition-transform duration-500">
+<img class="w-full h-full object-cover" data-alt="minimalist studio portrait of a person looking thoughtfully away from camera soft cream background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB44KQmJ49MJnDeDi6HHypytUQiv20aiWPP-dKzVtyIBgLmpS4UTOvwCiLqmL8D_TEjt8McF-1b9TmpXsJaGB1zTF0HpYNcahHZo8SwlQSz91cus2hNaXddlGbDum3tHRbLYUgImVfHCSrLXADwEjD00-rmml8yx_qSCKEnNVsbLv7yX153WbRka1LSQpH4316GgwS8etfIsIhuLdk08rVGncbLuiEAA7mTObNSsV_MZYXGFJQTiFUL9TAAiusiNMOVgWjc_fWzeZo"/>
+</div>
+<button class="absolute -bottom-2 -right-2 bg-primary text-white p-2 rounded-full shadow-lg">
+<span class="material-symbols-outlined text-sm" data-icon="edit">edit</span>
+</button>
+</div>
+<div class="flex-1 pt-4">
+<h2 class="serif-headline text-2xl mb-1">Eleanor Sterling</h2>
+<p class="text-on-surface-variant text-sm mb-6">Curating memories since October 2023</p>
+<div class="flex gap-3">
+<span class="bg-tertiary-fixed text-on-tertiary-fixed-variant px-4 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase">Active Circle</span>
+<span class="bg-secondary-fixed text-on-secondary-fixed-variant px-4 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase">84 Moments</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Premium Entry Point (Glassmorphism / Gradient) -->
+<section class="mb-16">
+<div class="relative overflow-hidden rounded-lg bg-gradient-to-br from-[#884532] to-[#a65d48] p-8 text-white">
+<div class="absolute top-0 right-0 p-4 opacity-10">
+<span class="material-symbols-outlined text-9xl" data-icon="auto_awesome">auto_awesome</span>
+</div>
+<div class="relative z-10">
+<h3 class="serif-headline text-2xl mb-2">DoneDrop Premium</h3>
+<p class="text-on-primary-container/80 text-sm max-w-sm mb-6 leading-relaxed">Unlock high-fidelity exports, unlimited private circles, and editorial layout themes for your memories.</p>
+<button class="bg-white text-primary px-8 py-3 rounded-full font-bold text-sm hover:shadow-xl transition-all active:scale-95">
+                        Enhance Your Archive
+                    </button>
+</div>
+</div>
+</section>
+<!-- Settings Groups -->
+<div class="space-y-12">
+<!-- Notifications -->
+<section>
+<div class="flex items-baseline justify-between mb-6">
+<h4 class="serif-headline text-xl italic">Preferences</h4>
+<div class="h-px flex-1 mx-4 bg-outline-variant/20"></div>
+</div>
+<div class="space-y-6">
+<div class="flex items-center justify-between p-4 bg-surface-container-low rounded-lg">
+<div>
+<p class="font-medium text-on-surface">Moment Reminders</p>
+<p class="text-xs text-on-surface-variant">Daily gentle nudges to capture your day</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="flex items-center justify-between p-4 bg-surface-container-low rounded-lg">
+<div>
+<p class="font-medium text-on-surface">Circle Activity</p>
+<p class="text-xs text-on-surface-variant">Notifications when others drop moments</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+</section>
+<!-- Privacy -->
+<section>
+<div class="flex items-baseline justify-between mb-6">
+<h4 class="serif-headline text-xl italic">Privacy &amp; Circles</h4>
+<div class="h-px flex-1 mx-4 bg-outline-variant/20"></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="p-6 bg-surface-container-lowest border border-outline-variant/10 rounded-lg shadow-[0_4px_12px_rgba(134,115,110,0.03)] group hover:bg-surface-bright transition-colors">
+<div class="mb-4 text-primary">
+<span class="material-symbols-outlined" data-icon="visibility">visibility</span>
+</div>
+<p class="font-medium mb-1">Visibility</p>
+<p class="text-xs text-on-surface-variant leading-relaxed">Current setting: Visible to Friends Only</p>
+<button class="mt-4 text-xs font-bold text-primary underline underline-offset-4">Change Visibility</button>
+</div>
+<div class="p-6 bg-surface-container-lowest border border-outline-variant/10 rounded-lg shadow-[0_4px_12px_rgba(134,115,110,0.03)] group hover:bg-surface-bright transition-colors">
+<div class="mb-4 text-primary">
+<span class="material-symbols-outlined" data-icon="lock">lock</span>
+</div>
+<p class="font-medium mb-1">Encrypted Vault</p>
+<p class="text-xs text-on-surface-variant leading-relaxed">All archived moments are double-encrypted</p>
+<button class="mt-4 text-xs font-bold text-primary underline underline-offset-4">Security Keys</button>
+</div>
+</div>
+</section>
+<!-- Widget Preferences -->
+<section>
+<div class="flex items-baseline justify-between mb-6">
+<h4 class="serif-headline text-xl italic">Interface</h4>
+<div class="h-px flex-1 mx-4 bg-outline-variant/20"></div>
+</div>
+<div class="bg-surface-container-low rounded-lg overflow-hidden">
+<div class="p-4 border-b border-outline-variant/10 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="widgets">widgets</span>
+<span class="font-medium">Lock Screen Widget</span>
+</div>
+<span class="material-symbols-outlined text-outline" data-icon="chevron_right">chevron_right</span>
+</div>
+<div class="p-4 border-b border-outline-variant/10 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="palette">palette</span>
+<span class="font-medium">Color Palette</span>
+</div>
+<span class="text-xs text-on-surface-variant font-medium uppercase tracking-widest">Elysian Cream</span>
+</div>
+<div class="p-4 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="history">history</span>
+<span class="font-medium">Auto-Archive</span>
+</div>
+<span class="text-xs text-on-surface-variant font-medium uppercase tracking-widest">After 30 Days</span>
+</div>
+</div>
+</section>
+<!-- Danger Zone -->
+<section class="pt-8">
+<button class="w-full py-4 text-error font-bold text-sm tracking-widest uppercase border border-error/20 rounded-lg hover:bg-error/5 transition-colors">
+                    Deactivate Archive
+                </button>
+</section>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-3 bg-[#faf9f6]/90 backdrop-blur-xl shadow-[0_-10px_30px_rgba(134,115,110,0.04)] rounded-t-[2rem] z-50">
+<a class="flex flex-col items-center justify-center text-[#86736e] px-5 py-2 hover:text-[#884532] transition-colors" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="auto_awesome">auto_awesome</span>
+<span class="font-['Manrope'] text-[11px] font-medium tracking-wide uppercase">Moments</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#86736e] px-5 py-2 hover:text-[#884532] transition-colors" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="group">group</span>
+<span class="font-['Manrope'] text-[11px] font-medium tracking-wide uppercase">Circles</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#86736e] px-5 py-2 hover:text-[#884532] transition-colors" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="person_add">person_add</span>
+<span class="font-['Manrope'] text-[11px] font-medium tracking-wide uppercase">Invite</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-gradient-to-br from-[#884532] to-[#a65d48] text-white rounded-full px-5 py-2" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="account_circle" style="font-variation-settings: 'FILL' 1;">account_circle</span>
+<span class="font-['Manrope'] text-[11px] font-medium tracking-wide uppercase">Profile</span>
+</a>
+</nav>
+</body></html>

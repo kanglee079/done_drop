@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DoneDrop Premium - Preserve More Memories</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary": "#ffffff",
+                        "on-tertiary-fixed": "#0d1f18",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed-dim": "#ffb5a0",
+                        "tertiary-fixed": "#d2e7dc",
+                        "on-tertiary": "#ffffff",
+                        "inverse-on-surface": "#f2f1ee",
+                        "on-secondary-fixed": "#201b16",
+                        "on-secondary-container": "#69615b",
+                        "on-primary-container": "#fff4f1",
+                        "surface-container": "#efeeeb",
+                        "on-secondary": "#ffffff",
+                        "inverse-primary": "#ffb5a0",
+                        "primary-container": "#a65d48",
+                        "surface-container-highest": "#e3e2e0",
+                        "on-primary-fixed": "#3a0a01",
+                        "outline-variant": "#d9c1bb",
+                        "on-surface": "#1a1c1a",
+                        "inverse-surface": "#2f312f",
+                        "surface-container-low": "#f4f3f1",
+                        "secondary-container": "#e8ded6",
+                        "on-tertiary-fixed-variant": "#384b42",
+                        "primary": "#884532",
+                        "on-surface-variant": "#53433f",
+                        "on-tertiary-container": "#e6fbef",
+                        "on-error": "#ffffff",
+                        "surface-dim": "#dbdad7",
+                        "tertiary": "#4a5c54",
+                        "surface": "#faf9f6",
+                        "error-container": "#ffdad6",
+                        "secondary-fixed-dim": "#cfc5be",
+                        "tertiary-fixed-dim": "#b7cbc0",
+                        "primary-fixed": "#ffdbd1",
+                        "secondary-fixed": "#ebe0d9",
+                        "background": "#faf9f6",
+                        "secondary": "#645d57",
+                        "on-secondary-fixed-variant": "#4c4640",
+                        "surface-variant": "#e3e2e0",
+                        "surface-bright": "#faf9f6",
+                        "on-primary-fixed-variant": "#733422",
+                        "surface-container-high": "#e9e8e5",
+                        "surface-tint": "#904b37",
+                        "tertiary-container": "#62756c",
+                        "outline": "#86736e",
+                        "error": "#ba1a1a",
+                        "on-error-container": "#93000a",
+                        "on-background": "#1a1c1a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Newsreader"],
+                        "body": ["Manrope"],
+                        "label": ["Manrope"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .premium-gradient {
+            background: linear-gradient(135deg, #884532 0%, #a65d48 100%);
+        }
+        .soft-gold-glow {
+            box-shadow: 0 20px 40px rgba(134, 115, 110, 0.08);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- Header Navigation Shell suppressed per Task Focus rule -->
+<!-- TopAppBar would go here for main pages, but this is a focused premium screen -->
+<header class="fixed top-0 left-0 w-full flex justify-between items-center px-6 py-4 bg-[#faf9f6]/80 backdrop-blur-md z-50">
+<div class="flex items-center gap-2">
+<span class="font-headline italic text-2xl text-primary">DoneDrop</span>
+</div>
+<button class="p-2 text-outline hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined">close</span>
+</button>
+</header>
+<main class="min-h-screen pt-24 pb-12 px-6 flex flex-col items-center max-w-4xl mx-auto">
+<!-- Hero Section -->
+<section class="text-center mb-16 max-w-2xl">
+<div class="inline-flex items-center gap-2 px-4 py-1 mb-6 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label text-xs uppercase tracking-widest">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">stars</span>
+                Premium
+            </div>
+<h1 class="font-headline text-5xl md:text-6xl text-primary mb-6 leading-tight">Preserve More Memories</h1>
+<p class="text-on-surface-variant text-lg leading-relaxed font-light">
+                Upgrade your digital heirloom with tools designed for deeper reflection and permanent preservation.
+            </p>
+</section>
+<!-- Main Content Grid -->
+<div class="w-full grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch mb-16">
+<!-- Benefit Visual Card -->
+<div class="relative overflow-hidden rounded-lg bg-surface-container-low min-h-[400px] flex items-center justify-center">
+<img alt="Ethereal lifestyle photo" class="absolute inset-0 w-full h-full object-cover mix-blend-multiply opacity-30 grayscale" data-alt="Soft ethereal close-up of a person's hands holding a vintage leather-bound journal in warm morning sunlight with dust motes" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDPh0qo2XOHeAonMYreRZX3lXOviJ_dpcOLX7ZMDMrza1-ZuvxsyinU7b2JnsXgiFvxAxUEJZVLjH3VQgbLCUp9QwpMDFa_dygDx9gelPnh3uGHjgDTFfP7odt6iBkV66D1uIYgw8eJ9jAGP6E13UkB5aFB3bunnu-0sQ2MGk4nL_CxGEZXqoj45oCdkMqniQMdgsh7fUTTo42p9UcZdnpTc9kj-_6rZ1YLmrnSSwORK_ZTuUb8XDU8M51WiZmDcSJx6jQTqzi6Z5k"/>
+<div class="relative z-10 p-12 text-center">
+<div class="w-20 h-20 mx-auto mb-8 premium-gradient rounded-full flex items-center justify-center shadow-lg">
+<span class="material-symbols-outlined text-white text-4xl">auto_awesome</span>
+</div>
+<h3 class="font-headline text-2xl text-on-surface mb-4">Unlimited Circles</h3>
+<p class="text-on-surface-variant font-body">Share memories with every circle of friends, family, and colleagues without boundaries.</p>
+</div>
+</div>
+<!-- Pricing & Benefits Selection -->
+<div class="flex flex-col justify-between bg-surface-container-lowest rounded-lg p-8 md:p-12 soft-gold-glow">
+<!-- Toggle -->
+<div class="flex justify-center mb-10">
+<div class="bg-surface-container-high p-1 rounded-full flex items-center">
+<button class="px-6 py-2 rounded-full text-sm font-semibold transition-all bg-surface-container-lowest shadow-sm text-on-surface">Monthly</button>
+<button class="px-6 py-2 rounded-full text-sm font-semibold transition-all text-on-surface-variant hover:text-on-surface">Annual <span class="text-primary font-bold ml-1">-20%</span></button>
+</div>
+</div>
+<!-- Benefits List -->
+<ul class="space-y-6 mb-10">
+<li class="flex items-start gap-4">
+<span class="material-symbols-outlined text-primary mt-0.5">check_circle</span>
+<div>
+<p class="font-semibold text-on-surface">Advanced Memory Filters</p>
+<p class="text-sm text-on-surface-variant">Search your history by mood, person, or subtle recurring themes.</p>
+</div>
+</li>
+<li class="flex items-start gap-4">
+<span class="material-symbols-outlined text-primary mt-0.5">check_circle</span>
+<div>
+<p class="font-semibold text-on-surface">Custom Recap Themes</p>
+<p class="text-sm text-on-surface-variant">Exclusive editorial layouts for your monthly and yearly memory books.</p>
+</div>
+</li>
+<li class="flex items-start gap-4">
+<span class="material-symbols-outlined text-primary mt-0.5">check_circle</span>
+<div>
+<p class="font-semibold text-on-surface">High-Res Backups</p>
+<p class="text-sm text-on-surface-variant">Lossless storage for every photo and video you treasure.</p>
+</div>
+</li>
+</ul>
+<!-- Action -->
+<div class="space-y-4">
+<button class="w-full premium-gradient text-white py-5 px-8 rounded-full font-bold text-lg shadow-xl hover:scale-[1.02] active:scale-95 transition-all">
+                        Start 7-Day Free Trial
+                    </button>
+<p class="text-center text-xs text-outline tracking-wide font-label uppercase">Then $9.99/month. Cancel anytime.</p>
+</div>
+</div>
+</div>
+<!-- Asymmetric Detail Section -->
+<section class="w-full grid grid-cols-1 md:grid-cols-3 gap-12 mt-12 items-center">
+<div class="md:col-span-1">
+<h4 class="font-headline text-3xl text-primary leading-tight mb-4">A Private Legacy</h4>
+<p class="text-on-surface-variant font-light text-sm italic">"DoneDrop isn't just an app; it's a vault for the moments that define who you are."</p>
+</div>
+<div class="md:col-span-2 grid grid-cols-2 gap-4">
+<div class="aspect-square rounded-lg overflow-hidden bg-surface-container">
+<img alt="Atmospheric sunset" class="w-full h-full object-cover opacity-80" data-alt="Blurred golden sunset over a peaceful meadow with soft bokeh highlights and warm amber tones" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCaqooqb82EFk23tslU-p2FmiPMiAOGaPJ14p8PpbEA9nXM1uBMSsZjNTMzibKN4DmOn0OLhT_eMJ0voHbG3ztXBI5jRS0Ysrr68610xSJdeCeodBKmnstXoZwDGDnyVHhocugc-ywT_mL5hNxvnD8zHPxaYe2wI-aAVTnkKFvKE21FAzWq5LQAk35HHyyaSleH_C6x03eTmd_dAIjC3cdg_dnksMX0FAXMpLEzWD9eTjD38FQk-qLjLmmaqcEAyHm_LZkcjey7B0U"/>
+</div>
+<div class="aspect-square rounded-lg overflow-hidden bg-surface-container mt-8">
+<img alt="Intimate connection" class="w-full h-full object-cover opacity-80" data-alt="Close-up of two hands gently touching on a linen surface with soft cinematic lighting and natural textures" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB5iUEqpHf1tlphw_PA5R_cf5ADKQ09UWbsg8ROkFKSWSYS_f5RoZINr52zG4h6M1vsL_mBW7XaUR26hrwB5THKOijn3ImG1bozvc7xJGwZEtM6858wNeLJTEUU700I67xeCMdqYAGs3_QmtXYmnVKqPidbkeojv7zjLtX9NkXBly5QBPlIJGF-eHkZIqwmIQQEAPY7yDmtUilPWB_ONrYofYzSJopjY13i0WnFPUtJ7TlgkyWehH1T4KjAFBeXZFfFB7zd-IUlIb0"/>
+</div>
+</div>
+</section>
+<!-- Guarantee Footer -->
+<footer class="mt-24 pt-12 border-t border-outline-variant/20 w-full text-center">
+<div class="flex justify-center gap-12 mb-8 opacity-60 grayscale hover:grayscale-0 transition-all duration-700">
+<span class="font-headline text-xl text-on-surface-variant">Archived Daily</span>
+<span class="font-headline text-xl text-on-surface-variant">End-to-End Secure</span>
+<span class="font-headline text-xl text-on-surface-variant">Export Anytime</span>
+</div>
+<p class="text-xs text-outline font-label uppercase tracking-widest">DoneDrop Premium © 2024 · All Rights Reserved</p>
+</footer>
+</main>
+<!-- Navigation Shell suppressed because this is a focused task/transactional page (Upgrade flow) -->
+</body></html>

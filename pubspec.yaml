@@ -1,0 +1,74 @@
+name: done_drop
+description: "DoneDrop — Private social memory app. Complete it. Capture it. Share the moment."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.3
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # ── UI & Icons ──────────────────────────────────────────
+  cupertino_icons: ^1.0.8
+  google_fonts: ^6.2.1
+  flutter_svg: ^2.0.16
+  cached_network_image: ^3.4.1
+  shimmer: ^3.0.0
+  flutter_animate: ^4.5.2
+
+  # ── State Management + DI + Routing (GetX) ──────────────
+  get: ^4.6.6
+
+  # ── Firebase ────────────────────────────────────────────
+  firebase_core: ^3.9.0
+  firebase_auth: ^5.5.0
+  cloud_firestore: ^5.6.0
+  firebase_storage: ^12.4.0
+  firebase_crashlytics: ^4.2.0
+  firebase_analytics: ^11.6.0
+  google_sign_in: ^6.2.2
+
+  # ── Image / Camera ──────────────────────────────────────
+  image_picker: ^1.1.2
+  image_cropper: ^8.0.2
+
+  # ── Navigation & Deep Links ─────────────────────────────
+  # go_deep_link: handled via Firebase Dynamic Links in Phase 9
+
+  # ── Local Storage ──────────────────────────────────────
+  shared_preferences: ^2.3.5
+  flutter_secure_storage: ^9.2.4
+
+  # ── Notifications ──────────────────────────────────────
+  flutter_local_notifications: ^18.0.1
+  timezone: ^0.10.0
+
+  # ── Subscriptions ───────────────────────────────────────
+  # revenuecat: ^9.0.0  # Will be added in Phase 7
+
+  # ── Widgets ─────────────────────────────────────────────
+  home_widget: ^0.7.0
+
+  # ── Utils ────────────────────────────────────────────────
+  uuid: ^4.5.1
+  intl: ^0.20.2
+  path_provider: ^2.1.5
+  url_launcher: ^6.3.1
+  permission_handler: ^11.3.1
+  connectivity_plus: ^6.1.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  build_runner: ^2.4.15
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/animations/

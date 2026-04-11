@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DoneDrop - The Sunday Collective</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,700;1,400;1,700&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-container": "#e8ded6",
+                    "primary": "#884532",
+                    "error": "#ba1a1a",
+                    "on-primary-fixed": "#3a0a01",
+                    "on-secondary-fixed": "#201b16",
+                    "surface-container-low": "#f4f3f1",
+                    "primary-fixed-dim": "#ffb5a0",
+                    "on-tertiary-fixed": "#0d1f18",
+                    "on-surface-variant": "#53433f",
+                    "tertiary-fixed": "#d2e7dc",
+                    "surface": "#faf9f6",
+                    "surface-container-lowest": "#ffffff",
+                    "on-surface": "#1a1c1a",
+                    "primary-container": "#a65d48",
+                    "tertiary-fixed-dim": "#b7cbc0",
+                    "surface-container": "#efeeeb",
+                    "inverse-on-surface": "#f2f1ee",
+                    "on-primary-container": "#fff4f1",
+                    "surface-container-highest": "#e3e2e0",
+                    "on-background": "#1a1c1a",
+                    "outline": "#86736e",
+                    "surface-variant": "#e3e2e0",
+                    "primary-fixed": "#ffdbd1",
+                    "secondary-fixed": "#ebe0d9",
+                    "on-tertiary-fixed-variant": "#384b42",
+                    "outline-variant": "#d9c1bb",
+                    "on-secondary-container": "#69615b",
+                    "surface-bright": "#faf9f6",
+                    "on-error-container": "#93000a",
+                    "on-tertiary": "#ffffff",
+                    "tertiary": "#4a5c54",
+                    "on-primary": "#ffffff",
+                    "error-container": "#ffdad6",
+                    "surface-dim": "#dbdad7",
+                    "on-primary-fixed-variant": "#733422",
+                    "on-secondary-fixed-variant": "#4c4640",
+                    "surface-tint": "#904b37",
+                    "background": "#faf9f6",
+                    "inverse-primary": "#ffb5a0",
+                    "on-error": "#ffffff",
+                    "surface-container-high": "#e9e8e5",
+                    "on-secondary": "#ffffff",
+                    "secondary-fixed-dim": "#cfc5be",
+                    "inverse-surface": "#2f312f",
+                    "tertiary-container": "#62756c",
+                    "secondary": "#645d57",
+                    "on-tertiary-container": "#e6fbef"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Newsreader"],
+                    "body": ["Manrope"],
+                    "label": ["Manrope"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+      body { font-family: 'Manrope', sans-serif; background-color: #faf9f6; }
+      .font-serif { font-family: 'Newsreader', serif; }
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+      }
+      .custom-scrollbar::-webkit-scrollbar { width: 0px; background: transparent; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#faf9f6]/80 backdrop-blur-md shadow-[0_20px_40px_rgba(134,115,110,0.06)]">
+<div class="flex justify-between items-center px-6 h-16 w-full max-w-screen-xl mx-auto">
+<div class="flex items-center gap-3 scale-95 duration-200 transition-transform hover:opacity-80">
+<img alt="Profile" class="w-8 h-8 rounded-full object-cover border border-outline-variant/20" data-alt="close-up portrait of a smiling man with warm lighting in a cozy minimalist interior" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-DmONDUq7ZHoVpwB-V2T5OBa4sZIp_OyFXBk72ez4s0H_uNJ74iNm6uvpbHqT_ICzq-6M_X-rrPyx7r21aCMDlobzf-C-hXYrZjN3z0XwlxzGnsIdCLsUs8mreJUT5oG1tAQjU6TH7jXZtpXNXF27OCgl7_BUmUikcxpom3AoIEmQpsrzI9_yniOJOv2LxwT2-3qwtc1az8Lbx1GQ5IcyEnTkcPgtt6GAEF3rIHEBoCqpY4AzyHr2tRTxrGQQgxZ7bbTmwO45jmA"/>
+<span class="font-['Newsreader'] font-bold italic text-2xl text-[#884532] tracking-tight">DoneDrop</span>
+</div>
+<button class="material-symbols-outlined text-[#884532] scale-95 duration-200 transition-transform hover:opacity-80">settings</button>
+</div>
+</header>
+<main class="pt-24 pb-32 px-6 max-w-screen-xl mx-auto">
+<!-- Header Section: Asymmetric Hero -->
+<section class="mb-16">
+<div class="flex flex-col md:flex-row gap-8 items-end">
+<div class="flex-1">
+<span class="inline-block bg-tertiary-fixed text-on-tertiary-fixed px-4 py-1 rounded-full text-xs font-medium tracking-wider uppercase mb-4">Established Oct 2023</span>
+<h1 class="font-serif text-5xl md:text-7xl text-primary font-bold italic leading-tight">The Sunday Collective</h1>
+<p class="mt-6 text-on-surface-variant max-w-md leading-relaxed text-lg">A private sanctuary for our weekly reflections, slow mornings, and the quiet moments that define us.</p>
+</div>
+<!-- Member Stack & Invite -->
+<div class="flex flex-col items-start md:items-end gap-4 w-full md:w-auto">
+<div class="flex -space-x-3 items-center">
+<img class="w-12 h-12 rounded-full border-4 border-surface object-cover" data-alt="portrait of a young woman with a soft smile in gentle morning sunlight" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAdF77a7DBo87B67XqGZhOSnntcb7Glg4JJ4yIVRtKYaRRVT0uBeM5Y8PD3Aj09rORPEdaPIHrZbwy6FI_Cm5rL6aVppF9dgHv6B1PET9wUWNQLC7dLL4Lvo1J8h2P6G5imkNB556jhw7MZV9Tosj3kR8UCHzzsbCPMgwpgsHi2o_AC438Um4bVV804lCPuqXmxqH2lIIBvcAeLQMPjyc20-2XiMaOrpmVZNIMXJlhC_GSsseyA6FP0paD3uiT3_hgnYGxWAFxC3vw"/>
+<img class="w-12 h-12 rounded-full border-4 border-surface object-cover" data-alt="candid shot of a man laughing outdoors with warm natural light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD6MTzVekZp5hk-rI6KoeXCTsGzhydK9F9MQu9CMNpJWycnUOi3NXDBjYSzpgB6cf77l78exKagCO-OMQeUCVjWZPtqEicdQfrz8dIQEaGhBFDa7x7dFPmGa-LDdPVb3wAX_-QTUd4soWtv4ho1zvLgEwy2-RNgJuZYZruOabnWF3DRw37UyUzdVEU_NuILeEAJoWcWclc_1DnGWEzOG9wRmolRXdYNxuUWCstmC3yq_EuWc6JvyJRU2dd5R5Jv4SKHzexPTCjAFU8"/>
+<img class="w-12 h-12 rounded-full border-4 border-surface object-cover" data-alt="portrait of a woman in a beige knit sweater looking thoughtfully into the distance" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAP8_gPGW2k4E4yO4u_SUSXpyRmXqR8cCgB3tG-LvwjNpTDDxjCNgto5Eu_OJfTL-xYKW3AEXTeIoxTptDSq8lz83IbjIZ-1S4xwVv5lPqhCX_tJw7vnif01Zrd2tJiOgwO4pPrPrhcB7BInySzRH_WmOqgRTaijb793eXFcjbDwiFD0vCuJhv9EbBh_q4GJeNa9y8zubqJ2T_dxrxpA056cxbJw-i6_bzw9u7O8IWgvZft8vdoB9G0h-M7vrGoniD4-0Qr45HBxr0"/>
+<img class="w-12 h-12 rounded-full border-4 border-surface object-cover" data-alt="profile of a man against a minimalist textured wall with soft shadows" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZ1YSu75mA4UMRIaPlV60eBIvkMRMbH_Xj40FsGzk7FW_kVdGz00uRjktTbQRHFASFCEhiIz0MADFseCHLdHuAwJ3e3fqeQkjQr__13SEqn2ouI4wrkcKrgRG9LSz7qEaIRAqKJ5GJDALs5BeSJNwhJzkS63OIzr4fMJ0hZdGVtc3qv8NxK-M6IWTT5lzgXcWwMei-ABPv3J3WgHMvQGwoK0w_Oee4BRKviCkxX_poal0LKEAFcI5PZwTeMfa2EOyMMxqqtYLAqzk"/>
+<div class="w-12 h-12 rounded-full border-4 border-surface bg-secondary-container flex items-center justify-center text-on-secondary-container text-xs font-bold">+2</div>
+</div>
+<button class="flex items-center gap-2 bg-gradient-to-br from-primary to-primary-container text-white px-6 py-3 rounded-lg shadow-sm hover:opacity-90 transition-all active:scale-95">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">person_add</span>
+<span class="font-medium">Invite New Member</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Gallery: Bento Grid / Asymmetric Layout -->
+<section class="space-y-8">
+<div class="flex justify-between items-baseline">
+<h2 class="font-serif text-3xl text-on-surface italic">Recent Moments</h2>
+<a class="text-primary text-sm font-semibold tracking-wide uppercase hover:underline decoration-primary/30" href="#">View Archive</a>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6 auto-rows-[280px]">
+<!-- Featured Moment -->
+<div class="md:col-span-8 md:row-span-2 group relative overflow-hidden rounded-lg bg-surface-container-low transition-all">
+<img alt="Coffee and Journal" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="aesthetic overhead shot of a coffee cup next to an open journal on a linen tablecloth in warm morning light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAaFTY9Ewr6zhuMhfimHWnkMOxTPYv4d1kDQOIfqouU8f7vPypLsZO-oEMRGy6DO3jlKa1Qc0B7QgEdVZPAoXrseh4N9UCsQ6T-abhX1pVrtinNTz__b3bb5UlU_a6xVq8ZFJ6FPy4FpZwJg2KIQy7beKNs96NjF685PEhUxQ9cPSoM4co-bbaCFno4XLGxd-BravZzM8NgcY6m1gNqLfo_yzDYWpgH3UOruelXfb1QJqwx_WWKGbhrlG35SyF6Wgq6Iw-osHrHDHQ"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+<div class="absolute top-6 left-6">
+<span class="bg-[#faf9f6]/90 backdrop-blur-sm text-primary px-3 py-1 rounded-full text-xs font-bold tracking-tight">Sunday, 8:42 AM</span>
+</div>
+<div class="absolute bottom-6 left-6 right-6">
+<p class="font-serif text-white text-2xl italic leading-snug">"The light in the kitchen this morning was worth capturing."</p>
+<div class="mt-3 flex items-center gap-2">
+<img alt="Elena" class="w-6 h-6 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6j_2bB7ngRWMmXLJa7YVNCniwNcZp3dpElh2q67pMMAc-LEe_3Tr7zBb7ueD3P7oKy6RLHmt_zT_zR7QLlhRWNIZFBYJcKtGxQeITu7ZUaij4LtMncDzl7MFS5JVe4JHLlqvH77jLq2PfGHvgmcRkMKJb6Gvk1EiKMtEVSjWryYkwZMNKmUohy4LbA0nrO8fDs9eB5XenS-51tzmD_ot3d6g7sLsSnnrXjP65RKaANgjEtDlzzLt8GcZvDj309hNkah5ZEwjTJnc"/>
+<span class="text-white/80 text-xs font-medium">shared by Elena</span>
+</div>
+</div>
+</div>
+<!-- Secondary Moment 1 -->
+<div class="md:col-span-4 group relative overflow-hidden rounded-lg bg-surface-container-low">
+<img alt="Mist Lake" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="peaceful landscape of a misty lake at dawn with soft pastel colors and a small wooden dock" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD_dcNrUUnn_OgaesY3X3QTg4raQvv3dAWZ2FTuzCGoD1yljnbLC0rC0rQK_VWrS6Sh9bWncewoQ1g7lEB1UEU9ZF7knXcT9eaQW0h7AoJsmvtbp-KPuoWB64QFCJqRhL-voeKUPFK-Gb2p_J2NwJ7h_o6EiSXcsp5bZSmylf4nOA10fz2cmbRK2DNxOmXm7rXSqOFgbxVCBnTEyspcHTncAR7PaGpF5C3x6Mkc9zawAlalUyoSpnzed_jLvJ6meAqv48r8YLRIh2Q"/>
+<div class="absolute inset-0 bg-black/10"></div>
+<div class="absolute top-4 right-4">
+<div class="bg-tertiary-fixed text-on-tertiary-fixed px-3 py-1 rounded-full text-[10px] font-bold">Saturday</div>
+</div>
+</div>
+<!-- Secondary Moment 2 -->
+<div class="md:col-span-4 group relative overflow-hidden rounded-lg bg-surface-container-low">
+<img alt="Autumn Woods" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="golden autumn leaves on a forest floor with soft dappled sunlight filtering through trees" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCf8GLUldD6zxNM_xFwVZEATJAfnIuQrj8p6Igla3dYLi1nPk6pKBWrIrLfmSBIscalieUeHAkvgMuX31loOOein8ANDDDyTSS0au_cgQH2Jh9VDHZycxbpvEhMQ5IJqsJ5HI2_ysdhbRfUFATXXxA5PCHHEtYuTwwxKZMc7_nsQHSPKjTHMP5rQRyGB7SW2osvOSd2aZEwraS1AIbqwFfl16pnmJAnTLNfPdtk1uwOALdLgTXIz2sobHT5DqQBc4Qgzyf7TAIgK-4"/>
+<div class="absolute bottom-4 left-4">
+<span class="text-white text-xs font-medium bg-black/20 backdrop-blur-md px-2 py-1 rounded">by Julian</span>
+</div>
+</div>
+<!-- Third Row -->
+<div class="md:col-span-4 group relative overflow-hidden rounded-lg bg-surface-container-low">
+<img alt="Baking" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="close-up of freshly baked sourdough bread with a crispy crust on a rustic wooden board" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCfikaHTkStbKhkRX2VXfrikth4syBwARPJ5EJADuhNLxlSdf0BcUQA9g8jbhtd1Dr-hyrseTwznP0WxKNe3eDlCW4lP8s5VNyA9ljx_4A7-z5-_2A54FqAaquOY2kSH-2apO-PfyzDBe44m5m6lxKrX7-zlSDZZafORq6CuW8BmHfS1LoixtLWCU3llBWLQN8glzX3f8IOHyyaeSYYgh7RQnxnxENDwZPVpmp_axtyB22q7Ma0OA74d0v5uBbOtE3wNPWvmOxXKso"/>
+</div>
+<div class="md:col-span-8 group relative overflow-hidden rounded-lg bg-surface-container-low flex items-center justify-center border border-dashed border-outline-variant/30">
+<div class="text-center p-8">
+<span class="material-symbols-outlined text-4xl text-outline-variant mb-4">auto_awesome</span>
+<p class="font-serif text-xl text-on-surface-variant italic">Share a new moment from your weekend.</p>
+<button class="mt-6 text-primary font-bold text-sm underline decoration-primary/30 underline-offset-4">Open Camera</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Circle Activity Tonal Shift -->
+<section class="mt-16 bg-surface-container-low rounded-lg p-10">
+<div class="max-w-2xl">
+<h3 class="font-serif text-3xl text-on-surface mb-6">Circle Dynamics</h3>
+<div class="space-y-10">
+<div class="flex gap-6 items-start">
+<div class="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0"></div>
+<div>
+<p class="text-on-surface font-medium">Most Active Moment</p>
+<p class="text-on-surface-variant text-sm mt-1">Sundays between 9:00 AM and 11:00 AM are when the Collective is most vibrant.</p>
+</div>
+</div>
+<div class="flex gap-6 items-start">
+<div class="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0"></div>
+<div>
+<p class="text-on-surface font-medium">Shared Themes</p>
+<div class="flex flex-wrap gap-2 mt-3">
+<span class="bg-surface-container-lowest px-3 py-1 rounded-full text-xs text-secondary italic">#quietmornings</span>
+<span class="bg-surface-container-lowest px-3 py-1 rounded-full text-xs text-secondary italic">#slowfood</span>
+<span class="bg-surface-container-lowest px-3 py-1 rounded-full text-xs text-secondary italic">#naturewalks</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 bg-[#faf9f6]/90 backdrop-blur-xl rounded-t-[2rem] shadow-[0_-10px_30px_rgba(134,115,110,0.04)]">
+<div class="flex justify-around items-center px-4 pb-6 pt-3">
+<a class="flex flex-col items-center justify-center text-[#86736e] px-5 py-2 hover:text-[#884532] transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="auto_awesome">auto_awesome</span>
+<span class="font-['Manrope'] text-[11px] font-medium tracking-wide uppercase mt-1">Moments</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-gradient-to-br from-[#884532] to-[#a65d48] text-white rounded-full px-5 py-2 active:scale-90 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="group" style="font-variation-settings: 'FILL' 1;">group</span>
+<span class="font-['Manrope'] text-[11px] font-medium tracking-wide uppercase mt-1">Circles</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#86736e] px-5 py-2 hover:text-[#884532] transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="person_add">person_add</span>
+<span class="font-['Manrope'] text-[11px] font-medium tracking-wide uppercase mt-1">Invite</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#86736e] px-5 py-2 hover:text-[#884532] transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+<span class="font-['Manrope'] text-[11px] font-medium tracking-wide uppercase mt-1">Profile</span>
+</a>
+</div>
+</nav>
+</body></html>

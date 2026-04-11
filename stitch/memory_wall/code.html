@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DoneDrop - Memory Wall</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                "on-primary": "#ffffff",
+                "on-tertiary-fixed": "#0d1f18",
+                "surface-container-lowest": "#ffffff",
+                "primary-fixed-dim": "#ffb5a0",
+                "tertiary-fixed": "#d2e7dc",
+                "on-tertiary": "#ffffff",
+                "inverse-on-surface": "#f2f1ee",
+                "on-secondary-fixed": "#201b16",
+                "on-secondary-container": "#69615b",
+                "on-primary-container": "#fff4f1",
+                "surface-container": "#efeeeb",
+                "on-secondary": "#ffffff",
+                "inverse-primary": "#ffb5a0",
+                "primary-container": "#a65d48",
+                "surface-container-highest": "#e3e2e0",
+                "on-primary-fixed": "#3a0a01",
+                "outline-variant": "#d9c1bb",
+                "on-surface": "#1a1c1a",
+                "inverse-surface": "#2f312f",
+                "surface-container-low": "#f4f3f1",
+                "secondary-container": "#e8ded6",
+                "on-tertiary-fixed-variant": "#384b42",
+                "primary": "#884532",
+                "on-surface-variant": "#53433f",
+                "on-tertiary-container": "#e6fbef",
+                "on-error": "#ffffff",
+                "surface-dim": "#dbdad7",
+                "tertiary": "#4a5c54",
+                "surface": "#faf9f6",
+                "error-container": "#ffdad6",
+                "secondary-fixed-dim": "#cfc5be",
+                "tertiary-fixed-dim": "#b7cbc0",
+                "primary-fixed": "#ffdbd1",
+                "secondary-fixed": "#ebe0d9",
+                "background": "#faf9f6",
+                "secondary": "#645d57",
+                "on-secondary-fixed-variant": "#4c4640",
+                "surface-variant": "#e3e2e0",
+                "surface-bright": "#faf9f6",
+                "on-primary-fixed-variant": "#733422",
+                "surface-container-high": "#e9e8e5",
+                "surface-tint": "#904b37",
+                "tertiary-container": "#62756c",
+                "outline": "#86736e",
+                "error": "#ba1a1a",
+                "on-error-container": "#93000a",
+                "on-background": "#1a1c1a"
+              },
+              "borderRadius": {
+                "DEFAULT": "1rem",
+                "lg": "2rem",
+                "xl": "3rem",
+                "full": "9999px"
+              },
+              "fontFamily": {
+                "headline": ["Newsreader"],
+                "body": ["Manrope"],
+                "label": ["Manrope"]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Manrope', sans-serif;
+            background-color: #faf9f6;
+        }
+        .masonry-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-auto-rows: 10px;
+            gap: 24px;
+        }
+        .masonry-item {
+            grid-row-end: span 25;
+        }
+        .masonry-item-tall {
+            grid-row-end: span 40;
+        }
+        .masonry-item-wide {
+            grid-row-end: span 30;
+        }
+        /* Custom scrollbar for better editorial feel */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #faf9f6;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d9c1bb;
+            border-radius: 10px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 w-full flex justify-between items-center px-6 py-4 bg-[#faf9f6]/80 dark:bg-[#1a1c1a]/80 backdrop-blur-md z-50">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden">
+<img alt="User profile photo" class="w-full h-full object-cover" data-alt="portrait of a smiling woman with warm lighting and soft background bokeh in a professional yet approachable style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCCjdgohSD6UbwdXYrQi31Ct0Pj0YlM7uO4EPkIh_h5XxbnDLpTlyYpxAnL02glIor1echRLwuBt-Y_9uaT1iBA0QrDIxmZ-wMUOtjFWTdyGxZJSfCCfN-lzhNGtLP8XlaTzYIlim9Txj4iqeYS0JW6Ly5ROSlTm0zTr16-pHydz9nPa3Bezl5QApmWwf5wGqAVbAiI87OsTVMvr0V3NaFBhhfLnnGxVF-kRw_YCo7P26bW_pY68DhwzcC_u5DEYNhWyXcy1IA3ymE"/>
+</div>
+<h1 class="font-['Newsreader'] font-bold text-2xl text-[#884532] dark:text-[#d9c1bb]">DoneDrop</h1>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-full hover:bg-[#f4f3f1] dark:hover:bg-[#2a2c2a] transition-colors text-[#884532]">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="pt-24 pb-32 px-6 max-w-7xl mx-auto">
+<!-- Hero Editorial Section -->
+<section class="mb-12">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+<div class="max-w-xl">
+<span class="font-label text-sm uppercase tracking-widest text-outline mb-2 block">Personal Museum</span>
+<h2 class="font-headline text-5xl md:text-6xl text-on-surface leading-tight">Your Memory <span class="italic font-normal">Wall</span></h2>
+</div>
+<p class="font-body text-on-surface-variant max-w-xs md:text-right leading-relaxed">
+                    A curated collection of your life's quiet victories and meaningful departures.
+                </p>
+</div>
+<!-- Filter Pills -->
+<div class="flex flex-wrap gap-3 overflow-x-auto pb-4 no-scrollbar">
+<button class="px-6 py-2 rounded-full bg-primary text-on-primary font-label text-sm font-semibold transition-transform active:scale-95">All Moments</button>
+<button class="px-6 py-2 rounded-full bg-surface-container-low hover:bg-surface-container-high text-on-surface-variant font-label text-sm font-semibold transition-colors">Monthly Highlights</button>
+<button class="px-6 py-2 rounded-full bg-surface-container-low hover:bg-surface-container-high text-on-surface-variant font-label text-sm font-semibold transition-colors">Travel</button>
+<button class="px-6 py-2 rounded-full bg-surface-container-low hover:bg-surface-container-high text-on-surface-variant font-label text-sm font-semibold transition-colors">Daily Wins</button>
+<button class="px-6 py-2 rounded-full bg-surface-container-low hover:bg-surface-container-high text-on-surface-variant font-label text-sm font-semibold transition-colors">Reflections</button>
+</div>
+</section>
+<!-- Masonry Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-start">
+<!-- Memory Card 1: Tall -->
+<div class="group flex flex-col gap-4">
+<div class="relative overflow-hidden rounded-lg bg-surface-container-lowest transition-all duration-500 hover:shadow-xl">
+<img alt="Alpine lake morning" class="w-full aspect-[3/4] object-cover transition-transform duration-700 group-hover:scale-105" data-alt="serene turquoise alpine lake at dawn with misty mountains in the background and a single wooden boat" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZiEhr8u9fjqLtni1kCRh6UbX0xPzwtVGHKpcny5MdfrZGl4enc9ksUh64atuGztHweBrerx1xRh339OSvaN2SyX_3PPnGHb6GXfuzK0tEo-TMc0saYrCs-D0V7wawcxHmTLlGMN36xt_icZo-Xv006Uvr_u7-41FYrM58Z0vkxnzYRc5TG6g7eor7Mbk3veSFCoLIuX69OQo41TBOkx-N2B61sfFYqJvA4MoAU8_uBbctzV8Odckd0Fw2syz9-icC5Vpv2lQPX3k"/>
+<div class="absolute top-4 right-4">
+<span class="px-3 py-1 bg-[#d2e7dc] text-[#0d1f18] text-[10px] font-bold uppercase tracking-widest rounded-full">Travel</span>
+</div>
+</div>
+<div class="px-1">
+<h3 class="font-headline text-2xl text-on-surface group-hover:text-primary transition-colors">Sunrise at Oeschinensee</h3>
+<p class="font-body text-sm text-on-surface-variant mt-2 leading-relaxed">The water was perfectly still, reflecting the first light of the Swiss Alps.</p>
+<span class="font-label text-xs text-outline mt-4 block">October 12, 2023</span>
+</div>
+</div>
+<!-- Memory Card 2: Square/Asymmetric offset -->
+<div class="group flex flex-col gap-4 lg:mt-12">
+<div class="relative overflow-hidden rounded-lg bg-surface-container-lowest transition-all duration-500 hover:shadow-xl">
+<img alt="Workspace setup" class="w-full aspect-square object-cover transition-transform duration-700 group-hover:scale-105" data-alt="minimalist workspace with a vintage typewriter on a dark wood desk with warm golden hour light through a window" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD0tcWzotB9j02trzWN0nVrbu8MJkJ884smGW1htFCD1ajc8qgad_cbXG8bnm6jrYrZewl-RHSF_I9shHJfrWjbxcrDGSfnaBXgbkSOonsXhXi_UpHRG9GKRsyKB8C-v7D3pfNVal2gBgXeQq83F5UqzZjkJ4RiI0owNxBWl-lFzzd1SLsC6vhgkkNSQ-uHOLWC5MduSoFmYw3An6MuODLVmXKLvrA6uKaupF6aLxIMiYSErrx5QM-kuDxKrmeSoJXWR9OyVv2qnZo"/>
+<div class="absolute top-4 right-4">
+<span class="px-3 py-1 bg-[#d2e7dc] text-[#0d1f18] text-[10px] font-bold uppercase tracking-widest rounded-full">Daily Wins</span>
+</div>
+</div>
+<div class="px-1">
+<h3 class="font-headline text-2xl text-on-surface group-hover:text-primary transition-colors">First Draft Finished</h3>
+<p class="font-body text-sm text-on-surface-variant mt-2 leading-relaxed">Finally completed the manuscript. A moment of quiet relief in the studio.</p>
+<span class="font-label text-xs text-outline mt-4 block">October 08, 2023</span>
+</div>
+</div>
+<!-- Memory Card 3: Horizontal -->
+<div class="group flex flex-col gap-4">
+<div class="relative overflow-hidden rounded-lg bg-surface-container-lowest transition-all duration-500 hover:shadow-xl">
+<img alt="Spring picnic" class="w-full aspect-video object-cover transition-transform duration-700 group-hover:scale-105" data-alt="a rustic outdoor picnic spread with linen napkins, fresh berries, and wine glasses in a wildflower meadow" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCOD8XgIYf4Rr77hnDssxFkkYeIC2coKypbP_Ko3zAP_ymLK-z7KRVSoXkRuDOl8E3x38KneJenAuOxuPOOK1g8vi63dCJoHU-TRyvgjY_9u7tZd9BxiT0-ntJ7gBf173LsbWVqbzWj6-8xK1PXq4sB3mGgb8sEq97P0A1aj1CejFFoaMhPH13mIm54u09wurx1BkW35LI2CxcDY4xAbzSQ5eDKsS-0jnjEgw1d18H3s29FdFfwcAYrkj8hQUOL-NUJDQcsgNa2TgE"/>
+<div class="absolute top-4 right-4">
+<span class="px-3 py-1 bg-[#d2e7dc] text-[#0d1f18] text-[10px] font-bold uppercase tracking-widest rounded-full">Monthly Highlights</span>
+</div>
+</div>
+<div class="px-1">
+<h3 class="font-headline text-2xl text-on-surface group-hover:text-primary transition-colors">Afternoon in the Meadow</h3>
+<p class="font-body text-sm text-on-surface-variant mt-2 leading-relaxed">Sometimes the best memories are the ones that move slowly.</p>
+<span class="font-label text-xs text-outline mt-4 block">September 29, 2023</span>
+</div>
+</div>
+<!-- Memory Card 4: Tall Asymmetric -->
+<div class="group flex flex-col gap-4 md:-mt-16 lg:mt-0">
+<div class="relative overflow-hidden rounded-lg bg-surface-container-lowest transition-all duration-500 hover:shadow-xl">
+<img alt="Dinner party" class="w-full aspect-[2/3] object-cover transition-transform duration-700 group-hover:scale-105" data-alt="overhead shot of a long wooden dining table filled with Mediterranean food and hands reaching for plates under string lights" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDp44DIo3uh47B7UA2NKao7jCcoLBoBJNpI8taFDQtKhjjxbWMkEpgIofu4Nccrn6pcpqQ1jA1_-RuhEO509wluz6fWGD1rvAvKIwq0VQLCOvmpXda04T8zaSn-UHaBPz5R8DCNI6Xt3PUBmnYlhwBm7UpeIgE0EuptFc06ZmI55xYUvvvc_X9bEtsec2E5tI7_sMXcS2gMQQlL11RTFpA0B5qbKoEEHhK_sU8kB7xyCF6e71BCwtIVwhHgqeJWqhjEwPYhXcnyLNM"/>
+<div class="absolute top-4 right-4">
+<span class="px-3 py-1 bg-[#d2e7dc] text-[#0d1f18] text-[10px] font-bold uppercase tracking-widest rounded-full">Monthly Highlights</span>
+</div>
+</div>
+<div class="px-1">
+<h3 class="font-headline text-2xl text-on-surface group-hover:text-primary transition-colors">The Harvest Table</h3>
+<p class="font-body text-sm text-on-surface-variant mt-2 leading-relaxed">Family, friends, and the smell of roasted thyme. Grateful for this chaos.</p>
+<span class="font-label text-xs text-outline mt-4 block">September 22, 2023</span>
+</div>
+</div>
+<!-- Memory Card 5: Text Focused -->
+<div class="bg-[#f4f3f1] p-10 rounded-lg flex flex-col justify-between aspect-square lg:-mt-12 border border-[#d9c1bb]/10">
+<span class="material-symbols-outlined text-[#884532] text-4xl" data-icon="format_quote">format_quote</span>
+<div class="flex flex-col gap-4">
+<p class="font-headline text-3xl italic text-primary leading-snug">"We do not remember days, we remember moments."</p>
+<p class="font-body text-on-surface-variant text-sm">— Cesare Pavese</p>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-[#884532]"></span>
+<span class="font-label text-[10px] uppercase tracking-widest text-outline">Reflection of the week</span>
+</div>
+</div>
+<!-- Memory Card 6: Portrait -->
+<div class="group flex flex-col gap-4">
+<div class="relative overflow-hidden rounded-lg bg-surface-container-lowest transition-all duration-500 hover:shadow-xl">
+<img alt="Portrait" class="w-full aspect-[4/5] object-cover transition-transform duration-700 group-hover:scale-105" data-alt="close up soft focus portrait of a person looking thoughtful with natural window light casting soft shadows" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB5z9NyecyoI9DYRjMVB26_QEe1bpyXEPeOMr90lVatYAZ9NJSAOusbWHrVOYtsmMvUIsCTcgBb0HMDPagbFAnmdIeZwnUQlNnf_2NmWUdjy6ixXssLM3DUKLJHnzwQFmeijDWspLmQcIrn2oOME5xCsRfyNsdSbFici5-lVR3eMdybWkWBBzeuqaewGgKyn_yHhcLk7wMG6v-uUkyOQdfAKcB88vW9yv6_kiJZW0sBNq_dxbu0OL7F_ouu45-hU6g8xcKMLiySHhY"/>
+<div class="absolute top-4 right-4">
+<span class="px-3 py-1 bg-[#d2e7dc] text-[#0d1f18] text-[10px] font-bold uppercase tracking-widest rounded-full">Reflections</span>
+</div>
+</div>
+<div class="px-1">
+<h3 class="font-headline text-2xl text-on-surface group-hover:text-primary transition-colors">Quiet Contemplation</h3>
+<p class="font-body text-sm text-on-surface-variant mt-2 leading-relaxed">A Saturday morning alone with my thoughts and a cold coffee.</p>
+<span class="font-label text-xs text-outline mt-4 block">September 15, 2023</span>
+</div>
+</div>
+</div>
+<!-- Pagination/Load More Footer -->
+<div class="mt-20 text-center">
+<button class="px-10 py-4 bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label text-sm font-bold rounded-full transition-all flex items-center gap-3 mx-auto">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+                Step Back Further
+            </button>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-end px-4 pb-6 pt-2 bg-[#faf9f6]/80 dark:bg-[#1a1c1a]/80 backdrop-blur-md rounded-t-[2rem] shadow-[0_-10px_30px_rgba(134,115,110,0.04)] z-50">
+<a class="flex flex-col items-center justify-center text-[#86736e] dark:text-[#a68e89] p-2 hover:text-[#884532] transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-['Manrope'] text-[10px] font-semibold tracking-wide uppercase mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#86736e] dark:text-[#a68e89] p-2 hover:text-[#884532] transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-['Manrope'] text-[10px] font-semibold tracking-wide uppercase mt-1">Feed</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-gradient-to-br from-[#884532] to-[#a65d48] text-white rounded-full p-3 mb-2 scale-110 shadow-lg active:scale-90 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
+<span class="font-['Manrope'] text-[10px] font-semibold tracking-wide uppercase mt-1">Capture</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#884532] dark:text-[#d9c1bb] p-2" href="#">
+<!-- Wall is Active Tab -->
+<div class="relative flex flex-col items-center">
+<span class="material-symbols-outlined" data-icon="auto_awesome_mosaic" style="font-variation-settings: 'FILL' 1;">auto_awesome_mosaic</span>
+<span class="font-['Manrope'] text-[10px] font-bold tracking-wide uppercase mt-1">Wall</span>
+<div class="w-1 h-1 bg-primary rounded-full absolute -bottom-2"></div>
+</div>
+</a>
+<a class="flex flex-col items-center justify-center text-[#86736e] dark:text-[#a68e89] p-2 hover:text-[#884532] transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-['Manrope'] text-[10px] font-semibold tracking-wide uppercase mt-1">Settings</span>
+</a>
+</nav>
+</body></html>

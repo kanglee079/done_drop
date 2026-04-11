@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DoneDrop - Your Journey Starts Here</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<!-- Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary": "#ffffff",
+                    "on-tertiary-fixed": "#0d1f18",
+                    "surface-container-lowest": "#ffffff",
+                    "primary-fixed-dim": "#ffb5a0",
+                    "tertiary-fixed": "#d2e7dc",
+                    "on-tertiary": "#ffffff",
+                    "inverse-on-surface": "#f2f1ee",
+                    "on-secondary-fixed": "#201b16",
+                    "on-secondary-container": "#69615b",
+                    "on-primary-container": "#fff4f1",
+                    "surface-container": "#efeeeb",
+                    "on-secondary": "#ffffff",
+                    "inverse-primary": "#ffb5a0",
+                    "primary-container": "#a65d48",
+                    "surface-container-highest": "#e3e2e0",
+                    "on-primary-fixed": "#3a0a01",
+                    "outline-variant": "#d9c1bb",
+                    "on-surface": "#1a1c1a",
+                    "inverse-surface": "#2f312f",
+                    "surface-container-low": "#f4f3f1",
+                    "secondary-container": "#e8ded6",
+                    "on-tertiary-fixed-variant": "#384b42",
+                    "primary": "#884532",
+                    "on-surface-variant": "#53433f",
+                    "on-tertiary-container": "#e6fbef",
+                    "on-error": "#ffffff",
+                    "surface-dim": "#dbdad7",
+                    "tertiary": "#4a5c54",
+                    "surface": "#faf9f6",
+                    "error-container": "#ffdad6",
+                    "secondary-fixed-dim": "#cfc5be",
+                    "tertiary-fixed-dim": "#b7cbc0",
+                    "primary-fixed": "#ffdbd1",
+                    "secondary-fixed": "#ebe0d9",
+                    "background": "#faf9f6",
+                    "secondary": "#645d57",
+                    "on-secondary-fixed-variant": "#4c4640",
+                    "surface-variant": "#e3e2e0",
+                    "surface-bright": "#faf9f6",
+                    "on-primary-fixed-variant": "#733422",
+                    "surface-container-high": "#e9e8e5",
+                    "surface-tint": "#904b37",
+                    "tertiary-container": "#62756c",
+                    "outline": "#86736e",
+                    "error": "#ba1a1a",
+                    "on-error-container": "#93000a",
+                    "on-background": "#1a1c1a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Newsreader"],
+                    "body": ["Manrope"],
+                    "label": ["Manrope"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+        body {
+            font-family: 'Manrope', sans-serif;
+            background-color: #faf9f6;
+        }
+        .serif-headline {
+            font-family: 'Newsreader', serif;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen flex flex-col">
+<!-- TopAppBar Shell -->
+<header class="fixed top-0 left-0 w-full flex justify-between items-center px-6 py-4 bg-[#faf9f6]/80 backdrop-blur-md z-50">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="Close-up portrait of a thoughtful person in soft natural lighting against a blurred neutral background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBX-eiqZ2X1o9GRIh75MddpUDJzmzI60r1cQs4kfV8ey9BLX2qkWTzXMUMyjNEGgrSeDrGQzo5eguujC8a40y5ufIttFqJ5FfeoaSPTUx8hukZ4qn95RcvUq6lCIXAsW4AQDpeNXa1IK9vsccPPVOQUeE_SDvGtPjEw27JAYhra867s4rRs5QX5HU4P6m4eb6uP1s35oD5sWX1zyqRB7ET2YSWkbdGO540-xcJcyfmifHZflkOOLNgvg0ve5ErbOZxYOx4OLvKLb9M"/>
+</div>
+<span class="font-['Newsreader'] italic text-2xl text-[#884532]">DoneDrop</span>
+</div>
+<button class="p-2 rounded-full hover:bg-[#f4f3f1] transition-colors text-[#884532] active:scale-95 duration-200">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+</header>
+<!-- Main Canvas -->
+<main class="flex-grow flex flex-col items-center justify-center px-6 pt-24 pb-32">
+<div class="max-w-4xl w-full flex flex-col md:flex-row items-center gap-12 md:gap-20">
+<!-- Asymmetric Visual Anchor -->
+<div class="w-full md:w-1/2 relative group">
+<div class="aspect-[4/5] rounded-lg overflow-hidden shadow-[0_20px_40px_rgba(134,115,110,0.06)] bg-surface-container-lowest">
+<img alt="Open Notebook" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="Minimalist top-down view of a blank high-quality paper notebook on a textured linen surface with soft morning sunlight" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB1r4vM3ygY7yID9A0FKHBxlcS25Enbu-w0MuqD07XbPSkQclJnf718SkNeEJAY1zb-jtQrxFOFw7RPmeHDj7ykVxpU8EaIsSqQtNrAGLcB66ILw0ug19hwsKOR_iti4Ca9Vc96iDpTDHhw0Sn4c9nj8Rou-J8LPDg2eoIx9qsfkiGZZXGsLzZzC2yUYo6ZNqugwZGzm4DUCTremGdlR_eE6i_GS7IE0R8G25CROUoZEgi0zwA83fys4M9JrbWH86oRt3E62o4_cp8"/>
+</div>
+<!-- Floating Detail Pill -->
+<div class="absolute -bottom-4 -right-4 bg-tertiary-fixed text-on-tertiary-fixed px-6 py-3 rounded-full shadow-lg flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="auto_awesome">auto_awesome</span>
+<span class="font-label text-xs font-semibold tracking-widest uppercase">The Beginning</span>
+</div>
+</div>
+<!-- Content Column -->
+<div class="w-full md:w-1/2 flex flex-col items-start text-left">
+<div class="mb-2">
+<span class="text-primary font-body text-sm font-semibold tracking-[0.2em] uppercase">Memory Vault</span>
+</div>
+<h1 class="serif-headline text-[3.5rem] leading-[1.1] text-on-surface mb-6 font-bold">
+                    Your journey starts here.
+                </h1>
+<p class="font-body text-lg leading-relaxed text-on-surface-variant mb-10 max-w-md">
+                    Complete your first task to capture your first memory. Every small win is a piece of a beautiful story yet to be written.
+                </p>
+<button class="group flex items-center gap-4 bg-gradient-to-br from-[#884532] to-[#a65d48] text-on-primary px-8 py-4 rounded-md shadow-xl hover:shadow-2xl transition-all duration-300 active:scale-95">
+<span class="font-body font-bold text-lg">Create My First Task</span>
+<span class="material-symbols-outlined transition-transform group-hover:translate-x-1" data-icon="arrow_forward">arrow_forward</span>
+</button>
+<div class="mt-12 flex items-center gap-6">
+<div class="flex -space-x-3">
+<div class="w-8 h-8 rounded-full border-2 border-surface bg-surface-container">
+<img alt="User" class="rounded-full" data-alt="Portrait of a young person smiling softly" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAhns16nLNAKKwu8_B2dOFsAFsdg2wzHhZlXN-XHR8dJr9qQ-jG7xj-IeQvIUpEUZYaSVvNWeH5s4DkbR2VDHhrrmULBk91BwL5YY8w6f3_fLvD60F4M9I0_k_yvZZVItcOmcPab5uDGfYszBWPfbYoGa25_pgCkBxcL5ciXWPYbjkVYl99DVkHZ1CbTQ4Vhx2Co1Fw7SYhcXbeq6Sk0ADDFqvs2_kq1bE9Cz9blEnMKXCUTmvmdBf0S2bPVWb0_orVv8IFyryDH3E"/>
+</div>
+<div class="w-8 h-8 rounded-full border-2 border-surface bg-surface-container">
+<img alt="User" class="rounded-full" data-alt="Portrait of a creative man looking aside" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAoNS1OZnfWYsWjkgr7hxB_XfADA3AwqJWK3PC3wwOq879UOuTVyRqw9vw8ZxLHXReVRRexWUQMH-jzOM_oN7cv_472tCn-yyogDGLw4H8iTxxXU2jiV8LCLLecycctbrB7d_FU1zSaJ9UZjPMd0uRlN5ilnpikKEixRn-97DcN3GlJ0mNMoG1XutHrljrCzYvadl3kyY5cgnn9FqqCcfpVc0sPBPdMNaqjBVPg5srsAHqmDLg4ZBDeebsduaNfgsL4ngmUjC2ebqM"/>
+</div>
+<div class="w-8 h-8 rounded-full border-2 border-surface bg-surface-container flex items-center justify-center text-[10px] font-bold text-on-surface-variant">
+                            +12k
+                        </div>
+</div>
+<p class="text-xs text-on-surface-variant font-medium">Joined by seekers of intention</p>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar Shell -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-end px-4 pb-6 pt-2 bg-[#faf9f6]/80 backdrop-blur-md rounded-t-[2rem] shadow-[0_-10px_30px_rgba(134,115,110,0.04)] z-50">
+<!-- Home (Active) -->
+<a class="flex flex-col items-center justify-center bg-gradient-to-br from-[#884532] to-[#a65d48] text-white rounded-full p-3 mb-2 scale-110 shadow-lg transition-all active:scale-90 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="home" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-['Manrope'] text-[10px] font-semibold tracking-wide uppercase mt-1 hidden">Home</span>
+</a>
+<!-- Feed -->
+<a class="flex flex-col items-center justify-center text-[#86736e] p-2 hover:text-[#884532] transition-all active:scale-90 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-['Manrope'] text-[10px] font-semibold tracking-wide uppercase mt-1">Feed</span>
+</a>
+<!-- Capture -->
+<a class="flex flex-col items-center justify-center text-[#86736e] p-2 hover:text-[#884532] transition-all active:scale-90 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
+<span class="font-['Manrope'] text-[10px] font-semibold tracking-wide uppercase mt-1">Capture</span>
+</a>
+<!-- Wall -->
+<a class="flex flex-col items-center justify-center text-[#86736e] p-2 hover:text-[#884532] transition-all active:scale-90 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="auto_awesome_mosaic">auto_awesome_mosaic</span>
+<span class="font-['Manrope'] text-[10px] font-semibold tracking-wide uppercase mt-1">Wall</span>
+</a>
+<!-- Settings -->
+<a class="flex flex-col items-center justify-center text-[#86736e] p-2 hover:text-[#884532] transition-all active:scale-90 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-['Manrope'] text-[10px] font-semibold tracking-wide uppercase mt-1">Settings</span>
+</a>
+</nav>
+<!-- Background Decoration -->
+<div class="fixed top-0 left-0 w-full h-full pointer-events-none -z-10 opacity-30">
+<div class="absolute top-[-10%] right-[-5%] w-96 h-96 bg-primary/10 rounded-full blur-[100px]"></div>
+<div class="absolute bottom-[-5%] left-[-5%] w-80 h-80 bg-tertiary-fixed/40 rounded-full blur-[80px]"></div>
+</div>
+</body></html>
