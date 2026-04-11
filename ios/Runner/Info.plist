@@ -45,5 +45,7 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>GIDClientID</key>
+	<string>796015993618-fq11oc3bbtk7kc22b96js07ie35qdps6.apps.googleusercontent.com</string>
 </dict>
 </plist>

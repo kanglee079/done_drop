@@ -119,9 +119,14 @@ class MomentRepository {
     return _taskCol
         .where('ownerId', isEqualTo: userId)
         .where('isArchived', isEqualTo: false)
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snap) =>
-            snap.docs.map((d) => TaskTemplate.fromFirestore(d.data())).toList());
+        .map((snap) {
+          final list = snap.docs
+              .map((d) => TaskTemplate.fromFirestore(d.data()))
+              .toList();
+          // Sort in-memory - requires index for server-side ordering
+          list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return list;
+        });
   }
 }

@@ -74,6 +74,20 @@ service cloud.firestore {
       allow delete: if request.auth.uid == resource.data.ownerId;
     }
 
+    // ── Friend Requests ─────────────────────────────────────────────────
+    match /friend_requests/{requestId} {
+      allow read: if request.auth != null
+        && (resource.data.senderId == request.auth.uid
+          || resource.data.receiverId == request.auth.uid);
+      allow create: if request.auth.uid == request.resource.data.senderId;
+      allow update: if request.auth != null
+        && (resource.data.senderId == request.auth.uid
+          || resource.data.receiverId == request.auth.uid);
+      allow delete: if request.auth != null
+        && (resource.data.senderId == request.auth.uid
+          || resource.data.receiverId == request.auth.uid);
+    }
+
     // ── Reactions ────────────────────────────────────────────────────────
     // FIX: Only the reaction author or the moment owner can read reactions
     // (was: any authenticated user could enumerate all reactions).

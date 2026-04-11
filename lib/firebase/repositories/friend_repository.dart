@@ -127,11 +127,15 @@ class FriendRepository {
     return _requestsCol
         .where('receiverId', isEqualTo: userId)
         .where('status', isEqualTo: 'pending')
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snap) => snap.docs
-            .map((d) => FriendRequest.fromFirestore(d.data()))
-            .toList());
+        .map((snap) {
+          final list = snap.docs
+              .map((d) => FriendRequest.fromFirestore(d.data()))
+              .toList();
+          // Sort in-memory - requires index for server-side ordering
+          list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return list;
+        });
   }
 
   /// Watch outgoing friend requests (requests sent BY the current user).
@@ -139,11 +143,15 @@ class FriendRepository {
     return _requestsCol
         .where('senderId', isEqualTo: userId)
         .where('status', isEqualTo: 'pending')
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snap) => snap.docs
-            .map((d) => FriendRequest.fromFirestore(d.data()))
-            .toList());
+        .map((snap) {
+          final list = snap.docs
+              .map((d) => FriendRequest.fromFirestore(d.data()))
+              .toList();
+          // Sort in-memory - requires index for server-side ordering
+          list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return list;
+        });
   }
 
   // ── Friend List ──────────────────────────────────────────────────────────

@@ -118,6 +118,7 @@ class Invite {
     required this.createdBy,
     required this.inviteCode,
     required this.expiresAt,
+    this.createdAt,
     this.maxUses = 5,
     this.currentUses = 0,
     this.status = 'active',
@@ -128,6 +129,7 @@ class Invite {
   final String createdBy;
   final String inviteCode;
   final DateTime expiresAt;
+  final DateTime? createdAt;
   final int maxUses;
   final int currentUses;
   final String status; // active, expired, revoked
@@ -143,6 +145,7 @@ class Invite {
         'createdBy': createdBy,
         'inviteCode': inviteCode,
         'expiresAt': expiresAt.toIso8601String(),
+        if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
         'maxUses': maxUses,
         'currentUses': currentUses,
         'status': status,
@@ -154,6 +157,9 @@ class Invite {
         createdBy: map['createdBy'] as String,
         inviteCode: map['inviteCode'] as String,
         expiresAt: DateTime.parse(map['expiresAt'] as String),
+        createdAt: map['createdAt'] != null
+            ? DateTime.parse(map['createdAt'] as String)
+            : null,
         maxUses: map['maxUses'] as int? ?? 5,
         currentUses: map['currentUses'] as int? ?? 0,
         status: map['status'] as String? ?? 'active',

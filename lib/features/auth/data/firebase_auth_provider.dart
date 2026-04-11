@@ -14,10 +14,8 @@ import 'auth_provider.dart';
 class FirebaseAuthProvider implements AuthProvider {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // TODO(xikang): Replace with your real Google Web Client ID before releasing.
-  // Get it from Firebase Console → Authentication → Sign-in method → Google → Web SDK configuration
   static const String _googleWebClientId =
-      'REPLACE_WITH_YOUR_GOOGLE_WEB_CLIENT_ID';
+      '796015993618-fq11oc3bbtk7kc22b96js07ie35qdps6.apps.googleusercontent.com';
 
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     serverClientId: _googleWebClientId,
@@ -25,7 +23,7 @@ class FirebaseAuthProvider implements AuthProvider {
   );
 
   bool get _isGoogleSignInConfigured =>
-      _googleWebClientId != 'REPLACE_WITH_YOUR_GOOGLE_WEB_CLIENT_ID';
+      _googleWebClientId.isNotEmpty && _googleWebClientId != 'REPLACE_WITH_YOUR_GOOGLE_WEB_CLIENT_ID';
 
   @override
   Future<Result<UserCredential>> signInWithEmail(String email, String password) async {

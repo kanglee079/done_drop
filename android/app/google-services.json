@@ -14,7 +14,15 @@
       },
       "oauth_client": [
         {
-          "client_id": "690648677853-drkb08ndf0bq5h0rgbkvhj4h1hlm0g8a.apps.googleusercontent.com",
+          "client_id": "796015993618-fqcg3of4o44rb9t6csoc3d20vnr9pauf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.donedrop.app",
+            "certificate_hash": "2bbc0aa7ca75a3053692611fc80190cbd77a904a"
+          }
+        },
+        {
+          "client_id": "796015993618-vqotkva1s64768pguv41dj689eb432rv.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
@@ -27,8 +35,15 @@
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "690648677853-drkb08ndf0bq5h0rgbkvhj4h1hlm0g8a.apps.googleusercontent.com",
+              "client_id": "796015993618-fq11oc3bbtk7kc22b96js07ie35qdps6.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "796015993618-fks8fhf53fjietrtom7hb74nl88rblhk.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.donedrop.app"
+              }
             }
           ]
         }

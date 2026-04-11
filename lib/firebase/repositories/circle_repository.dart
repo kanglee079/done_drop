@@ -118,12 +118,14 @@ class CircleRepository {
 
   Future<Result<Invite>> createInvite(String circleId) async {
     try {
+      final now = DateTime.now();
       final invite = Invite(
         id: _inviteCol.doc().id,
         circleId: circleId,
         createdBy: Get.find<AuthController>().firebaseUser?.uid ?? '',
         inviteCode: _generateCode(),
-        expiresAt: DateTime.now().add(const Duration(days: 30)),
+        expiresAt: now.add(const Duration(days: 30)),
+        createdAt: now,
         maxUses: 5,
         currentUses: 0,
         status: 'active',
@@ -175,11 +177,16 @@ class CircleRepository {
     final snap = await _inviteCol
         .where('circleId', isEqualTo: circleId)
         .where('status', isEqualTo: 'active')
-        .orderBy('createdAt', descending: true)
-        .limit(1)
         .get();
     if (snap.docs.isEmpty) return null;
-    return Invite.fromFirestore(snap.docs.first.data());
+    // Sort in-memory - requires index for server-side ordering
+    final invites = snap.docs.map((d) => Invite.fromFirestore(d.data())).toList();
+    invites.sort((a, b) {
+      final aTime = a.createdAt ?? DateTime(1970);
+      final bTime = b.createdAt ?? DateTime(1970);
+      return bTime.compareTo(aTime);
+    });
+    return invites.first;
   }
 
   /// Watch a single circle document.
