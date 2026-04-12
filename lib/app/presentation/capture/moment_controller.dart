@@ -2,22 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:done_drop/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:done_drop/firebase/repositories/moment_repository.dart';
+import 'package:done_drop/firebase/repositories/friend_repository.dart';
 import 'package:done_drop/core/models/moment.dart';
-import 'package:done_drop/core/services/image_service.dart';
+import 'package:done_drop/core/services/media_service.dart';
 import 'package:done_drop/core/services/analytics_service.dart';
 import 'package:done_drop/app/routes/app_routes.dart';
+import 'package:done_drop/core/constants/app_constants.dart';
 
 class MomentController extends GetxController {
   MomentController();
 
   MomentRepository get _momentRepo => Get.find<MomentRepository>();
+  FriendRepository get _friendRepo => Get.find<FriendRepository>();
   AuthController get _authController => Get.find<AuthController>();
-  ImageService get _imageService => ImageService.instance;
+  MediaService get _mediaService => MediaService.instance;
 
   // Post form state
   final captionController = TextEditingController();
-  final Rx<String> visibility = 'personal_only'.obs;
-  final Rx<String?> selectedCircleId = Rx<String?>(null);
+  final Rx<String> visibility = AppConstants.visibilityPersonalOnly.obs;
+  final RxList<String> selectedFriendIds = <String>[].obs;
   final Rx<String> selectedCategory = ''.obs;
 
   // Post state
@@ -57,22 +60,28 @@ class MomentController extends GetxController {
       final momentId = 'moment_${DateTime.now().millisecondsSinceEpoch}';
       final now = DateTime.now();
 
-      // Upload image to Firestore + cache locally
-      final imageId = await _imageService.uploadMomentImage(
+      // Upload images to Firebase Storage
+      final media = await _mediaService.uploadMomentImages(
         userId: uid,
         momentId: momentId,
         localFilePath: _imagePath!,
       );
 
+      // Build visibility
+      final postVisibility = visibility.value;
+      final friendsIds = postVisibility == AppConstants.visibilitySelectedFriends
+          ? selectedFriendIds.toList()
+          : <String>[];
+
       // Create moment document in Firestore
       final moment = Moment(
         id: momentId,
         ownerId: uid,
-        visibility: visibility.value,
-        imageUrl: imageId, // Store image ID instead of URL
+        visibility: postVisibility,
+        selectedFriendIds: friendsIds,
+        media: media,
         caption: caption,
         category: selectedCategory.value.isEmpty ? null : selectedCategory.value,
-        circleId: visibility.value == 'circle' ? selectedCircleId.value : null,
         completedAt: now,
         createdAt: now,
         updatedAt: now,
@@ -83,10 +92,28 @@ class MomentController extends GetxController {
 
       await _momentRepo.createMoment(moment);
 
-      // Track analytics
+      // Create feed deliveries for shared moments
+      if (postVisibility == AppConstants.visibilityAllFriends) {
+        final friendships = await _friendRepo.watchFriendships(uid).first;
+        final friendIds = friendships.map((f) => f.otherUserId(uid)).toList();
+        await _momentRepo.createFeedDeliveries(
+          momentId: momentId,
+          ownerId: uid,
+          visibility: postVisibility,
+          recipientIds: friendIds,
+        );
+      } else if (postVisibility == AppConstants.visibilitySelectedFriends &&
+          friendsIds.isNotEmpty) {
+        await _momentRepo.createFeedDeliveries(
+          momentId: momentId,
+          ownerId: uid,
+          visibility: postVisibility,
+          recipientIds: friendsIds,
+        );
+      }
+
       AnalyticsService.instance.momentPosted(
-        visibility: visibility.value,
-        circleId: selectedCircleId.value,
+        visibility: postVisibility,
         category: selectedCategory.value.isEmpty ? null : selectedCategory.value,
       );
 
@@ -100,20 +127,30 @@ class MomentController extends GetxController {
 
   void setVisibility(String v) {
     visibility.value = v;
-    if (v == 'personal_only') {
-      selectedCircleId.value = null;
+    if (v != AppConstants.visibilitySelectedFriends) {
+      selectedFriendIds.clear();
     }
   }
 
-  void setCircle(String? circleId) {
-    selectedCircleId.value = circleId;
-    if (circleId != null) {
-      visibility.value = 'circle';
+  void toggleSelectedFriend(String friendId) {
+    if (selectedFriendIds.contains(friendId)) {
+      selectedFriendIds.remove(friendId);
+    } else {
+      selectedFriendIds.add(friendId);
     }
   }
 
   void setCategory(String? cat) {
     selectedCategory.value = cat ?? '';
+  }
+
+  void reset() {
+    captionController.clear();
+    visibility.value = AppConstants.visibilityPersonalOnly;
+    selectedFriendIds.clear();
+    selectedCategory.value = '';
+    _imagePath = null;
+    errorMessage.value = null;
   }
 
   @override

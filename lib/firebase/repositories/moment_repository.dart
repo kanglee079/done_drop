@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../core/constants/app_constants.dart';
-import '../../core/models/models.dart';
+import 'package:done_drop/core/constants/app_constants.dart';
+import 'package:done_drop/core/models/models.dart';
+import 'package:done_drop/core/models/feed_delivery.dart';
 
 /// DoneDrop Firestore Repository — Moment operations
 class MomentRepository {
@@ -15,6 +16,9 @@ class MomentRepository {
 
   CollectionReference<Map<String, dynamic>> get _taskCol =>
       _db.collection(AppConstants.colTaskTemplates);
+
+  CollectionReference<Map<String, dynamic>> get _feedDeliveryCol =>
+      _db.collection(AppConstants.colFeedDeliveries);
 
   // ── Moments ────────────────────────────────────────────────────────────
   Future<Moment?> getMoment(String momentId) async {
@@ -52,6 +56,7 @@ class MomentRepository {
   }
 
   /// Circle feed: all circle moments visible to user
+  /// Deprecated: replaced by watchFriendFeed (private friend system).
   Stream<List<Moment>> watchCircleMoments(
     String circleId, {
     int limit = 50,
@@ -77,6 +82,84 @@ class MomentRepository {
         .limit(limit)
         .get();
     return snap.docs.map((d) => Moment.fromFirestore(d.data())).toList();
+  }
+
+  // ── Private Friend Feed ──────────────────────────────────────────────
+
+  /// Create feed delivery entries for each recipient of a moment.
+  /// Called after a moment is saved with visibility all_friends or selected_friends.
+  Future<void> createFeedDeliveries({
+    required String momentId,
+    required String ownerId,
+    required String visibility,
+    required List<String> recipientIds,
+  }) async {
+    if (recipientIds.isEmpty) return;
+
+    final batch = _db.batch();
+    final now = DateTime.now();
+
+    for (final recipientId in recipientIds) {
+      final docId = 'fd_${momentId}_$recipientId';
+      final delivery = FeedDelivery(
+        id: docId,
+        recipientId: recipientId,
+        momentId: momentId,
+        ownerId: ownerId,
+        visibility: visibility,
+        createdAt: now,
+      );
+      batch.set(_feedDeliveryCol.doc(docId), delivery.toFirestore());
+    }
+
+    await batch.commit();
+  }
+
+  /// Watch feed deliveries for a user (private friend feed).
+  Stream<List<FeedDelivery>> watchFeedDeliveries(String userId, {int limit = 50}) {
+    return _feedDeliveryCol
+        .where('recipientId', isEqualTo: userId)
+        .orderBy('createdAt', descending: true)
+        .limit(limit)
+        .snapshots()
+        .map((snap) => snap.docs
+            .map((d) => FeedDelivery.fromFirestore(d.data()))
+            .toList());
+  }
+
+  /// Mark a feed delivery as read.
+  Future<void> markDeliveryRead(String deliveryId) async {
+    await _feedDeliveryCol.doc(deliveryId).update({'isRead': true});
+  }
+
+  /// Get unread feed delivery count for a user.
+  Stream<int> watchUnreadFeedCount(String userId) {
+    return _feedDeliveryCol
+        .where('recipientId', isEqualTo: userId)
+        .where('isRead', isEqualTo: false)
+        .snapshots()
+        .map((snap) => snap.docs.length);
+  }
+
+  /// Fetch moments for feed deliveries.
+  Future<List<Moment>> getMomentsForFeed(List<String> momentIds) async {
+    if (momentIds.isEmpty) return [];
+    final List<Moment> moments = [];
+    for (final id in momentIds) {
+      final m = await getMoment(id);
+      if (m != null && !m.isDeleted) moments.add(m);
+    }
+    return moments;
+  }
+
+  /// Delete feed deliveries when a moment is deleted.
+  Future<void> deleteFeedDeliveriesForMoment(String momentId) async {
+    final snap = await _feedDeliveryCol.where('momentId', isEqualTo: momentId).get();
+    final batch = _db.batch();
+    for (final d in snap.docs) {
+      batch.delete(d.reference);
+    }
+    await batch.commit();
   }
 
   // ── Reactions ─────────────────────────────────────────────────────────

@@ -9,6 +9,8 @@ import 'app/app.dart';
 import 'core/services/storage_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/analytics_service.dart';
+import 'core/services/media_service.dart';
+import 'core/services/local_database_service.dart';
 import 'features/auth/data/onboarding_service.dart';
 import 'features/auth/data/firebase_auth_provider.dart';
 import 'features/auth/data/firestore_user_profile_provider.dart';
@@ -19,6 +21,7 @@ import 'firebase/repositories/circle_repository.dart';
 import 'firebase/repositories/moment_repository.dart';
 import 'firebase/repositories/friend_repository.dart';
 import 'firebase/repositories/report_repository.dart';
+import 'firebase/repositories/activity_repository.dart';
 import 'core/services/block_service.dart';
 import 'core/services/connectivity_service.dart';
 import 'app/presentation/feed/reaction_controller.dart';
@@ -47,6 +50,10 @@ void main() async {
   // Initialize local services
   await StorageService.instance.init();
   await NotificationService.instance.init();
+  await LocalDatabaseService.instance.init();
+
+  // Register MediaService as a permanent GetX service
+  Get.put<MediaService>(MediaService.instance, permanent: true);
 
   // Connectivity monitoring
   final connectivity = ConnectivityService();
@@ -93,6 +100,7 @@ void _registerAuthDependencies() {
   );
 
   // Data Repositories (used across authenticated screens)
+  Get.put<ActivityRepository>(ActivityRepository(FirebaseFirestore.instance), permanent: true);
   Get.put<CircleRepository>(CircleRepository(FirebaseFirestore.instance), permanent: true);
   Get.put<MomentRepository>(MomentRepository(FirebaseFirestore.instance), permanent: true);
   Get.put<FriendRepository>(FriendRepository(FirebaseFirestore.instance), permanent: true);

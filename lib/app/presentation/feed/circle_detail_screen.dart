@@ -158,7 +158,7 @@ class CircleDetailScreen extends StatelessWidget {
                         return ClipRRect(
                           borderRadius: AppSizes.borderRadiusSm,
                           child: CachedNetworkImage(
-                            imageUrl: m.imageUrl,
+                            imageUrl: m.media.thumbnail.downloadUrl,
                             fit: BoxFit.cover,
                             placeholder: (_, __) =>
                                 Container(color: AppColors.surfaceContainerHighest),

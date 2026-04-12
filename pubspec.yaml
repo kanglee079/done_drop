@@ -37,9 +37,11 @@ dependencies:
   # ── Navigation & Deep Links ─────────────────────────────
   # go_deep_link: handled via Firebase Dynamic Links in Phase 9
 
-  # ── Local Storage ──────────────────────────────────────
+  # ── Local Storage ──────────────────────────────────────────────
   shared_preferences: ^2.3.5
   flutter_secure_storage: ^9.2.4
+  isar: ^3.1.0+1
+  isar_flutter_libs: ^3.1.0+1
 
   # ── Notifications ──────────────────────────────────────
   flutter_local_notifications: ^18.0.1
@@ -63,7 +65,8 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
-  build_runner: ^2.4.15
+  build_runner: ^2.4.13
+  isar_generator: ^3.1.0+1
 
 flutter:
   uses-material-design: true

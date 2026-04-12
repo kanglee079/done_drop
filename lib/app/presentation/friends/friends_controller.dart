@@ -2,20 +2,23 @@ import 'package:get/get.dart';
 import 'package:done_drop/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:done_drop/firebase/repositories/friend_repository.dart';
 import 'package:done_drop/core/models/friend_request.dart';
+import 'package:done_drop/core/models/friendship.dart';
 import 'package:done_drop/core/errors/result.dart';
 import 'package:done_drop/core/services/analytics_service.dart';
 
-/// Controller for the Friends tab and friend management screens.
+/// Controller for friend management screens.
 class FriendsController extends GetxController {
   FriendsController(this._friendRepo);
   final FriendRepository _friendRepo;
 
+  /// Expose repository for screens that need direct access.
+  FriendRepository get friendRepo => _friendRepo;
+
   String? get _userId => Get.find<AuthController>().firebaseUser?.uid;
-  /// Exposed for screens that need to know the current user ID.
   String? get currentUserId => _userId;
 
   /// Accepted friendships.
-  final RxList<FriendRequest> friends = <FriendRequest>[].obs;
+  final RxList<Friendship> friendships = <Friendship>[].obs;
 
   /// Incoming pending requests.
   final RxList<FriendRequest> incomingRequests = <FriendRequest>[].obs;
@@ -26,20 +29,31 @@ class FriendsController extends GetxController {
   /// Pending request count (for badge).
   final RxInt pendingRequestCount = 0.obs;
 
+  /// Current friend count.
+  final RxInt friendCount = 0.obs;
+
+  /// Whether the user has reached the friend cap.
+  bool get isAtFriendCap => friendCount.value >= FriendRepository.maxFriendsFree;
+
+  int get maxFriends => FriendRepository.maxFriendsFree;
+
   bool get hasPendingRequests => incomingRequests.isNotEmpty;
 
   @override
   void onInit() {
     super.onInit();
-    _watchFriends();
+    _watchFriendships();
     _watchIncomingRequests();
     _watchOutgoingRequests();
   }
 
-  void _watchFriends() {
+  void _watchFriendships() {
     final uid = _userId;
     if (uid == null) return;
-    friends.bindStream(_friendRepo.watchFriends(uid));
+    _friendRepo.watchFriendships(uid).listen((list) {
+      friendships.value = list;
+      friendCount.value = list.length;
+    });
   }
 
   void _watchIncomingRequests() {
@@ -68,7 +82,7 @@ class FriendsController extends GetxController {
         );
       },
       onFailure: (failure) {
-        Get.snackbar('Error', failure.toString(), snackPosition: SnackPosition.BOTTOM);
+        Get.snackbar('Error', failure.message, snackPosition: SnackPosition.BOTTOM);
       },
     );
   }
@@ -83,13 +97,27 @@ class FriendsController extends GetxController {
     await _friendRepo.cancelRequest(request.id);
   }
 
-  /// Remove an existing friend.
-  Future<void> removeFriend(FriendRequest friendship) async {
-    await _friendRepo.removeFriend(friendship.id);
-    Get.snackbar(
-      'Friend Removed',
-      'The friendship has been removed',
-      snackPosition: SnackPosition.BOTTOM,
+  /// Remove an existing friendship.
+  Future<void> removeFriend(Friendship friendship) async {
+    final uid = _userId;
+    if (uid == null) return;
+
+    final result = await _friendRepo.removeFriend(friendship.id, uid);
+    result.fold(
+      onSuccess: (_) {
+        Get.snackbar('Friend Removed', 'The friendship has been removed',
+            snackPosition: SnackPosition.BOTTOM);
+      },
+      onFailure: (failure) {
+        Get.snackbar('Error', failure.message, snackPosition: SnackPosition.BOTTOM);
+      },
     );
+  }
+
+  /// Check if a user can add more friends (under cap).
+  Future<bool> canAddMoreFriends() async {
+    final uid = _userId;
+    if (uid == null) return false;
+    return _friendRepo.canAddFriend(uid);
   }
 }

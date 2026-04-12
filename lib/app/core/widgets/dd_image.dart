@@ -1,12 +1,12 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:done_drop/core/services/image_service.dart';
+import 'package:done_drop/core/services/media_service.dart';
 
 /// Helper widget to display images from various sources:
 /// - Data URLs (data:image/xxx;base64,xxx) → MemoryImage
-/// - Regular URLs → CachedNetworkImage
-/// - Image IDs (from Firestore) → Load from ImageService
+/// - HTTP/HTTPS URLs → CachedNetworkImage
+/// - Storage paths → loaded from MediaService (Firebase Storage)
 class DDImage extends StatefulWidget {
   const DDImage({
     super.key,
@@ -21,8 +21,8 @@ class DDImage extends StatefulWidget {
 
   /// Source can be:
   /// - Data URL: data:image/jpeg;base64,xxxxx
-  /// - Regular URL: https://example.com/image.jpg
-  /// - Image ID: moment_1234567890 (will be loaded from ImageService)
+  /// - Regular URL: https://example.com/image.jpg (Firebase Storage download URL)
+  /// - Storage path: avatars/uid/avatar.jpg or moments/uid/mid/original.jpg
   final String? source;
   final double? width;
   final double? height;
@@ -38,7 +38,6 @@ class DDImage extends StatefulWidget {
 class _DDImageState extends State<DDImage> {
   Uint8List? _imageBytes;
   bool _isLoading = true;
-  String? _error;
 
   @override
   void initState() {
@@ -56,78 +55,53 @@ class _DDImageState extends State<DDImage> {
 
   Future<void> _loadImage() async {
     if (widget.source == null || widget.source!.isEmpty) {
-      setState(() {
-        _isLoading = false;
-        _error = 'No source';
-      });
+      setState(() => _isLoading = false);
       return;
     }
 
     final source = widget.source!;
 
-    // Data URL - decode directly
     if (source.startsWith('data:')) {
       _loadFromDataUrl(source);
       return;
     }
 
-    // Regular URL - use CachedNetworkImage
     if (source.startsWith('http://') || source.startsWith('https://')) {
       setState(() {
         _isLoading = false;
-        _imageBytes = null; // Signal to use CachedNetworkImage
+        _imageBytes = null;
       });
       return;
     }
 
-    // Image ID - load from ImageService
-    await _loadFromImageService(source);
+    await _loadFromStorage(source);
   }
 
   void _loadFromDataUrl(String dataUrl) {
     try {
-      final parts = dataUrl.split(',');
-      if (parts.length == 2) {
-        final bytes = Uri.parse(dataUrl).data?.contentAsBytes();
-        if (bytes != null) {
-          setState(() {
-            _imageBytes = Uint8List.fromList(bytes);
-            _isLoading = false;
-          });
-        } else {
-          setState(() {
-            _error = 'Invalid data';
-            _isLoading = false;
-          });
-        }
-      }
-    } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _loadFromImageService(String imageId) async {
-    try {
-      final bytes = await ImageService.instance.getImageBytes(imageId);
+      final bytes = Uri.parse(dataUrl).data?.contentAsBytes();
       if (mounted) {
         setState(() {
           _imageBytes = bytes != null ? Uint8List.fromList(bytes) : null;
           _isLoading = false;
-          if (bytes == null) {
-            _error = 'Image not found';
-          }
         });
       }
-    } catch (e) {
+    } catch (_) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _loadFromStorage(String storagePath) async {
+    try {
+      final bytes = await MediaService.instance.getBytes(storagePath);
       if (mounted) {
         setState(() {
-          _error = e.toString();
+          _imageBytes = bytes != null ? Uint8List.fromList(bytes) : null;
           _isLoading = false;
         });
       }
+    } catch (_) {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -139,25 +113,18 @@ class _DDImageState extends State<DDImage> {
 
     final source = widget.source!;
 
-    // Data URL - use MemoryImage
     if (source.startsWith('data:')) {
       if (_isLoading) return _buildPlaceholder();
-      if (_imageBytes != null) {
-        return _buildImage(MemoryImage(_imageBytes!));
-      }
+      if (_imageBytes != null) return _buildImage(MemoryImage(_imageBytes!));
       return _buildError();
     }
 
-    // Regular URL - use CachedNetworkImage
     if (source.startsWith('http://') || source.startsWith('https://')) {
       return _buildNetworkImage(source);
     }
 
-    // Image ID - use our loaded bytes or placeholder
     if (_isLoading) return _buildPlaceholder();
-    if (_imageBytes != null) {
-      return _buildImage(MemoryImage(_imageBytes!));
-    }
+    if (_imageBytes != null) return _buildImage(MemoryImage(_imageBytes!));
     return _buildError();
   }
 
@@ -171,10 +138,7 @@ class _DDImageState extends State<DDImage> {
     );
 
     if (widget.borderRadius != null) {
-      child = ClipRRect(
-        borderRadius: widget.borderRadius!,
-        child: child,
-      );
+      child = ClipRRect(borderRadius: widget.borderRadius!, child: child);
     }
 
     return child;
@@ -191,10 +155,7 @@ class _DDImageState extends State<DDImage> {
     );
 
     if (widget.borderRadius != null) {
-      child = ClipRRect(
-        borderRadius: widget.borderRadius!,
-        child: child,
-      );
+      child = ClipRRect(borderRadius: widget.borderRadius!, child: child);
     }
 
     return child;

@@ -3,126 +3,343 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ── Users ──────────────────────────────────────────────────────────────
+    // ══════════════════════════════════════════════════════════════════
+    // Helper functions
+    // ══════════════════════════════════════════════════════════════════
+
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Get the current user's ID
+    function currentUser() {
+      return request.auth.uid;
+    }
+
+    // Check if user is the owner of a resource
+    function isOwner(ownerId) {
+      return isAuthenticated() && currentUser() == ownerId;
+    }
+
+    // Get a resource's data (for use in get() calls)
+    function getResourceData(path) {
+      return get(/databases/$(database)/documents/$(path)).data;
+    }
+
+    // Check if user is blocked by the owner
+    function isNotBlockedBy(String ownerId) {
+      return !(currentUser() in getResourceData('users/' + ownerId).blockedUserIds);
+    }
+
+    // Check if two users are friends (mutual friendship document exists)
+    function areFriends(String userId1, String userId2) {
+      // Check both possible friendship document paths
+      return exists(/databases/$(database)/documents/friendships/$(userId1)_$(userId2))
+          || exists(/databases/$(database)/documents/friendships/$(userId2)_$(userId1));
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // USERS
+    // ══════════════════════════════════════════════════════════════════
     match /users/{userId} {
-      allow read: if request.auth.uid == userId;
-      allow create: if request.auth.uid == userId
-        && request.resource.data.id == request.auth.uid;
-      allow update: if request.auth.uid == userId
-        && request.resource.data.id == userId;
+      // Read: own profile or friend (for friend list display)
+      allow read: if isAuthenticated() && (
+        currentUser() == userId
+        || areFriends(currentUser(), userId)
+      );
+
+      // Create: must match auth UID
+      allow create: if isOwner(userId)
+        && request.resource.data.id == currentUser();
+
+      // Update: own profile only (except blockedUserIds managed by block service)
+      allow update: if isOwner(userId)
+        && (
+          // Can update own fields
+          request.resource.data.id == userId
+        );
+
+      // Delete: not allowed (use account deletion via Auth)
       allow delete: if false;
+
+      // ── Blocked users subcollection ─────────────────────────────────
+      match /blockedUsers/{blockedId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow delete: if isOwner(userId);
+        allow update: if false;
+      }
     }
 
-    // ── Task Templates ──────────────────────────────────────────────────
-    match /task_templates/{taskId} {
-      allow read: if request.auth != null
-        && resource.data.ownerId == request.auth.uid;
-      allow create: if request.auth.uid == request.resource.data.ownerId;
-      allow update: if request.auth.uid == resource.data.ownerId
-        && request.resource.data.ownerId == request.auth.uid;
-      allow delete: if request.auth.uid == resource.data.ownerId;
+    // ══════════════════════════════════════════════════════════════════
+    // FRIENDSHIPS
+    // ══════════════════════════════════════════════════════════════════
+    match /friendships/{friendshipId} {
+      // Format: "{userId1}_{userId2}" where userId1 < userId2 (lexicographically)
+      // Or: "{userIdA}_{userIdB}" — sorted by the sender at creation time
+
+      // Read: only the two users involved
+      allow read: if isAuthenticated() && (
+        currentUser() in [request.resource.data.userId1, request.resource.data.userId2]
+        || currentUser() in [resource.data.userId1, resource.data.userId2]
+      );
+
+      // Create: current user must be one of the two parties
+      allow create: if isAuthenticated()
+        && currentUser() in [request.resource.data.userId1, request.resource.data.userId2];
+
+      // Update: not allowed (friendships are immutable once created)
+      allow update: if false;
+
+      // Delete: either party can remove the friendship
+      allow delete: if isAuthenticated() && (
+        currentUser() == resource.data.userId1
+        || currentUser() == resource.data.userId2
+      );
     }
 
-    // ── Circles ─────────────────────────────────────────────────────────
-    match /circles/{circleId} {
-      allow read: if request.auth != null
-        && request.auth.uid in resource.data.memberIds;
-      allow create: if request.auth.uid == request.resource.data.ownerId
-        && request.auth.uid in request.resource.data.memberIds;
-      // FIX: Prevent owner from arbitrarily modifying memberIds in a way that grants access
-      allow update: if request.auth.uid == resource.data.ownerId
-        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['memberIds'])
-            || request.resource.data.memberIds.hasAll(resource.data.memberIds));
-      allow delete: if request.auth.uid == resource.data.ownerId;
-    }
-
-    // ── Circle Memberships ───────────────────────────────────────────────
-    match /circle_memberships/{membershipId} {
-      allow read: if request.auth != null
-        && (resource.data.userId == request.auth.uid
-          || request.auth.uid in get(/databases/$(database)/documents/circles/$(resource.data.circleId)).data.memberIds);
-      allow create: if request.auth.uid == request.resource.data.userId;
-      allow update: if request.auth.uid == resource.data.userId
-        || request.auth.uid in get(/databases/$(database)/documents/circles/$(resource.data.circleId)).data.memberIds;
-      allow delete: if request.auth.uid == resource.data.userId
-        || request.auth.uid == get(/databases/$(database)/documents/circles/$(resource.data.circleId)).data.ownerId;
-    }
-
-    // ── Invites ─────────────────────────────────────────────────────────
-    // FIX: Only circle members can read invites (was: any authenticated user).
-    // FIX: Validate that invite's circleId exists and user is a member.
-    match /invites/{inviteId} {
-      allow read: if request.auth != null
-        && request.auth.uid in get(/databases/$(database)/documents/circles/$(resource.data.circleId)).data.memberIds;
-      allow create: if request.auth != null
-        && request.auth.uid == request.resource.data.createdBy
-        && request.auth.uid in get(/databases/$(database)/documents/circles/$(request.resource.data.circleId)).data.memberIds;
-      allow update: if request.auth.uid == request.resource.data.createdBy;
-      allow delete: if request.auth.uid == request.resource.data.createdBy;
-    }
-
-    // ── Moments ──────────────────────────────────────────────────────────
-    match /moments/{momentId} {
-      allow read: if request.auth != null
-        && (resource.data.ownerId == request.auth.uid
-          || (resource.data.visibility == 'circle'
-            && resource.data.circleId != null
-            && request.auth.uid in get(/databases/$(database)/documents/circles/$(resource.data.circleId)).data.memberIds
-            && !(request.auth.uid in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.blockedUserIds)));
-      allow create: if request.auth.uid == request.resource.data.ownerId;
-      allow update: if request.auth.uid == resource.data.ownerId;
-      allow delete: if request.auth.uid == resource.data.ownerId;
-    }
-
-    // ── Friend Requests ─────────────────────────────────────────────────
+    // ══════════════════════════════════════════════════════════════════
+    // FRIEND REQUESTS
+    // ══════════════════════════════════════════════════════════════════
     match /friend_requests/{requestId} {
-      allow read: if request.auth != null
-        && (resource.data.senderId == request.auth.uid
-          || resource.data.receiverId == request.auth.uid);
-      allow create: if request.auth.uid == request.resource.data.senderId;
-      allow update: if request.auth != null
-        && (resource.data.senderId == request.auth.uid
-          || resource.data.receiverId == request.auth.uid);
-      allow delete: if request.auth != null
-        && (resource.data.senderId == request.auth.uid
-          || resource.data.receiverId == request.auth.uid);
+      // Read: only sender or receiver
+      allow read: if isAuthenticated() && (
+        resource.data.senderId == currentUser()
+        || resource.data.receiverId == currentUser()
+      );
+
+      // Create: current user must be the sender
+      allow create: if isAuthenticated()
+        && request.resource.data.senderId == currentUser()
+        && request.resource.data.receiverId != currentUser();
+
+      // Update: sender can cancel, receiver can accept/decline
+      allow update: if isAuthenticated() && (
+        resource.data.senderId == currentUser()
+        || resource.data.receiverId == currentUser()
+      );
+
+      // Delete: same as update
+      allow delete: if isAuthenticated() && (
+        resource.data.senderId == currentUser()
+        || resource.data.receiverId == currentUser()
+      );
     }
 
-    // ── Reactions ────────────────────────────────────────────────────────
-    // FIX: Only the reaction author or the moment owner can read reactions
-    // (was: any authenticated user could enumerate all reactions).
-    match /reactions/{reactionId} {
-      allow read: if request.auth != null
-        && (resource.data.userId == request.auth.uid
-          || request.auth.uid == get(/databases/$(database)/documents/moments/$(resource.data.momentId)).data.ownerId);
-      allow create: if request.auth.uid == request.resource.data.userId;
-      allow delete: if request.auth.uid == resource.data.userId;
+    // ══════════════════════════════════════════════════════════════════
+    // ACTIVITIES
+    // ══════════════════════════════════════════════════════════════════
+    match /activities/{activityId} {
+      // Read/Write: owner only
+      allow read: if isOwner(resource.data.ownerId);
+      allow create: if isOwner(request.resource.data.ownerId);
+      allow update: if isOwner(resource.data.ownerId);
+      allow delete: if isOwner(resource.data.ownerId);
     }
 
-    // ── Weekly Recaps ───────────────────────────────────────────────────
+    // ══════════════════════════════════════════════════════════════════
+    // ACTIVITY INSTANCES
+    // ══════════════════════════════════════════════════════════════════
+    match /activity_instances/{instanceId} {
+      allow read: if isOwner(resource.data.ownerId);
+      allow create: if isOwner(request.resource.data.ownerId);
+      allow update: if isOwner(resource.data.ownerId);
+      allow delete: if isOwner(resource.data.ownerId);
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // COMPLETION LOGS
+    // ══════════════════════════════════════════════════════════════════
+    match /completion_logs/{logId} {
+      allow read: if isOwner(resource.data.ownerId);
+      allow create: if isOwner(request.resource.data.ownerId);
+      allow update: if false; // Completion logs are immutable
+      allow delete: if isOwner(resource.data.ownerId);
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // MOMENTS
+    // ══════════════════════════════════════════════════════════════════
+    match /moments/{momentId} {
+      // Read access based on visibility:
+      // - personal_only: owner only
+      // - all_friends: owner + accepted friends
+      // - selected_friends: owner + selected friends only
+      allow read: if isAuthenticated() && (
+        // Owner always can read
+        resource.data.ownerId == currentUser()
+        // Friends can read all_friends moments
+        || (
+          resource.data.visibility == 'all_friends'
+          && areFriends(resource.data.ownerId, currentUser())
+          && isNotBlockedBy(resource.data.ownerId)
+        )
+        // Selected friends can read selected_friends moments
+        || (
+          resource.data.visibility == 'selected_friends'
+          && currentUser() in resource.data.selectedFriendIds
+          && isNotBlockedBy(resource.data.ownerId)
+        )
+      );
+
+      // Create: must be the owner
+      allow create: if isAuthenticated()
+        && request.resource.data.ownerId == currentUser();
+
+      // Update: owner only
+      allow update: if isAuthenticated()
+        && resource.data.ownerId == currentUser();
+
+      // Delete: owner only
+      allow delete: if isAuthenticated()
+        && resource.data.ownerId == currentUser();
+
+      // ── Reactions subcollection ────────────────────────────────────
+      match /reactions/{reactionId} {
+        // Read: authenticated user who is the moment owner OR the reaction author
+        allow read: if isAuthenticated() && (
+          resource.data.userId == currentUser()
+          || getResourceData('moments/' + resource.data.momentId).ownerId == currentUser()
+        );
+
+        // Create: authenticated user
+        allow create: if isAuthenticated()
+          && request.resource.data.userId == currentUser();
+
+        // Update: not allowed
+        allow update: if false;
+
+        // Delete: reaction author only
+        allow delete: if isAuthenticated()
+          && resource.data.userId == currentUser();
+      }
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // FEED DELIVERIES (denormalized feed entries for recipients)
+    // ══════════════════════════════════════════════════════════════════
+    match /feed_deliveries/{deliveryId} {
+      // Read: recipient only
+      allow read: if isAuthenticated()
+        && resource.data.recipientId == currentUser();
+
+      // Create: system-created only (app logic creates these)
+      // For now, allow if user is authenticated (Phase 7 will add server-side logic)
+      allow create: if isAuthenticated()
+        && request.resource.data.recipientId == currentUser();
+
+      // Update: recipient can mark as read
+      allow update: if isAuthenticated()
+        && resource.data.recipientId == currentUser();
+
+      // Delete: recipient only
+      allow delete: if isAuthenticated()
+        && resource.data.recipientId == currentUser();
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // WEEKLY RECAPS
+    // ══════════════════════════════════════════════════════════════════
     match /weekly_recaps/{recapId} {
-      allow read: if request.auth != null
-        && resource.data.ownerId == request.auth.uid;
-      allow create: if request.auth.uid == request.resource.data.ownerId;
-      allow update: if request.auth.uid == resource.data.ownerId;
+      allow read: if isAuthenticated()
+        && resource.data.ownerId == currentUser();
+      allow create: if isAuthenticated()
+        && request.resource.data.ownerId == currentUser();
+      allow update: if isAuthenticated()
+        && resource.data.ownerId == currentUser();
       allow delete: if false;
     }
 
-    // ── Images (base64 stored in Firestore) ───────────────────────────────
-    match /images/{imageId} {
-      allow read: if request.auth != null
-        && (resource.data.userId == request.auth.uid
-          || request.auth.uid in get(/databases/$(database)/documents/circles/$(resource.data.circleId)).data.memberIds);
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
-      allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
-    }
-
-    // ── Reports ─────────────────────────────────────────────────────────
+    // ══════════════════════════════════════════════════════════════════
+    // REPORTS
+    // ══════════════════════════════════════════════════════════════════
     match /reports/{reportId} {
+      // Only reporter can read their own reports (if ever needed)
       allow read: if false;
-      allow create: if request.auth.uid == request.resource.data.reporterId;
+      // Create: authenticated user
+      allow create: if isAuthenticated()
+        && request.resource.data.reporterId == currentUser();
       allow update: if false;
       allow delete: if false;
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // LEGACY: CIRCLES (V1.5 — kept dormant, not actively used in V1)
+    // ══════════════════════════════════════════════════════════════════
+    match /circles/{circleId} {
+      allow read: if isAuthenticated()
+        && currentUser() in resource.data.memberIds;
+      allow create: if isAuthenticated()
+        && request.resource.data.ownerId == currentUser()
+        && currentUser() in request.resource.data.memberIds;
+      allow update: if isAuthenticated()
+        && resource.data.ownerId == currentUser();
+      allow delete: if isAuthenticated()
+        && resource.data.ownerId == currentUser();
+    }
+
+    match /circle_memberships/{membershipId} {
+      allow read: if isAuthenticated() && (
+        resource.data.userId == currentUser()
+        || currentUser() in getResourceData('circles/' + resource.data.circleId).memberIds
+      );
+      allow create: if isAuthenticated()
+        && request.resource.data.userId == currentUser();
+      allow update: if isAuthenticated() && (
+        resource.data.userId == currentUser()
+        || currentUser() in getResourceData('circles/' + resource.data.circleId).memberIds
+      );
+      allow delete: if isAuthenticated() && (
+        resource.data.userId == currentUser()
+        || currentUser() == getResourceData('circles/' + resource.data.circleId).ownerId
+      );
+    }
+
+    match /invites/{inviteId} {
+      allow read: if isAuthenticated()
+        && currentUser() in getResourceData('circles/' + resource.data.circleId).memberIds;
+      allow create: if isAuthenticated()
+        && currentUser() == request.resource.data.createdBy
+        && currentUser() in getResourceData('circles/' + request.resource.data.circleId).memberIds;
+      allow update: if isAuthenticated()
+        && currentUser() == resource.data.createdBy;
+      allow delete: if isAuthenticated()
+        && currentUser() == resource.data.createdBy;
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // LEGACY: TASK TEMPLATES (replaced by Activities in Phase 3)
+    // ══════════════════════════════════════════════════════════════════
+    match /task_templates/{taskId} {
+      allow read: if isAuthenticated()
+        && resource.data.ownerId == currentUser();
+      allow create: if isAuthenticated()
+        && request.resource.data.ownerId == currentUser();
+      allow update: if isAuthenticated()
+        && resource.data.ownerId == currentUser();
+      allow delete: if isAuthenticated()
+        && resource.data.ownerId == currentUser();
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // LEGACY: images collection (BASE64 — kept for existing data migration)
+    // ══════════════════════════════════════════════════════════════════
+    // NOTE: This collection is DEPRECATED. All new images use Firebase Storage.
+    // These rules exist only to allow read/delete of existing base64 images.
+    match /images/{imageId} {
+      allow read: if isAuthenticated() && (
+        resource.data.userId == currentUser()
+        || (
+          resource.data.circleId != null
+          && currentUser() in getResourceData('circles/' + resource.data.circleId).memberIds
+        )
+      );
+      allow create: if isAuthenticated()
+        && request.resource.data.userId == currentUser();
+      allow update: if false;
+      allow delete: if isAuthenticated()
+        && resource.data.userId == currentUser();
     }
   }
 }

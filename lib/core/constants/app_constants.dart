@@ -25,9 +25,30 @@ class AppConstants {
   static const String colMoments = 'moments';
   static const String colReactions = 'reactions';
   static const String colTaskTemplates = 'task_templates';
+  static const String colActivities = 'activities';
+  static const String colActivityInstances = 'activity_instances';
+  static const String colCompletionLogs = 'completion_logs';
+  static const String colFriendships = 'friendships';
+  static const String colFeedDeliveries = 'feed_deliveries';
   static const String colWeeklyRecaps = 'weekly_recaps';
   static const String colReports = 'reports';
   static const String colFriendRequests = 'friend_requests';
+
+  // ── Moment Visibility ─────────────────────────────────────────────────────
+  static const String visibilityPersonalOnly = 'personal_only';
+  static const String visibilityAllFriends = 'all_friends';
+  static const String visibilitySelectedFriends = 'selected_friends';
+
+  // ── Activity Recurrence ───────────────────────────────────────────────────
+  static const String recurrenceNone = 'none';
+  static const String recurrenceDaily = 'daily';
+  static const String recurrenceWeekly = 'weekly';
+  static const String recurrenceMonthly = 'monthly';
+
+  // ── Activity Instance Status ──────────────────────────────────────────────
+  static const String instanceStatusPending = 'pending';
+  static const String instanceStatusCompleted = 'completed';
+  static const String instanceStatusMissed = 'missed';
 
   // ── Friend Request Status ──────────────────────────────────────────────
   static const String friendStatusPending = 'pending';
@@ -37,13 +58,10 @@ class AppConstants {
 
   // ── Limits ──────────────────────────────────────────────────────────────
   static const int maxCaptionLength = 300;
-  static const int maxMomentsFree = 100;
-  static const int maxCirclesFree = 2;
-  static const int maxCircleMembers = 20;
+  static const int maxFriendsFree = 5;
   static const int maxInviteCodeAgeHours = 24;
-  static const int maxImageWidth = 1920;
-  static const int maxImageHeight = 1920;
-  static const int imageQuality = 85;
+  static const int feedPageSize = 20;
+  static const int wallPageSize = 30;
 
   // ── Reaction Types ──────────────────────────────────────────────────────
   static const List<String> reactionTypes = [

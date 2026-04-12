@@ -163,7 +163,7 @@ class _MomentTile extends StatelessWidget {
           fit: StackFit.expand,
           children: [
             CachedNetworkImage(
-              imageUrl: moment.imageUrl,
+              imageUrl: moment.media.thumbnail.downloadUrl,
               fit: BoxFit.cover,
               placeholder: (_, __) => Container(color: AppColors.surfaceContainerHigh),
               errorWidget: (_, __, ___) => Container(

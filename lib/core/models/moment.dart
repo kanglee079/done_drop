@@ -1,13 +1,14 @@
-/// Moment model — a captured photo moment
+/// Moment model — a captured proof moment tied to a completed activity
 class Moment {
   const Moment({
     required this.id,
     required this.ownerId,
-    this.taskTemplateId,
-    this.circleId,
+    this.activityId,
+    this.activityInstanceId,
     required this.visibility,
-    required this.imageUrl,
-    this.thumbnailUrl,
+    this.selectedFriendIds = const [],
+    // Media stored in Firebase Storage; Firestore holds metadata
+    required this.media,
     required this.caption,
     this.category,
     required this.completedAt,
@@ -20,11 +21,14 @@ class Moment {
 
   final String id;
   final String ownerId;
-  final String? taskTemplateId;
-  final String? circleId;
-  final String visibility; // personal_only, circle
-  final String imageUrl;
-  final String? thumbnailUrl;
+  final String? activityId; // optional link to discipline activity
+  final String? activityInstanceId; // optional link to activity instance
+  /// Visibility: personal_only | all_friends | selected_friends
+  final String visibility;
+  /// Used when visibility == selected_friends
+  final List<String> selectedFriendIds;
+  /// Media metadata stored in Firestore (Storage path, URLs, dimensions)
+  final MomentMedia media;
   final String caption;
   final String? category;
   final DateTime completedAt;
@@ -37,11 +41,11 @@ class Moment {
   Moment copyWith({
     String? id,
     String? ownerId,
-    String? taskTemplateId,
-    String? circleId,
+    String? activityId,
+    String? activityInstanceId,
     String? visibility,
-    String? imageUrl,
-    String? thumbnailUrl,
+    List<String>? selectedFriendIds,
+    MomentMedia? media,
     String? caption,
     String? category,
     DateTime? completedAt,
@@ -54,11 +58,11 @@ class Moment {
       Moment(
         id: id ?? this.id,
         ownerId: ownerId ?? this.ownerId,
-        taskTemplateId: taskTemplateId ?? this.taskTemplateId,
-        circleId: circleId ?? this.circleId,
+        activityId: activityId ?? this.activityId,
+        activityInstanceId: activityInstanceId ?? this.activityInstanceId,
         visibility: visibility ?? this.visibility,
-        imageUrl: imageUrl ?? this.imageUrl,
-        thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
+        selectedFriendIds: selectedFriendIds ?? this.selectedFriendIds,
+        media: media ?? this.media,
         caption: caption ?? this.caption,
         category: category ?? this.category,
         completedAt: completedAt ?? this.completedAt,
@@ -72,11 +76,11 @@ class Moment {
   Map<String, dynamic> toFirestore() => {
         'id': id,
         'ownerId': ownerId,
-        'taskTemplateId': taskTemplateId,
-        'circleId': circleId,
+        'activityId': activityId,
+        'activityInstanceId': activityInstanceId,
         'visibility': visibility,
-        'imageUrl': imageUrl,
-        'thumbnailUrl': thumbnailUrl,
+        'selectedFriendIds': selectedFriendIds,
+        'media': media.toFirestore(),
         'caption': caption,
         'category': category,
         'completedAt': completedAt.toIso8601String(),
@@ -90,11 +94,12 @@ class Moment {
   factory Moment.fromFirestore(Map<String, dynamic> map) => Moment(
         id: map['id'] as String,
         ownerId: map['ownerId'] as String,
-        taskTemplateId: map['taskTemplateId'] as String?,
-        circleId: map['circleId'] as String?,
+        activityId: map['activityId'] as String?,
+        activityInstanceId: map['activityInstanceId'] as String?,
         visibility: map['visibility'] as String,
-        imageUrl: map['imageUrl'] as String,
-        thumbnailUrl: map['thumbnailUrl'] as String?,
+        selectedFriendIds:
+            (map['selectedFriendIds'] as List<dynamic>?)?.cast<String>() ?? [],
+        media: MomentMedia.fromFirestore(map['media'] as Map<String, dynamic>),
         caption: map['caption'] as String,
         category: map['category'] as String?,
         completedAt: DateTime.parse(map['completedAt'] as String),
@@ -109,6 +114,100 @@ class Moment {
         moderationStatus: map['moderationStatus'] as String? ?? 'approved',
       );
 }
+
+/// Metadata for a single media file. Stored in Firestore; actual bytes in Firebase Storage.
+class MediaMetadata {
+  final String storagePath;
+  final String downloadUrl;
+  final String mimeType;
+  final int width;
+  final int height;
+  final int bytesUploaded;
+  final String ownerId;
+  final String? momentId;
+
+  const MediaMetadata({
+    required this.storagePath,
+    required this.downloadUrl,
+    required this.mimeType,
+    required this.width,
+    required this.height,
+    required this.bytesUploaded,
+    required this.ownerId,
+    this.momentId,
+  });
+
+  Map<String, dynamic> toFirestore() => {
+        'storagePath': storagePath,
+        'downloadUrl': downloadUrl,
+        'mimeType': mimeType,
+        'width': width,
+        'height': height,
+        'bytesUploaded': bytesUploaded,
+        'ownerId': ownerId,
+        if (momentId != null) 'momentId': momentId,
+      };
+
+  factory MediaMetadata.fromFirestore(Map<String, dynamic> map) => MediaMetadata(
+        storagePath: map['storagePath'] as String? ?? '',
+        downloadUrl: map['downloadUrl'] as String? ?? '',
+        mimeType: map['mimeType'] as String? ?? 'image/jpeg',
+        width: map['width'] as int? ?? 0,
+        height: map['height'] as int? ?? 0,
+        bytesUploaded: map['bytesUploaded'] as int? ?? 0,
+        ownerId: map['ownerId'] as String? ?? '',
+        momentId: map['momentId'] as String?,
+      );
+}
+
+/// Media metadata for a moment (original + thumbnail). Stored in Firestore.
+class MomentMedia {
+  final MediaMetadata original;
+  final MediaMetadata thumbnail;
+
+  const MomentMedia({
+    required this.original,
+    required this.thumbnail,
+  });
+
+  Map<String, dynamic> toFirestore() => {
+        'original': original.toFirestore(),
+        'thumbnail': thumbnail.toFirestore(),
+      };
+
+  factory MomentMedia.fromFirestore(Map<String, dynamic> map) {
+    final orig = map['original'] as Map<String, dynamic>?;
+    final thumb = map['thumbnail'] as Map<String, dynamic>?;
+    return MomentMedia(
+      original: orig != null
+          ? MediaMetadata.fromFirestore(orig)
+          : MediaMetadata(
+              storagePath: '',
+              downloadUrl: '',
+              mimeType: 'image/jpeg',
+              width: 0,
+              height: 0,
+              bytesUploaded: 0,
+              ownerId: '',
+            ),
+      thumbnail: thumb != null
+          ? MediaMetadata.fromFirestore(thumb)
+          : MediaMetadata(
+              storagePath: '',
+              downloadUrl: '',
+              mimeType: 'image/jpeg',
+              width: 0,
+              height: 0,
+              bytesUploaded: 0,
+              ownerId: '',
+            ),
+    );
+  }
+}
+
+/// Alias for MomentMedia — used when both original and thumbnail metadata
+/// are needed together (e.g., from MediaService.uploadMomentImages).
+typedef MomentMediaMetadata = MomentMedia;
 
 /// Reaction on a moment
 class Reaction {

@@ -2,10 +2,13 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:done_drop/core/theme/theme.dart';
+import 'package:done_drop/core/constants/app_constants.dart';
+import 'package:done_drop/core/errors/result.dart';
 import 'package:done_drop/app/presentation/capture/moment_controller.dart';
 import 'package:done_drop/app/presentation/home/home_controller.dart';
-import 'package:done_drop/firebase/repositories/circle_repository.dart';
 import 'package:done_drop/firebase/repositories/moment_repository.dart';
+import 'package:done_drop/firebase/repositories/friend_repository.dart';
+import 'package:done_drop/features/auth/repositories/user_profile_repository.dart';
 
 /// DoneDrop Preview Screen — caption, audience selection, and post moment.
 class PreviewScreen extends StatelessWidget {
@@ -290,53 +293,200 @@ class _AudienceSection extends StatelessWidget {
         // Personal Wall chip
         Obx(() => _AudienceChip(
           icon: Icons.person,
-          label: 'Personal Wall',
-          isSelected: ctrl.visibility.value == 'personal_only',
-          onTap: () => ctrl.setVisibility('personal_only'),
+          label: 'Personal Only',
+          isSelected: ctrl.visibility.value == AppConstants.visibilityPersonalOnly,
+          onTap: () => ctrl.setVisibility(AppConstants.visibilityPersonalOnly),
         )),
         const SizedBox(height: AppSizes.space12),
 
-        // Circle chips — dynamic from HomeController circles
-        _CircleChips(ctrl: ctrl),
+        // All Friends chip
+        Obx(() => _AudienceChip(
+          icon: Icons.people,
+          label: 'All Friends',
+          isSelected: ctrl.visibility.value == AppConstants.visibilityAllFriends,
+          onTap: () => ctrl.setVisibility(AppConstants.visibilityAllFriends),
+        )),
+        const SizedBox(height: AppSizes.space12),
+
+        // Selected Friends chip
+        Obx(() => _AudienceChip(
+          icon: Icons.group,
+          label: 'Selected Friends',
+          isSelected: ctrl.visibility.value == AppConstants.visibilitySelectedFriends,
+          onTap: () => ctrl.setVisibility(AppConstants.visibilitySelectedFriends),
+        )),
+
+        // Friend selector when "Selected Friends" is chosen
+        Obx(() {
+          if (ctrl.visibility.value != AppConstants.visibilitySelectedFriends) {
+            return const SizedBox.shrink();
+          }
+          return _FriendSelector(
+            selectedFriendIds: ctrl.selectedFriendIds,
+            onToggle: ctrl.toggleSelectedFriend,
+          );
+        }),
       ],
     );
   }
 }
 
-class _CircleChips extends StatelessWidget {
-  const _CircleChips({required this.ctrl});
-  final MomentController ctrl;
+class _FriendSelector extends StatelessWidget {
+  const _FriendSelector({
+    required this.selectedFriendIds,
+    required this.onToggle,
+  });
+
+  final RxList<String> selectedFriendIds;
+  final void Function(String) onToggle;
 
   @override
   Widget build(BuildContext context) {
-    return GetBuilder<HomeController>(
-      init: HomeController(Get.find<CircleRepository>(), Get.find<MomentRepository>()),
-      builder: (homeCtrl) {
-        if (homeCtrl.circles.isEmpty) {
-          return const SizedBox.shrink();
+    final friendRepo = Get.find<FriendRepository>();
+    final userProfileRepo = Get.find<UserProfileRepository>();
+
+    return FutureBuilder(
+      future: friendRepo.watchFriendships(
+        Get.find<HomeController>().currentUserId ?? '',
+      ).first,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Padding(
+            padding: EdgeInsets.only(top: AppSizes.space12),
+            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          );
         }
-        return Obx(() => Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: homeCtrl.circles.map((circle) {
-            final isSelected = ctrl.visibility.value == 'circle'
-                && ctrl.selectedCircleId.value == circle.id;
+
+        final friendships = snapshot.data!;
+        if (friendships.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.only(top: AppSizes.space12),
+            child: Container(
+              padding: const EdgeInsets.all(AppSizes.space16),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceContainerLow,
+                borderRadius: AppSizes.borderRadiusMd,
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, color: AppColors.outline, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'No friends yet. Add friends first to share with them.',
+                      style: TextStyle(fontSize: 12, color: AppColors.onSurfaceVariant),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return FutureBuilder(
+          future: Future.wait(
+            friendships.map((f) async {
+              final uid = Get.find<HomeController>().currentUserId ?? '';
+              final friendId = f.otherUserId(uid);
+              final result = await userProfileRepo.getUserProfile(friendId);
+              final profile = result.fold(
+                onSuccess: (data) => data,
+                onFailure: (_) => null,
+              );
+              return (friendId, profile);
+            }).toList(),
+          ),
+          builder: (context, snap) {
+            if (!snap.hasData) return const SizedBox.shrink();
+
             return Padding(
-              padding: const EdgeInsets.only(bottom: AppSizes.space8),
-              child: _AudienceChip(
-                icon: Icons.group,
-                label: circle.name,
-                isSelected: isSelected,
-                onTap: () {
-                  ctrl.setCircle(circle.id);
-                },
+              padding: const EdgeInsets.only(top: AppSizes.space12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Select Friends',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.outline,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                  const SizedBox(height: AppSizes.space8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: snap.data!.map((item) {
+                      final friendId = item.$1;
+                      final profile = item.$2;
+                      final name = profile?.displayName ?? 'Friend';
+                      final avatarUrl = profile?.avatarUrl;
+                      final isSelected = selectedFriendIds.contains(friendId);
+
+                      return GestureDetector(
+                        onTap: () => onToggle(friendId),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? AppColors.primaryContainer
+                                : AppColors.surfaceContainerLow,
+                            borderRadius: BorderRadius.circular(20),
+                            border: isSelected
+                                ? Border.all(color: AppColors.primary, width: 1.5)
+                                : null,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              CircleAvatar(
+                                radius: 10,
+                                backgroundColor: AppColors.primaryFixed,
+                                backgroundImage: avatarUrl != null
+                                    ? NetworkImage(avatarUrl)
+                                    : null,
+                                child: avatarUrl == null
+                                    ? Icon(Icons.person, size: 10, color: AppColors.primary)
+                                    : null,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                name,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: isSelected
+                                      ? AppColors.onPrimaryContainer
+                                      : AppColors.onSurfaceVariant,
+                                ),
+                              ),
+                              if (isSelected) ...[
+                                const SizedBox(width: 4),
+                                Icon(Icons.check, size: 14, color: AppColors.primary),
+                              ],
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
               ),
             );
-          }).toList(),
-        ));
+          },
+        );
       },
     );
   }
 }
+
+// Unused — kept for reference during Phase 3 (Circle V1.5)
+// class _CircleChips extends StatelessWidget {
+//   const _CircleChips({required this.ctrl});
+//   final MomentController ctrl;
+//   ...
+// }
 
 class _AudienceChip extends StatelessWidget {
   const _AudienceChip({
@@ -359,7 +509,7 @@ class _AudienceChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: AppSizes.space16, vertical: AppSizes.space12),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.primaryContainer : AppColors.surfaceContainerLow,
-          borderRadius: AppSizes.borderRadiusFull,
+          borderRadius: AppSizes.borderRadiusMd,
           border: isSelected ? Border.all(color: AppColors.primary, width: 1.5) : null,
         ),
         child: Row(

@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/errors/failures.dart';
 import '../../../core/errors/result.dart';
 import '../../../core/models/user_profile.dart';
-import '../../../core/services/image_service.dart';
+import '../../../core/services/media_service.dart';
 import 'user_profile_provider.dart';
 
 class FirestoreUserProfileProvider implements UserProfileProvider {
@@ -57,17 +57,16 @@ class FirestoreUserProfileProvider implements UserProfileProvider {
   @override
   Future<Result<String>> uploadAvatar(String uid, String filePath) async {
     try {
-      // Use ImageService to save to Firestore + local cache
-      final imageService = ImageService.instance;
-      final dataUrl = await imageService.uploadAvatar(
+      // Upload to Firebase Storage via MediaService
+      final media = await MediaService.instance.uploadAvatar(
         userId: uid,
         localFilePath: filePath,
       );
 
-      // Update user profile with avatar data URL
-      await _col.doc(uid).update({'avatarUrl': dataUrl});
+      // Update user profile with download URL
+      await _col.doc(uid).update({'avatarUrl': media.downloadUrl});
 
-      return Result.success(dataUrl);
+      return Result.success(media.downloadUrl);
     } catch (e) {
       return Result.failure(AppFailure.unexpected(e.toString()));
     }

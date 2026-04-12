@@ -1,7 +1,9 @@
 import 'package:get/get.dart';
 import 'package:done_drop/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:done_drop/firebase/repositories/moment_repository.dart';
+import 'package:done_drop/firebase/repositories/activity_repository.dart';
 import 'package:done_drop/core/models/moment.dart';
+import 'package:done_drop/core/models/activity.dart';
 import 'package:done_drop/core/services/analytics_service.dart';
 
 /// Data class for a recap day group.
@@ -12,21 +14,27 @@ class RecapDay {
 }
 
 /// Controller for the weekly recap screen.
+/// Integrates discipline activity data with proof moments.
 class RecapController extends GetxController {
   RecapController();
 
   MomentRepository get _momentRepo => Get.find<MomentRepository>();
+  ActivityRepository get _activityRepo => Get.find<ActivityRepository>();
   AuthController get _authController => Get.find<AuthController>();
 
   String? get _userId => _authController.firebaseUser?.uid;
 
   final RxList<RecapDay> days = <RecapDay>[].obs;
+  final RxList<Activity> activities = <Activity>[].obs;
   final RxBool isLoading = true.obs;
+  final RxInt weekCompletions = 0.obs;
+  final RxInt bestStreak = 0.obs;
 
   @override
   void onInit() {
     super.onInit();
     _loadRecap();
+    _watchActivities();
   }
 
   void _loadRecap() {
@@ -36,36 +44,44 @@ class RecapController extends GetxController {
       return;
     }
 
-    // Subscribe to personal moments and compute weekly recap
     _momentRepo.watchPersonalMoments(uid, limit: 200).listen((moments) {
       final now = DateTime.now();
       final weekStart = now.subtract(Duration(days: now.weekday - 1));
       final startOfWeek = DateTime(weekStart.year, weekStart.month, weekStart.day);
 
-      // Filter to this week only
       final thisWeek = moments.where((m) {
         return m.createdAt.isAfter(startOfWeek) ||
             m.createdAt.isAtSameMomentAs(startOfWeek);
       }).toList();
 
-      // Group by day
       final grouped = <String, List<Moment>>{};
       for (final m in thisWeek) {
         final key = _dateKey(m.createdAt);
         grouped.putIfAbsent(key, () => []).add(m);
       }
 
-      // Build sorted list of RecapDay
       final sortedKeys = grouped.keys.toList()..sort((a, b) => b.compareTo(a));
       days.value = sortedKeys.map((key) {
         final date = DateTime.parse(key);
         return RecapDay(date: date, moments: grouped[key]!);
       }).toList();
 
+      weekCompletions.value = thisWeek.length;
       isLoading.value = false;
 
-      // Log recap viewed
       AnalyticsService.instance.recapViewed(_weekKey());
+    });
+  }
+
+  void _watchActivities() {
+    final uid = _userId;
+    if (uid == null) return;
+
+    _activityRepo.watchActiveActivities(uid).listen((list) {
+      activities.value = list;
+      if (list.isNotEmpty) {
+        bestStreak.value = list.map((a) => a.currentStreak).reduce((a, b) => a > b ? a : b);
+      }
     });
   }
 

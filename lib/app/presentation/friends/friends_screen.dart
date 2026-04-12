@@ -4,8 +4,9 @@ import 'package:done_drop/core/theme/theme.dart';
 import 'package:done_drop/app/core/widgets/widgets.dart';
 import 'package:done_drop/app/routes/app_routes.dart';
 import 'package:done_drop/app/presentation/friends/friends_controller.dart';
+import 'package:done_drop/core/models/friendship.dart';
+import 'package:done_drop/core/models/friend_request.dart';
 
-/// Friends management screen — lists accepted friends + pending requests.
 class FriendsScreen extends StatelessWidget {
   const FriendsScreen({super.key});
 
@@ -48,7 +49,11 @@ class FriendsScreen extends StatelessWidget {
                 unselectedLabelColor: AppColors.onSurfaceVariant,
                 labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
                 tabs: [
-                  const Tab(text: 'Friends'),
+                  Obx(() => Tab(
+                    child: Text(ctrl.isAtFriendCap
+                        ? 'Friends (${ctrl.friendCount.value}/${ctrl.maxFriends})'
+                        : 'Friends'),
+                  )),
                   Obx(() => Tab(
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -64,7 +69,8 @@ class FriendsScreen extends StatelessWidget {
                             ),
                             child: Text(
                               '${ctrl.pendingRequestCount.value}',
-                              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                  color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                             ),
                           ),
                         ],
@@ -76,9 +82,7 @@ class FriendsScreen extends StatelessWidget {
             ),
             body: TabBarView(
               children: [
-                // Tab 0: Friends list
                 Obx(() => _FriendsList(ctrl: ctrl)),
-                // Tab 1: Requests
                 Obx(() => _RequestsList(ctrl: ctrl)),
               ],
             ),
@@ -95,7 +99,7 @@ class _FriendsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (ctrl.friends.isEmpty) {
+    if (ctrl.friendships.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -130,27 +134,19 @@ class _FriendsList extends StatelessWidget {
 
     return ListView.builder(
       padding: const EdgeInsets.all(AppSizes.space16),
-      itemCount: ctrl.friends.length,
+      itemCount: ctrl.friendships.length,
       itemBuilder: (context, i) {
-        final friendship = ctrl.friends[i];
-        // Determine the other user's info
-        final isSender = friendship.senderId == ctrl.currentUserId;
-        final friendName = isSender
-            ? friendship.receiverId // We don't have display name readily; would need to look up
-            : friendship.senderDisplayName ?? 'User';
-        final avatarUrl = isSender ? null : friendship.senderAvatarUrl;
+        final friendship = ctrl.friendships[i];
+        final currentUid = ctrl.currentUserId ?? '';
+        final friendId = friendship.otherUserId(currentUid);
 
         return _FriendTile(
-          name: friendName,
-          avatarUrl: avatarUrl,
-          onTap: () {
-            // Future: navigate to friend profile
-          },
+          friendId: friendId,
           onRemove: () async {
             final confirmed = await Get.dialog<bool>(
               AlertDialog(
                 title: const Text('Remove Friend'),
-                content: Text('Remove $friendName from your friends?'),
+                content: const Text('Remove this friend?'),
                 actions: [
                   TextButton(onPressed: () => Get.back(result: false), child: const Text('Cancel')),
                   TextButton(
@@ -207,18 +203,7 @@ class _RequestsList extends StatelessWidget {
       padding: const EdgeInsets.all(AppSizes.space16),
       children: [
         if (hasIncoming) ...[
-          Padding(
-            padding: const EdgeInsets.only(bottom: AppSizes.space8),
-            child: Text(
-              'INCOMING',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: AppColors.outline,
-                letterSpacing: 1.5,
-              ),
-            ),
-          ),
+          _SectionLabel('INCOMING'),
           ...ctrl.incomingRequests.map((req) => _RequestTile(
             name: req.senderDisplayName ?? 'User',
             avatarUrl: req.senderAvatarUrl,
@@ -229,20 +214,9 @@ class _RequestsList extends StatelessWidget {
         ],
         if (hasOutgoing) ...[
           const SizedBox(height: AppSizes.space16),
-          Padding(
-            padding: const EdgeInsets.only(bottom: AppSizes.space8),
-            child: Text(
-              'SENT',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: AppColors.outline,
-                letterSpacing: 1.5,
-              ),
-            ),
-          ),
+          _SectionLabel('SENT'),
           ...ctrl.outgoingRequests.map((req) => _RequestTile(
-            name: req.receiverId, // We don't store receiver's display name in the request
+            name: req.receiverId,
             avatarUrl: null,
             isIncoming: false,
             onCancel: () => ctrl.cancelRequest(req),
@@ -253,40 +227,67 @@ class _RequestsList extends StatelessWidget {
   }
 }
 
-class _FriendTile extends StatelessWidget {
-  const _FriendTile({
-    required this.name,
-    required this.avatarUrl,
-    required this.onTap,
-    required this.onRemove,
-  });
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.label);
+  final String label;
 
-  final String name;
-  final String? avatarUrl;
-  final VoidCallback onTap;
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSizes.space8),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: AppColors.outline,
+          letterSpacing: 1.5,
+        ),
+      ),
+    );
+  }
+}
+
+class _FriendTile extends StatelessWidget {
+  const _FriendTile({required this.friendId, required this.onRemove});
+
+  final String friendId;
   final VoidCallback onRemove;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppSizes.space8),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: AppSizes.space16, vertical: AppSizes.space4),
-        shape: RoundedRectangleBorder(borderRadius: AppSizes.borderRadiusMd),
-        tileColor: AppColors.surfaceContainerLow,
-        leading: CircleAvatar(
-          radius: 22,
-          backgroundColor: AppColors.primaryFixed,
-          backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl!) : null,
-          child: avatarUrl == null ? Icon(Icons.person, color: AppColors.primary, size: 20) : null,
-        ),
-        title: Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),
-        trailing: IconButton(
-          icon: Icon(Icons.remove_circle_outline, color: AppColors.error, size: 20),
-          onPressed: onRemove,
-        ),
-        onTap: onTap,
-      ),
+    final ctrl = Get.find<FriendsController>();
+
+    return FutureBuilder(
+      future: ctrl.friendRepo.getFriendProfile(friendId),
+      builder: (context, snapshot) {
+        final profile = snapshot.data;
+        final name = profile?.displayName ?? 'Friend';
+        final avatarUrl = profile?.avatarUrl;
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: AppSizes.space8),
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: AppSizes.space16, vertical: AppSizes.space4),
+            shape: RoundedRectangleBorder(borderRadius: AppSizes.borderRadiusMd),
+            tileColor: AppColors.surfaceContainerLow,
+            leading: CircleAvatar(
+              radius: 22,
+              backgroundColor: AppColors.primaryFixed,
+              backgroundImage:
+                  avatarUrl != null ? NetworkImage(avatarUrl!) : null,
+              child: avatarUrl == null
+                  ? Icon(Icons.person, color: AppColors.primary, size: 20)
+                  : null,
+            ),
+            title: Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),
+            trailing: IconButton(
+              icon: Icon(Icons.remove_circle_outline, color: AppColors.error, size: 20),
+              onPressed: onRemove,
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -323,7 +324,9 @@ class _RequestTile extends StatelessWidget {
             radius: 22,
             backgroundColor: AppColors.primaryFixed,
             backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl!) : null,
-            child: avatarUrl == null ? Icon(Icons.person, color: AppColors.primary, size: 20) : null,
+            child: avatarUrl == null
+                ? Icon(Icons.person, color: AppColors.primary, size: 20)
+                : null,
           ),
           const SizedBox(width: AppSizes.space12),
           Expanded(
@@ -339,20 +342,10 @@ class _RequestTile extends StatelessWidget {
             ),
           ),
           if (isIncoming) ...[
-            IconButton(
-              icon: Icon(Icons.check_circle, color: AppColors.primary),
-              onPressed: onAccept,
-            ),
-            IconButton(
-              icon: Icon(Icons.cancel, color: AppColors.error),
-              onPressed: onDecline,
-            ),
-          ] else ...[
-            IconButton(
-              icon: Icon(Icons.cancel_outlined, color: AppColors.outline),
-              onPressed: onCancel,
-            ),
-          ],
+            IconButton(icon: Icon(Icons.check_circle, color: AppColors.primary), onPressed: onAccept),
+            IconButton(icon: Icon(Icons.cancel, color: AppColors.error), onPressed: onDecline),
+          ] else
+            IconButton(icon: Icon(Icons.cancel_outlined, color: AppColors.outline), onPressed: onCancel),
         ],
       ),
     );
