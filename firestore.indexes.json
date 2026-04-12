@@ -1,7 +1,16 @@
 {
   "indexes": [
+    // ── activities ─────────────────────────────────────────────────────────────
     {
-      "collectionGroup": "task_templates",
+      "collectionGroup": "activities",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "ownerId", "order": "ASCENDING" },
+        { "fieldPath": "isArchived", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "activities",
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "ownerId", "order": "ASCENDING" },
@@ -9,57 +18,44 @@
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
+
+    // ── activity_instances ─────────────────────────────────────────────────────
     {
-      "collectionGroup": "friend_requests",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "senderId", "order": "ASCENDING" },
-        { "fieldPath": "status", "order": "ASCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "friend_requests",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "receiverId", "order": "ASCENDING" },
-        { "fieldPath": "status", "order": "ASCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "friend_requests",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "senderId", "order": "ASCENDING" },
-        { "fieldPath": "status", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "friend_requests",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "receiverId", "order": "ASCENDING" },
-        { "fieldPath": "status", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "moments",
+      "collectionGroup": "activity_instances",
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "ownerId", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
+        { "fieldPath": "date", "order": "ASCENDING" }
       ]
     },
     {
-      "collectionGroup": "moments",
+      "collectionGroup": "activity_instances",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "circleId", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" },
-        { "fieldPath": "visibility", "order": "ASCENDING" }
+        { "fieldPath": "activityId", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "ASCENDING" }
       ]
     },
+
+    // ── completion_logs ────────────────────────────────────────────────────────
+    {
+      "collectionGroup": "completion_logs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "ownerId", "order": "ASCENDING" },
+        { "fieldPath": "completedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "completion_logs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "activityId", "order": "ASCENDING" },
+        { "fieldPath": "completedAt", "order": "DESCENDING" }
+      ]
+    },
+
+    // ── moments ───────────────────────────────────────────────────────────────
     {
       "collectionGroup": "moments",
       "queryScope": "COLLECTION",
@@ -73,43 +69,85 @@
       "collectionGroup": "moments",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "circleId", "order": "ASCENDING" },
+        { "fieldPath": "ownerId", "order": "ASCENDING" },
         { "fieldPath": "visibility", "order": "ASCENDING" },
         { "fieldPath": "isDeleted", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
     {
-      "collectionGroup": "circle_memberships",
+      "collectionGroup": "moments",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "userId", "order": "ASCENDING" },
-        { "fieldPath": "status", "order": "ASCENDING" }
+        { "fieldPath": "category", "order": "ASCENDING" },
+        { "fieldPath": "ownerId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+
+    // ── feed_deliveries ──────────────────────────────────────────────────────
+    {
+      "collectionGroup": "feed_deliveries",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "recipientId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
     {
-      "collectionGroup": "circle_memberships",
+      "collectionGroup": "feed_deliveries",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "circleId", "order": "ASCENDING" },
-        { "fieldPath": "status", "order": "ASCENDING" }
+        { "fieldPath": "recipientId", "order": "ASCENDING" },
+        { "fieldPath": "isRead", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+
+    // ── friendships ───────────────────────────────────────────────────────────
+    {
+      "collectionGroup": "friendships",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId1", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
     {
-      "collectionGroup": "invites",
+      "collectionGroup": "friendships",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "inviteCode", "order": "ASCENDING" },
-        { "fieldPath": "status", "order": "ASCENDING" }
+        { "fieldPath": "userId2", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
+
+    // ── friend_requests ───────────────────────────────────────────────────────
     {
-      "collectionGroup": "invites",
+      "collectionGroup": "friend_requests",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "circleId", "order": "ASCENDING" },
+        { "fieldPath": "receiverId", "order": "ASCENDING" },
         { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "friend_requests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "senderId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+
+    // ── users ────────────────────────────────────────────────────────────────
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "username", "order": "ASCENDING" }
       ]
     }
   ],

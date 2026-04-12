@@ -9,3 +9,4 @@ export 'dd_moment_card.dart';
 export 'dd_scaffold.dart';
 export 'dd_chip.dart';
 export 'dd_reaction.dart';
+export 'dd_connectivity_banner.dart';

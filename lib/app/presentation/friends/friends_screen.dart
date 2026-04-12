@@ -4,8 +4,6 @@ import 'package:done_drop/core/theme/theme.dart';
 import 'package:done_drop/app/core/widgets/widgets.dart';
 import 'package:done_drop/app/routes/app_routes.dart';
 import 'package:done_drop/app/presentation/friends/friends_controller.dart';
-import 'package:done_drop/core/models/friendship.dart';
-import 'package:done_drop/core/models/friend_request.dart';
 
 class FriendsScreen extends StatelessWidget {
   const FriendsScreen({super.key});
@@ -275,7 +273,7 @@ class _FriendTile extends StatelessWidget {
               radius: 22,
               backgroundColor: AppColors.primaryFixed,
               backgroundImage:
-                  avatarUrl != null ? NetworkImage(avatarUrl!) : null,
+                  avatarUrl != null ? NetworkImage(avatarUrl) : null,
               child: avatarUrl == null
                   ? Icon(Icons.person, color: AppColors.primary, size: 20)
                   : null,

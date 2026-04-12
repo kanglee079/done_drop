@@ -112,7 +112,7 @@ class ProfileScreen extends StatelessWidget {
                     controller: ctrl.bioController,
                     maxLines: 3,
                     maxLength: 150,
-                    decoration: _inputDecoration('Tell your circle a little about yourself'),
+                    decoration: _inputDecoration('Tell your friends a little about yourself'),
                     style: const TextStyle(fontSize: 14, color: AppColors.onSurface),
                   ),
                 ),

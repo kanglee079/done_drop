@@ -5,19 +5,23 @@ import '../presentation/splash/splash_screen.dart';
 import '../presentation/onboarding/onboarding_screen.dart';
 import '../presentation/auth/sign_in_screen.dart';
 import '../presentation/auth/sign_up_screen.dart';
+import '../presentation/auth/forgot_password_screen.dart';
+import '../presentation/auth/forgot_password_binding.dart';
 import '../presentation/home/home_screen.dart';
 import '../presentation/capture/capture_screen.dart';
 import '../presentation/capture/preview_screen.dart';
 import '../presentation/capture/success_screen.dart';
 import '../presentation/feed/feed_screen.dart';
 import '../presentation/feed/feed_binding.dart';
-import '../presentation/feed/circle_detail_screen.dart';
-import '../presentation/feed/circle_detail_binding.dart';
-import '../presentation/feed/create_circle_screen.dart';
+// Circle screens deprecated in V1 — kept but not routed
+// import '../presentation/feed/circle_detail_screen.dart';
+// import '../presentation/feed/circle_detail_binding.dart';
+// import '../presentation/feed/create_circle_screen.dart';
 import '../presentation/feed/invite_screen.dart';
 import '../presentation/feed/invite_binding.dart';
 import '../presentation/feed/join_circle_screen.dart';
 import '../presentation/memory_wall/memory_wall_screen.dart';
+import '../presentation/memory_wall/memory_wall_binding.dart';
 import '../presentation/recap/recap_screen.dart';
 import '../presentation/recap/recap_binding.dart';
 import '../presentation/settings/settings_screen.dart';
@@ -30,7 +34,9 @@ import '../presentation/premium/premium_binding.dart';
 import '../presentation/report/report_screen.dart';
 import '../presentation/report/report_binding.dart';
 import '../presentation/friends/friends_screen.dart';
+import '../presentation/friends/friends_binding.dart';
 import '../presentation/friends/add_friend_screen.dart';
+import '../presentation/friends/add_friend_binding.dart';
 import '../presentation/home/home_binding.dart';
 import '../../features/auth/presentation/bindings/sign_in_binding.dart';
 import '../../features/auth/presentation/bindings/sign_up_binding.dart';
@@ -72,6 +78,12 @@ class AppPages {
       binding: SignUpBinding(),
       transition: Transition.rightToLeft,
     ),
+    GetPage(
+      name: AppRoutes.forgotPassword,
+      page: () => const ForgotPasswordScreen(),
+      binding: ForgotPasswordBinding(),
+      transition: Transition.rightToLeft,
+    ),
 
     // ── Protected Routes (require AuthGuard) ─────────────────────────────────
     GetPage(
@@ -107,19 +119,21 @@ class AppPages {
       middlewares: [AuthGuard()],
       transition: Transition.fadeIn,
     ),
-    GetPage(
-      name: AppRoutes.circleDetail,
-      page: () => const CircleDetailScreen(),
-      binding: CircleDetailBinding(),
-      middlewares: [AuthGuard()],
-      transition: Transition.rightToLeft,
-    ),
-    GetPage(
-      name: AppRoutes.createCircle,
-      page: () => const CreateCircleScreen(),
-      middlewares: [AuthGuard()],
-      transition: Transition.downToUp,
-    ),
+    // ── Circle routes DEPRECATED in V1 ────────────────────────────────────
+    // GetPage(
+    //   name: AppRoutes.circleDetail,
+    //   page: () => const CircleDetailScreen(),
+    //   binding: CircleDetailBinding(),
+    //   middlewares: [AuthGuard()],
+    //   transition: Transition.rightToLeft,
+    // ),
+    // GetPage(
+    //   name: AppRoutes.createCircle,
+    //   page: () => const CreateCircleScreen(),
+    //   middlewares: [AuthGuard()],
+    //   transition: Transition.downToUp,
+    // ),
+    // ───────────────────────────────────────────────────────────────────────
     GetPage(
       name: AppRoutes.invite,
       page: () => const InviteScreen(),
@@ -136,6 +150,7 @@ class AppPages {
     GetPage(
       name: AppRoutes.memoryWall,
       page: () => const MemoryWallScreen(),
+      binding: MemoryWallBinding(),
       middlewares: [AuthGuard()],
       transition: Transition.fadeIn,
     ),
@@ -183,12 +198,14 @@ class AppPages {
     GetPage(
       name: AppRoutes.friends,
       page: () => const FriendsScreen(),
+      binding: FriendsBinding(),
       middlewares: [AuthGuard()],
       transition: Transition.rightToLeft,
     ),
     GetPage(
       name: AppRoutes.addFriend,
       page: () => const AddFriendScreen(),
+      binding: AddFriendBinding(),
       middlewares: [AuthGuard()],
       transition: Transition.rightToLeft,
     ),

@@ -1,6 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:done_drop/core/constants/app_constants.dart';
-
 /// Discipline activity — a repeatable habit/routine the user commits to.
 class Activity {
   const Activity({

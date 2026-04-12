@@ -6,7 +6,6 @@ import 'package:done_drop/core/constants/app_constants.dart';
 import 'package:done_drop/core/errors/result.dart';
 import 'package:done_drop/app/presentation/capture/moment_controller.dart';
 import 'package:done_drop/app/presentation/home/home_controller.dart';
-import 'package:done_drop/firebase/repositories/moment_repository.dart';
 import 'package:done_drop/firebase/repositories/friend_repository.dart';
 import 'package:done_drop/features/auth/repositories/user_profile_repository.dart';
 
@@ -22,6 +21,10 @@ class PreviewScreen extends StatelessWidget {
     // If imagePath was passed, set it on the controller
     final args = Get.arguments as Map<String, dynamic>?;
     final imagePath = args?['imagePath'] as String?;
+
+    // Initialize proof moment context if coming from activity completion
+    ctrl.initFromArgs(args);
+
     if (imagePath != null) {
       ctrl.setImagePath(imagePath);
     }
@@ -91,7 +94,8 @@ class _PreviewTopBar extends StatelessWidget {
           ),
           Expanded(
             child: Text(
-              'Post Moment',
+              // "Proof Moment" when coming from activity completion
+              ctrl.isProofMoment ? 'Proof Moment' : 'Post Moment',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: AppTypography.serifFamily,
@@ -109,8 +113,8 @@ class _PreviewTopBar extends StatelessWidget {
                     height: 16,
                     child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
                   )
-                : const Text(
-                    'Post',
+                : Text(
+                    ctrl.isProofMoment ? 'Save' : 'Post',
                     style: TextStyle(
                       color: AppColors.primary,
                       fontWeight: FontWeight.w700,
@@ -129,6 +133,7 @@ class _CaptionField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isProof = ctrl.isProofMoment;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -153,7 +158,8 @@ class _CaptionField extends StatelessWidget {
             color: AppColors.onSurface,
           ),
           decoration: InputDecoration(
-            hintText: 'Add a short caption...',
+            // Proof moments don't require a caption; free captures can add one optionally
+            hintText: isProof ? 'Add a caption for your proof (optional)...' : 'Add a short caption...',
             hintStyle: TextStyle(
               color: AppColors.outline.withValues(alpha: 0.4),
               fontStyle: FontStyle.italic,
@@ -184,19 +190,8 @@ class _CategorySelector extends StatelessWidget {
   const _CategorySelector({required this.ctrl});
   final MomentController ctrl;
 
-  static const categories = [
-    'Daily Wins',
-    'Travel',
-    'Reflections',
-    'Health & Fitness',
-    'Creative',
-    'Learning',
-    'Relationships',
-    'Nature',
-    'Food',
-    'Work',
-    'Monthly Highlights',
-  ];
+  // Use constants instead of hardcoded list
+  List<String> get categories => AppConstants.momentCategories;
 
   @override
   Widget build(BuildContext context) {

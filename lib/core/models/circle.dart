@@ -1,4 +1,10 @@
-/// Circle model — a private shared space
+/// Circle model — DEPRECATED in V1.
+///
+/// V1 uses the friend model (personal_only / all_friends / selected_friends)
+/// instead of circles. This model is kept for existing data migration only.
+///
+/// To be fully removed after V1 public launch.
+@Deprecated('Circle deprecated in V1 — use friend system')
 class Circle {
   const Circle({
     required this.id,

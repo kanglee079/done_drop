@@ -75,10 +75,11 @@ class DDSecondaryButton extends StatelessWidget {
   const DDSecondaryButton({
     super.key,
     required this.label,
-    required this.onPressed,
+    this.onPressed,
     this.icon,
     this.isExpanded = true,
     this.isLoading = false,
+    this.isEnabled = true,
   });
 
   final String label;
@@ -86,16 +87,21 @@ class DDSecondaryButton extends StatelessWidget {
   final IconData? icon;
   final bool isExpanded;
   final bool isLoading;
+  /// When false, button appears dimmed and taps are ignored
+  final bool isEnabled;
 
   @override
   Widget build(BuildContext context) {
+    final enabled = isEnabled && !isLoading;
     final button = GestureDetector(
-      onTap: isLoading ? null : onPressed,
+      onTap: enabled ? onPressed : null,
       child: Container(
         height: AppSizes.buttonHeightMd,
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
           borderRadius: AppSizes.borderRadiusMd,
+          color: enabled
+              ? Theme.of(context).colorScheme.surfaceContainerHighest
+              : Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         ),
         child: Center(
           child: isLoading
@@ -111,13 +117,17 @@ class DDSecondaryButton extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (icon != null) ...[
-                      Icon(icon, color: AppColors.onSurface, size: 20),
+                      Icon(
+                        icon,
+                        color: enabled ? AppColors.onSurface : AppColors.outline,
+                        size: 20,
+                      ),
                       const SizedBox(width: AppSizes.space8),
                     ],
                     Text(
                       label,
-                      style: const TextStyle(
-                        color: AppColors.onSurface,
+                      style: TextStyle(
+                        color: enabled ? AppColors.onSurface : AppColors.outline,
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),

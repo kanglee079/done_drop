@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:done_drop/core/theme/theme.dart';
+import 'package:done_drop/core/constants/app_constants.dart';
 import 'package:done_drop/app/core/widgets/widgets.dart';
 import 'package:done_drop/features/auth/presentation/controllers/onboarding_controller.dart';
 
@@ -40,9 +41,9 @@ class OnboardingScreen extends GetView<OnboardingController> {
                 physics: const NeverScrollableScrollPhysics(),
                 onPageChanged: controller.onPageChanged,
                 children: [
-                  _WelcomePage(),
+                  const _WelcomePage(),
                   _UseCasePage(controller: controller),
-                  _PermissionsPage(),
+                  const _PermissionsPage(),
                 ],
               ),
             ),
@@ -70,6 +71,8 @@ class OnboardingScreen extends GetView<OnboardingController> {
 }
 
 class _WelcomePage extends StatelessWidget {
+  const _WelcomePage();
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -92,7 +95,7 @@ class _WelcomePage extends StatelessWidget {
           ),
           const SizedBox(height: AppSizes.space16),
           Text(
-            'A curated space to preserve the small wins, the big adventures, and everything that matters in between.',
+            'Build habits. Complete them. Capture proof. Share privately with accountability partners.',
             textAlign: TextAlign.center,
             style: AppTypography.bodyMedium(color: AppColors.onSurfaceVariant),
           ),
@@ -107,34 +110,24 @@ class _UseCasePage extends StatelessWidget {
 
   final OnboardingController controller;
 
+  IconData _useCaseIcon(String key) {
+    switch (key) {
+      case 'personal':
+        return Icons.person_outline;
+      case 'with_friends':
+        return Icons.people_outline;
+      case 'couple':
+        return Icons.favorite_outline;
+      case 'squad':
+        return Icons.celebration_outlined;
+      default:
+        return Icons.person_outline;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final useCases = const [
-      {
-        'key': 'personal',
-        'label': 'Personal',
-        'desc': 'A private journal for you.',
-        'icon': Icons.person_outline,
-      },
-      {
-        'key': 'couple',
-        'label': 'Couple',
-        'desc': 'Shared moments for two.',
-        'icon': Icons.favorite_outline,
-      },
-      {
-        'key': 'friends',
-        'label': 'Friends',
-        'desc': 'Close circles only.',
-        'icon': Icons.groups_outlined,
-      },
-      {
-        'key': 'squad',
-        'label': 'Squad',
-        'desc': 'For your accountability circle.',
-        'icon': Icons.celebration_outlined,
-      },
-    ];
+    final useCases = AppConstants.onboardingUseCases;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSizes.space24),
@@ -143,7 +136,7 @@ class _UseCasePage extends StatelessWidget {
         children: [
           const SizedBox(height: AppSizes.space24),
           Text(
-            'WHO ARE YOU SHARING WITH?',
+            'WHAT BRINGS YOU HERE?',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,
@@ -174,7 +167,7 @@ class _UseCasePage extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          uc['icon'] as IconData,
+                          _useCaseIcon(uc['icon'] as String),
                           color: AppColors.primary,
                           size: 28,
                         ),
@@ -193,7 +186,7 @@ class _UseCasePage extends StatelessWidget {
                         const SizedBox(height: 4),
                         Flexible(
                           child: Text(
-                            uc['desc'] as String,
+                            uc['description'] as String,
                             style: const TextStyle(
                               fontFamily: 'Manrope',
                               fontSize: 12,
@@ -218,6 +211,8 @@ class _UseCasePage extends StatelessWidget {
 }
 
 class _PermissionsPage extends StatelessWidget {
+  const _PermissionsPage();
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -236,12 +231,13 @@ class _PermissionsPage extends StatelessWidget {
           ),
           const SizedBox(height: AppSizes.space32),
           Text(
-            'Camera Access',
+            'Capture Your Proof',
             style: AppTypography.headlineMedium(color: AppColors.onSurface),
           ),
           const SizedBox(height: AppSizes.space16),
           Text(
-            'DoneDrop needs camera access to capture your moments. Your photos are private and only shared with the circles you choose.',
+            'DoneDrop needs camera access to capture proof moments. '
+            'Your photos stay private until you choose to share them.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 15,
@@ -250,22 +246,22 @@ class _PermissionsPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSizes.space48),
-          _PermissionItem(
+          const _PermissionItem(
             icon: Icons.visibility_off_outlined,
             title: 'Private by default',
-            desc: 'You control who sees your moments.',
+            desc: 'You control who sees your proof moments.',
           ),
           const SizedBox(height: AppSizes.space16),
-          _PermissionItem(
+          const _PermissionItem(
             icon: Icons.lock_outline,
             title: 'End-to-end secure',
-            desc: 'Your memories stay yours.',
+            desc: 'Your accountability data stays yours.',
           ),
           const SizedBox(height: AppSizes.space16),
-          _PermissionItem(
+          const _PermissionItem(
             icon: Icons.notifications_outlined,
             title: 'Gentle reminders',
-            desc: 'Optional nudges to capture your day.',
+            desc: 'Optional nudges to complete your habits.',
           ),
         ],
       ),

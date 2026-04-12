@@ -4,8 +4,12 @@ class AppConstants {
 
   // ── App Info ─────────────────────────────────────────────────────────────
   static const String appName = 'DoneDrop';
-  static const String tagline = 'Complete it. Capture it. Share the moment.';
+  static const String tagline = 'Complete it. Capture it. Share the proof.';
   static const String appVersion = '1.0.0';
+  static const String appDescription =
+      'DoneDrop is a personal discipline app. Create habits and routines, '
+      'get reminded to do them, complete and capture proof moments, '
+      'then share privately with friends who hold you accountable.';
 
   // ── Storage Keys ─────────────────────────────────────────────────────────
   static const String keyOnboardingComplete = 'onboarding_complete';
@@ -15,15 +19,22 @@ class AppConstants {
   static const String keyPremiumStatus = 'premium_status';
   static const String keyRecapNotificationTime = 'recap_notification_time';
   static const String keyReminderNotification = 'reminder_notification_enabled';
-  static const String keyCircleNotification = 'circle_notification_enabled';
+
+  // ── Legacy Circle Collections (V1.5 — kept for data migration compatibility) ──
+  // V1 uses friendships/friend_requests. Circles are deprecated.
+  @Deprecated('Circles deprecated in V1 — use friend system')
+  static const String colCircles = 'circles';
+  @Deprecated('Circles deprecated in V1 — use friend system')
+  static const String colCircleMemberships = 'circle_memberships';
+  @Deprecated('Circles deprecated in V1 — use invite codes for friend system')
+  static const String colInvites = 'invites';
 
   // ── Firebase Collections ─────────────────────────────────────────────────
   static const String colUsers = 'users';
-  static const String colCircles = 'circles';
-  static const String colCircleMemberships = 'circle_memberships';
-  static const String colInvites = 'invites';
   static const String colMoments = 'moments';
   static const String colReactions = 'reactions';
+  // task_templates: legacy V1.0 artifacts — replaced by activities
+  @Deprecated('TaskTemplate deprecated — use Activity instead')
   static const String colTaskTemplates = 'task_templates';
   static const String colActivities = 'activities';
   static const String colActivityInstances = 'activity_instances';
@@ -70,53 +81,47 @@ class AppConstants {
     'inspiring',
   ];
 
-  // ── Circle Types ────────────────────────────────────────────────────────
+  // ── Legacy Circle Types (V1.5 — deprecated in V1) ────────────────────────
+  // V1 uses friend model (personal_only/all_friends/selected_friends) instead.
+  @Deprecated('Circles deprecated in V1')
   static const String circleTypePartner = 'partner';
+  @Deprecated('Circles deprecated in V1')
   static const String circleTypeCloseFriends = 'close_friends';
+  @Deprecated('Circles deprecated in V1')
   static const String circleTypeSquad = 'squad';
+  @Deprecated('Circles deprecated in V1')
   static const String circleTypePrivate = 'private_custom';
 
-  // ── Onboarding Use Cases ────────────────────────────────────────────────
+  // ── Onboarding Use Cases (V1 relocked — discipline-first) ──────────────────
+  // Only two use cases: personal discipline, or personal + accountability partners.
   static const List<Map<String, dynamic>> onboardingUseCases = [
     {
       'key': 'personal',
       'label': 'Personal',
-      'description': 'A private journal for you.',
+      'description': 'Track habits privately. Just you.',
       'icon': 'person',
     },
     {
-      'key': 'couple',
-      'label': 'Couple',
-      'description': 'Shared moments for two.',
-      'icon': 'favorite',
-    },
-    {
-      'key': 'friends',
-      'label': 'Friends',
-      'description': 'Close circles only.',
-      'icon': 'groups',
-    },
-    {
-      'key': 'squad',
-      'label': 'Squad',
-      'description': 'For your accountability circle.',
-      'icon': 'celebration',
+      'key': 'with_friends',
+      'label': 'With Friends',
+      'description': 'Private accountability with close friends.',
+      'icon': 'friends',
     },
   ];
 
-  // ── Categories ───────────────────────────────────────────────────────────
+  // ── Moment Categories (V1 relocked — discipline-first) ───────────────────
+  // Removed: Reflections (diary mindset), Monthly Highlights (vague).
   static const List<String> momentCategories = [
-    'Daily Wins',
-    'Travel',
-    'Reflections',
-    'Health & Fitness',
-    'Creative',
+    'Morning Routine',
+    'Exercise',
     'Learning',
-    'Relationships',
-    'Nature',
-    'Food',
+    'Creative',
+    'Health',
+    'Social',
+    'Hobby',
     'Work',
-    'Monthly Highlights',
+    'Travel',
+    'Other',
   ];
 
   // ── Animation Durations ─────────────────────────────────────────────────

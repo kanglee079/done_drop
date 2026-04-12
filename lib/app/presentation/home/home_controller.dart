@@ -5,13 +5,18 @@ import 'package:done_drop/core/models/user_profile.dart';
 import 'package:done_drop/core/models/activity.dart';
 import 'package:done_drop/core/models/activity_instance.dart';
 import 'package:done_drop/firebase/repositories/activity_repository.dart';
+import 'package:done_drop/firebase/repositories/friend_repository.dart';
 import 'package:done_drop/core/models/completion_log.dart';
+import 'package:done_drop/app/routes/app_routes.dart';
+import 'package:done_drop/core/services/connectivity_service.dart';
+import 'package:done_drop/core/services/offline_queue_service.dart';
 
 /// Home controller — manages bottom nav state and provides data to HomeScreen tabs.
 class HomeController extends GetxController {
   HomeController();
 
   late final ActivityRepository _activityRepo;
+  late final FriendRepository _friendRepo;
   AuthController get _authController => Get.find<AuthController>();
   UserProfileRepository get _userProfileRepo => Get.find<UserProfileRepository>();
 
@@ -39,15 +44,28 @@ class HomeController extends GetxController {
   final RxInt overdueToday = 0.obs;
   final RxInt currentBestStreak = 0.obs;
 
+  /// Friend count for display in stats header
+  final RxInt friendCount = 0.obs;
+
   final RxBool isLoading = true.obs;
 
   @override
   void onInit() {
     super.onInit();
     _activityRepo = ActivityRepository(Get.find());
+    _friendRepo = Get.find<FriendRepository>();
     _watchProfile();
     _watchActivities();
     _watchTodayInstances();
+    _watchFriendCount();
+  }
+
+  void _watchFriendCount() {
+    final uid = _userId;
+    if (uid == null) return;
+    _friendRepo.watchFriendships(uid).listen((list) {
+      friendCount.value = list.length;
+    });
   }
 
   void _watchProfile() {
@@ -93,8 +111,9 @@ class HomeController extends GetxController {
     overdueToday.value = instances.where((i) => i.isOverdue).length;
 
     if (activities.isNotEmpty) {
+      // Use longestStreak (best ever) not currentStreak
       currentBestStreak.value = activities
-          .map((a) => a.currentStreak)
+          .map((a) => a.longestStreak)
           .reduce((a, b) => a > b ? a : b);
     }
   }
@@ -153,20 +172,101 @@ class HomeController extends GetxController {
   }
 
   /// Complete an activity for today.
-  Future<void> completeActivity(String activityId) async {
+  /// Creates a CompletionLog for streak verification + links to proof moment later.
+  /// Queues the completion if offline (via OfflineQueueService).
+  Future<CompletionLog?> completeActivity(String activityId) async {
     final uid = _userId;
-    if (uid == null) return;
+    if (uid == null) return null;
 
     final instance = await _activityRepo.getOrCreateTodayInstance(activityId, uid);
-    if (!instance.isCompleted) {
-      await _activityRepo.completeInstance(instance.id);
-      await _activityRepo.incrementStreak(activityId);
+    if (instance.isCompleted) return null;
+
+    final now = DateTime.now();
+    final logId = 'log_${now.millisecondsSinceEpoch}';
+    final log = CompletionLog(
+      id: logId,
+      activityId: activityId,
+      activityInstanceId: instance.id,
+      ownerId: uid,
+      completedAt: now,
+      createdAt: now,
+    );
+
+    final connectivity = Get.find<ConnectivityService>();
+    if (!connectivity.isOnline.value) {
+      // Queue for later sync
+      final queue = Get.find<OfflineQueueService>();
+      await queue.queueCompleteActivity(
+        activityId: activityId,
+        instanceId: instance.id,
+        ownerId: uid,
+        completionLogId: logId,
+      );
+      return log;
     }
+
+    // Online: complete immediately
+    await _activityRepo.completeInstance(instance.id);
+    await _activityRepo.createCompletionLog(log);
+    await _activityRepo.incrementStreak(activityId);
+
+    return log;
+  }
+
+  /// Complete an activity and immediately open camera to capture proof moment.
+  /// Returns the CompletionLog id, or null if already completed.
+  Future<String?> completeAndOpenCapture(String activityId) async {
+    final uid = _userId;
+    if (uid == null) return null;
+
+    final instance = await _activityRepo.getOrCreateTodayInstance(activityId, uid);
+    if (instance.isCompleted) return null;
+
+    // Complete instance
+    await _activityRepo.completeInstance(instance.id);
+
+    // Create completion log
+    final now = DateTime.now();
+    final logId = 'log_${now.millisecondsSinceEpoch}';
+    final log = CompletionLog(
+      id: logId,
+      activityId: activityId,
+      activityInstanceId: instance.id,
+      ownerId: uid,
+      completedAt: now,
+      createdAt: now,
+    );
+    await _activityRepo.createCompletionLog(log);
+
+    // Update streak
+    await _activityRepo.incrementStreak(activityId);
+
+    // Navigate to capture with proof moment context
+    Get.toNamed(
+      AppRoutes.capture,
+      arguments: {
+        'activityId': activityId,
+        'completionLogId': logId,
+      },
+    );
+
+    return logId;
   }
 
   /// Archive an activity.
   Future<void> archiveActivity(String activityId) async {
     await _activityRepo.archiveActivity(activityId);
+  }
+
+  /// Mark today's instance of an activity as missed.
+  /// Unlike archive, this keeps the activity but marks today as skipped.
+  Future<void> missActivity(String activityId) async {
+    final uid = _userId;
+    if (uid == null) return;
+    final instance = await _activityRepo.getOrCreateTodayInstance(activityId, uid);
+    if (!instance.isCompleted) {
+      await _activityRepo.missInstance(instance.id);
+    }
   }
 
   void onNavTap(int index) {

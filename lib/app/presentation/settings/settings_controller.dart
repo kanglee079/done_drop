@@ -11,9 +11,8 @@ class SettingsController extends GetxController {
   AuthController get _authController => Get.find<AuthController>();
   StorageService get _storage => StorageService.instance;
 
-  // Notification preferences — mirrored to SharedPreferences for Phase 6 persistence
+  // Notification preferences
   final RxBool momentReminders = true.obs;
-  final RxBool circleActivity = false.obs;
 
   String get userEmail => _authController.firebaseUser?.email ?? '';
 
@@ -22,19 +21,12 @@ class SettingsController extends GetxController {
     super.onInit();
     // Load preferences from local storage
     momentReminders.value = _storage.getBool('pref_moment_reminders') ?? true;
-    circleActivity.value = _storage.getBool('pref_circle_activity') ?? false;
   }
 
   void toggleMomentReminders(bool value) {
     momentReminders.value = value;
     _storage.setBool('pref_moment_reminders', value);
     AnalyticsService.instance.settingChanged('moment_reminders', value.toString());
-  }
-
-  void toggleCircleActivity(bool value) {
-    circleActivity.value = value;
-    _storage.setBool('pref_circle_activity', value);
-    AnalyticsService.instance.settingChanged('circle_activity', value.toString());
   }
 
   Future<void> signOut() async {

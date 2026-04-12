@@ -5,13 +5,13 @@ import 'package:done_drop/app/presentation/feed/reaction_controller.dart';
 class FeedBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut(() => FeedController());
+    Get.lazyPut<FeedController>(() => FeedController());
   }
 }
 
 class ReactionBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut(() => ReactionController());
+    Get.lazyPut<ReactionController>(() => ReactionController());
   }
 }

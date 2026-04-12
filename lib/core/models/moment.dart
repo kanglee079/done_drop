@@ -5,6 +5,7 @@ class Moment {
     required this.ownerId,
     this.activityId,
     this.activityInstanceId,
+    this.completionLogId, // links moment to its CompletionLog for audit trail
     required this.visibility,
     this.selectedFriendIds = const [],
     // Media stored in Firebase Storage; Firestore holds metadata
@@ -23,6 +24,7 @@ class Moment {
   final String ownerId;
   final String? activityId; // optional link to discipline activity
   final String? activityInstanceId; // optional link to activity instance
+  final String? completionLogId; // links moment to its CompletionLog
   /// Visibility: personal_only | all_friends | selected_friends
   final String visibility;
   /// Used when visibility == selected_friends
@@ -43,6 +45,7 @@ class Moment {
     String? ownerId,
     String? activityId,
     String? activityInstanceId,
+    String? completionLogId,
     String? visibility,
     List<String>? selectedFriendIds,
     MomentMedia? media,
@@ -60,6 +63,7 @@ class Moment {
         ownerId: ownerId ?? this.ownerId,
         activityId: activityId ?? this.activityId,
         activityInstanceId: activityInstanceId ?? this.activityInstanceId,
+        completionLogId: completionLogId ?? this.completionLogId,
         visibility: visibility ?? this.visibility,
         selectedFriendIds: selectedFriendIds ?? this.selectedFriendIds,
         media: media ?? this.media,
@@ -78,6 +82,7 @@ class Moment {
         'ownerId': ownerId,
         'activityId': activityId,
         'activityInstanceId': activityInstanceId,
+        'completionLogId': completionLogId,
         'visibility': visibility,
         'selectedFriendIds': selectedFriendIds,
         'media': media.toFirestore(),
@@ -96,6 +101,7 @@ class Moment {
         ownerId: map['ownerId'] as String,
         activityId: map['activityId'] as String?,
         activityInstanceId: map['activityInstanceId'] as String?,
+        completionLogId: map['completionLogId'] as String?,
         visibility: map['visibility'] as String,
         selectedFriendIds:
             (map['selectedFriendIds'] as List<dynamic>?)?.cast<String>() ?? [],
@@ -203,6 +209,28 @@ class MomentMedia {
             ),
     );
   }
+
+  /// Creates an empty MomentMedia instance with no media.
+  factory MomentMedia.empty() => MomentMedia(
+        original: MediaMetadata(
+          storagePath: '',
+          downloadUrl: '',
+          mimeType: 'image/jpeg',
+          width: 0,
+          height: 0,
+          bytesUploaded: 0,
+          ownerId: '',
+        ),
+        thumbnail: MediaMetadata(
+          storagePath: '',
+          downloadUrl: '',
+          mimeType: 'image/jpeg',
+          width: 0,
+          height: 0,
+          bytesUploaded: 0,
+          ownerId: '',
+        ),
+      );
 }
 
 /// Alias for MomentMedia — used when both original and thumbnail metadata

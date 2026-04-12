@@ -7,7 +7,6 @@ import 'package:done_drop/core/models/feed_delivery.dart';
 import 'package:done_drop/core/models/user_profile.dart';
 import 'package:done_drop/features/auth/repositories/user_profile_repository.dart';
 import 'package:done_drop/app/presentation/feed/reaction_controller.dart';
-import 'package:done_drop/core/errors/result.dart';
 
 /// Controller for the private friend feed screen.
 /// Aggregates moments shared with the current user via feed deliveries.
@@ -26,12 +25,14 @@ class FeedController extends GetxController {
   final RxList<FeedDelivery> deliveries = <FeedDelivery>[].obs;
   final RxMap<String, UserProfile> ownerProfiles = <String, UserProfile>{}.obs;
   final RxInt unreadCount = 0.obs;
+  final RxInt friendCount = 0.obs;
 
   @override
   void onInit() {
     super.onInit();
     _watchFriendFeed();
     _watchUnreadCount();
+    _watchFriendCount();
   }
 
   void _watchFriendFeed() {
@@ -56,24 +57,11 @@ class FeedController extends GetxController {
           .map((id) => momentMap[id]!)
           .toList();
 
-      // Load owner profiles for display
-      _loadOwnerProfiles(momentList.map((m) => m.ownerId).toSet().toList());
+      // Load owner profiles for display — batch fetch in parallel
+      final ownerIds = momentList.map((m) => m.ownerId).toSet().toList();
+      final profiles = await _userProfileRepo.getUserProfiles(ownerIds);
+      ownerProfiles.value = profiles;
     });
-  }
-
-  Future<void> _loadOwnerProfiles(List<String> ownerIds) async {
-    for (final id in ownerIds) {
-      if (!ownerProfiles.containsKey(id)) {
-        final result = await _userProfileRepo.getUserProfile(id);
-        final profile = result.fold(
-          onSuccess: (data) => data,
-          onFailure: (_) => null,
-        );
-        if (profile != null) {
-          ownerProfiles[id] = profile;
-        }
-      }
-    }
   }
 
   void _watchUnreadCount() {
@@ -81,6 +69,14 @@ class FeedController extends GetxController {
     if (uid == null) return;
     _momentRepo.watchUnreadFeedCount(uid).listen((count) {
       unreadCount.value = count;
+    });
+  }
+
+  void _watchFriendCount() {
+    final uid = _userId;
+    if (uid == null) return;
+    _friendRepo.watchFriendships(uid).listen((list) {
+      friendCount.value = list.length;
     });
   }
 

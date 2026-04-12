@@ -11,6 +11,8 @@ import 'core/services/notification_service.dart';
 import 'core/services/analytics_service.dart';
 import 'core/services/media_service.dart';
 import 'core/services/local_database_service.dart';
+import 'core/services/connectivity_service.dart';
+import 'core/services/offline_queue_service.dart';
 import 'features/auth/data/onboarding_service.dart';
 import 'features/auth/data/firebase_auth_provider.dart';
 import 'features/auth/data/firestore_user_profile_provider.dart';
@@ -23,7 +25,6 @@ import 'firebase/repositories/friend_repository.dart';
 import 'firebase/repositories/report_repository.dart';
 import 'firebase/repositories/activity_repository.dart';
 import 'core/services/block_service.dart';
-import 'core/services/connectivity_service.dart';
 import 'app/presentation/feed/reaction_controller.dart';
 
 void main() async {
@@ -59,6 +60,9 @@ void main() async {
   final connectivity = ConnectivityService();
   await connectivity.init();
   Get.put<ConnectivityService>(connectivity, permanent: true);
+
+  // Offline queue service — queues operations when offline, syncs when online
+  Get.put<OfflineQueueService>(OfflineQueueService(), permanent: true);
 
   // Register global auth dependencies
   _registerAuthDependencies();

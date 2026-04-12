@@ -107,8 +107,8 @@ class PremiumScreen extends StatelessWidget {
                     children: const [
                       _BenefitItem(
                         icon: Icons.group,
-                        title: 'Unlimited Circles',
-                        desc: 'Share with every circle of friends and family.',
+                        title: 'Unlimited Friends',
+                        desc: 'Connect with all your accountability partners.',
                       ),
                       SizedBox(height: AppSizes.space16),
                       _BenefitItem(

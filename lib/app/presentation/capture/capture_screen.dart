@@ -5,7 +5,11 @@ import '../../../core/theme/theme.dart';
 import '../../../core/services/analytics_service.dart';
 import '../../routes/app_routes.dart';
 
-/// DoneDrop Capture Screen — Camera / gallery selection
+/// DoneDrop Capture Screen — Camera / gallery selection or immediate capture for proof moments.
+///
+/// Two modes:
+/// 1. Free capture — user opens screen, picks camera or gallery (default)
+/// 2. Proof moment — opened from activity completion, immediately opens camera
 class CaptureScreen extends StatefulWidget {
   const CaptureScreen({super.key});
 
@@ -15,8 +19,34 @@ class CaptureScreen extends StatefulWidget {
 
 class _CaptureScreenState extends State<CaptureScreen> {
   final _picker = img_picker.ImagePicker();
+  bool _isProofMoment = false;
+  String? _activityId;
+  String? _completionLogId;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initProofContext();
+  }
+
+  void _initProofContext() {
+    final args = Get.arguments as Map<String, dynamic>?;
+    if (args != null && args['activityId'] != null) {
+      _isProofMoment = true;
+      _activityId = args['activityId'] as String?;
+      _completionLogId = args['completionLogId'] as String?;
+      // Immediately open camera for proof moment
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _pickFromCamera();
+      });
+    }
+  }
 
   Future<void> _pickFromCamera() async {
+    if (_isLoading) return;
+    setState(() => _isLoading = true);
+
     await AnalyticsService.instance.photoCaptureStarted();
     final image = await _picker.pickImage(
       source: img_picker.ImageSource.camera,
@@ -25,11 +55,24 @@ class _CaptureScreenState extends State<CaptureScreen> {
     );
     if (image != null) {
       await AnalyticsService.instance.photoSelected('camera');
-      Get.toNamed(AppRoutes.preview, arguments: {'imagePath': image.path});
+      // Navigate to preview with image path AND proof moment context
+      Get.toNamed(
+        AppRoutes.preview,
+        arguments: {
+          'imagePath': image.path,
+          'activityId': _activityId,
+          'completionLogId': _completionLogId,
+        },
+      );
+    } else {
+      setState(() => _isLoading = false);
     }
   }
 
   Future<void> _pickFromGallery() async {
+    if (_isLoading) return;
+    setState(() => _isLoading = true);
+
     await AnalyticsService.instance.photoCaptureStarted();
     final image = await _picker.pickImage(
       source: img_picker.ImageSource.gallery,
@@ -38,12 +81,43 @@ class _CaptureScreenState extends State<CaptureScreen> {
     );
     if (image != null) {
       await AnalyticsService.instance.photoSelected('gallery');
-      Get.toNamed(AppRoutes.preview, arguments: {'imagePath': image.path});
+      // Navigate to preview with image path AND proof moment context (if any)
+      Get.toNamed(
+        AppRoutes.preview,
+        arguments: {
+          'imagePath': image.path,
+          'activityId': _activityId,
+          'completionLogId': _completionLogId,
+        },
+      );
+    } else {
+      setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Show loading state when proof moment is auto-opening camera
+    if (_isLoading && _isProofMoment) {
+      return Scaffold(
+        backgroundColor: AppColors.surface,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const CircularProgressIndicator(color: AppColors.primary),
+              const SizedBox(height: AppSizes.space16),
+              Text(
+                'Opening camera...',
+                style: TextStyle(color: AppColors.onSurfaceVariant),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Normal UI for free capture or when user wants to cancel proof
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: AppBar(
@@ -72,7 +146,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Capture a Moment',
+                _isProofMoment ? 'Capture Your Proof' : 'Capture a Moment',
                 style: TextStyle(
                   fontFamily: AppTypography.serifFamily,
                   fontSize: 32,
@@ -82,7 +156,9 @@ class _CaptureScreenState extends State<CaptureScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Complete it. Capture it. Share the moment.',
+                _isProofMoment
+                    ? 'Complete it. Capture the proof.'
+                    : 'Complete it. Capture it. Share the moment.',
                 style: TextStyle(
                   fontSize: 15,
                   color: AppColors.onSurfaceVariant,

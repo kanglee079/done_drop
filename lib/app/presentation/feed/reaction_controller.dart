@@ -31,7 +31,7 @@ class ReactionController extends GetxController {
     } else {
       // Add / replace reaction
       final reaction = Reaction(
-        id: 'reaction_${momentId}_${uid}',
+        id: 'reaction_${momentId}_$uid',
         momentId: momentId,
         userId: uid,
         reactionType: reactionType,

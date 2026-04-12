@@ -175,9 +175,19 @@ class SignInScreen extends GetView<SignInController> {
               DDSecondaryButton(
                 label: 'Continue with Apple',
                 icon: Icons.apple,
-                onPressed: () {
-                  // TODO: Apple Sign-In (Phase 2)
-                },
+                isEnabled: false,
+                onPressed: null,
+              ),
+
+              const SizedBox(height: AppSizes.space8),
+
+              Text(
+                'Coming soon',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: AppColors.outline,
+                ),
               ),
 
               const SizedBox(height: AppSizes.space32),

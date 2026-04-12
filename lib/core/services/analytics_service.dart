@@ -57,6 +57,10 @@ class AnalyticsService {
     await _a?.logEvent(name: 'user_signed_out');
   }
 
+  Future<void> passwordResetRequested() async {
+    await _a?.logEvent(name: 'password_reset_requested');
+  }
+
   // ── Task & Moment Creation ──────────────────────────────────────────────
   Future<void> taskCreated() async {
     await _a?.logEvent(name: 'task_created');

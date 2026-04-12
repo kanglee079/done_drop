@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:done_drop/core/theme/theme.dart';
+import 'package:done_drop/core/models/moment.dart';
 import 'package:done_drop/app/core/widgets/widgets.dart';
 import 'package:done_drop/app/presentation/memory_wall/memory_wall_controller.dart';
 import 'package:done_drop/app/routes/app_routes.dart';
@@ -13,7 +14,6 @@ class MemoryWallScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetBuilder<MemoryWallController>(
-      init: MemoryWallController(Get.find()),
       builder: (ctrl) {
         return Scaffold(
           backgroundColor: AppColors.surface,
@@ -135,7 +135,7 @@ class MemoryWallScreen extends StatelessWidget {
 
 class _MomentTile extends StatelessWidget {
   const _MomentTile({required this.moment, required this.onDelete});
-  final dynamic moment;
+  final Moment moment;
   final VoidCallback onDelete;
 
   @override

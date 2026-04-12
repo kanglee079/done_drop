@@ -57,7 +57,7 @@ class DDAvatar extends StatelessWidget {
   }
 }
 
-/// DoneDrop Member Stack — overlapping avatars for circle members
+/// DoneDrop Member Stack — overlapping avatars for friend members
 class DDMemberStack extends StatelessWidget {
   const DDMemberStack({
     super.key,

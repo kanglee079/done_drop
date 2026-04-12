@@ -58,7 +58,8 @@ class Report {
 
   final String id;
   final String reporterId;
-  final String targetType; // moment, user, circle
+  /// Target type: moment | user (circle deprecated in V1)
+  final String targetType;
   final String targetId;
   final String reason;
   final DateTime createdAt;

@@ -85,7 +85,7 @@ class SettingsScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Unlock unlimited circles and premium themes.',
+                                'Unlock more friends and premium themes.',
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.white70,
@@ -112,21 +112,11 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSizes.space16),
                 Obx(() => _SettingsTile(
-                  title: 'Moment Reminders',
-                  desc: 'Daily gentle nudges to capture your day',
+                  title: 'Habit Reminders',
+                  desc: 'Daily gentle nudges to complete your habits',
                   trailing: Switch(
                     value: ctrl.momentReminders.value,
                     onChanged: ctrl.toggleMomentReminders,
-                    activeTrackColor: AppColors.primary,
-                    thumbColor: WidgetStateProperty.all(Colors.white),
-                  ),
-                )),
-                Obx(() => _SettingsTile(
-                  title: 'Circle Activity',
-                  desc: 'Notifications when others drop moments',
-                  trailing: Switch(
-                    value: ctrl.circleActivity.value,
-                    onChanged: ctrl.toggleCircleActivity,
                     activeTrackColor: AppColors.primary,
                     thumbColor: WidgetStateProperty.all(Colors.white),
                   ),
@@ -139,7 +129,7 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSizes.space24),
                 Text(
-                  'Privacy & Circles',
+                  'Privacy & Sharing',
                   style: TextStyle(
                     fontFamily: AppTypography.serifFamily,
                     fontSize: 18,
@@ -155,6 +145,12 @@ class SettingsScreen extends StatelessWidget {
                       : 'Edit your name, avatar, and bio',
                   trailing: const Icon(Icons.chevron_right, color: AppColors.outline),
                   onTap: () => Get.toNamed(AppRoutes.profile),
+                ),
+                _SettingsTile(
+                  title: 'Friends',
+                  desc: 'Manage your accountability partners',
+                  trailing: const Icon(Icons.chevron_right, color: AppColors.outline),
+                  onTap: () => Get.toNamed(AppRoutes.friends),
                 ),
                 _SettingsTile(
                   title: 'Visibility',

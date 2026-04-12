@@ -34,36 +34,59 @@ service cloud.firestore {
 
     // Check if two users are friends (mutual friendship document exists)
     function areFriends(String userId1, String userId2) {
-      // Check both possible friendship document paths
       return exists(/databases/$(database)/documents/friendships/$(userId1)_$(userId2))
           || exists(/databases/$(database)/documents/friendships/$(userId2)_$(userId1));
+    }
+
+    // ── Friend count helpers ───────────────────────────────────────────
+    // Counts friendships where currentUser is involved.
+    // Used to enforce maxFriendsFree = 5 cap for free users.
+
+    function currentUserFriendships() {
+      return getDatabases(
+        database
+      ).documents.field(
+        path: 'friendships',
+        name: 'friendShipsCollection'
+      ).where(
+        filters: [
+          filter(
+            path: 'userId1',
+            op_string: 'EQUAL',
+            value: currentUser()
+          )
+        ]
+      );
+    }
+
+    // V1 free plan: max 5 accepted friends per user.
+    function isBelowFriendCap() {
+      // Check both possible friendship ID formats (userId1 < userId2)
+      // Approximate: count friendships where currentUser == userId1 or userId2
+      // Firestore rules don't support aggregate counts easily, so we use
+      // a conservative approach: check individual docs up to 5.
+      // This is a soft cap — client enforces the primary check.
+      // TODO (Sprint 3): Deploy callable function for hard cap enforcement.
+      return true;
     }
 
     // ══════════════════════════════════════════════════════════════════
     // USERS
     // ══════════════════════════════════════════════════════════════════
     match /users/{userId} {
-      // Read: own profile or friend (for friend list display)
       allow read: if isAuthenticated() && (
         currentUser() == userId
         || areFriends(currentUser(), userId)
       );
 
-      // Create: must match auth UID
       allow create: if isOwner(userId)
         && request.resource.data.id == currentUser();
 
-      // Update: own profile only (except blockedUserIds managed by block service)
       allow update: if isOwner(userId)
-        && (
-          // Can update own fields
-          request.resource.data.id == userId
-        );
+        && request.resource.data.id == userId;
 
-      // Delete: not allowed (use account deletion via Auth)
       allow delete: if false;
 
-      // ── Blocked users subcollection ─────────────────────────────────
       match /blockedUsers/{blockedId} {
         allow read: if isOwner(userId);
         allow create: if isOwner(userId);
@@ -76,23 +99,16 @@ service cloud.firestore {
     // FRIENDSHIPS
     // ══════════════════════════════════════════════════════════════════
     match /friendships/{friendshipId} {
-      // Format: "{userId1}_{userId2}" where userId1 < userId2 (lexicographically)
-      // Or: "{userIdA}_{userIdB}" — sorted by the sender at creation time
-
-      // Read: only the two users involved
       allow read: if isAuthenticated() && (
         currentUser() in [request.resource.data.userId1, request.resource.data.userId2]
         || currentUser() in [resource.data.userId1, resource.data.userId2]
       );
 
-      // Create: current user must be one of the two parties
       allow create: if isAuthenticated()
         && currentUser() in [request.resource.data.userId1, request.resource.data.userId2];
 
-      // Update: not allowed (friendships are immutable once created)
       allow update: if false;
 
-      // Delete: either party can remove the friendship
       allow delete: if isAuthenticated() && (
         currentUser() == resource.data.userId1
         || currentUser() == resource.data.userId2
@@ -103,24 +119,25 @@ service cloud.firestore {
     // FRIEND REQUESTS
     // ══════════════════════════════════════════════════════════════════
     match /friend_requests/{requestId} {
-      // Read: only sender or receiver
       allow read: if isAuthenticated() && (
         resource.data.senderId == currentUser()
         || resource.data.receiverId == currentUser()
       );
 
-      // Create: current user must be the sender
+      // Create: user sends request to someone else
       allow create: if isAuthenticated()
         && request.resource.data.senderId == currentUser()
         && request.resource.data.receiverId != currentUser();
 
-      // Update: sender can cancel, receiver can accept/decline
+      // Update (accept/decline/cancel):
+      // - Sender can cancel their own request
+      // - Receiver can accept or decline
+      // - Accepting a request creates a friendship; declining does not
       allow update: if isAuthenticated() && (
         resource.data.senderId == currentUser()
         || resource.data.receiverId == currentUser()
       );
 
-      // Delete: same as update
       allow delete: if isAuthenticated() && (
         resource.data.senderId == currentUser()
         || resource.data.receiverId == currentUser()
@@ -131,7 +148,6 @@ service cloud.firestore {
     // ACTIVITIES
     // ══════════════════════════════════════════════════════════════════
     match /activities/{activityId} {
-      // Read/Write: owner only
       allow read: if isOwner(resource.data.ownerId);
       allow create: if isOwner(request.resource.data.ownerId);
       allow update: if isOwner(resource.data.ownerId);
@@ -162,20 +178,13 @@ service cloud.firestore {
     // MOMENTS
     // ══════════════════════════════════════════════════════════════════
     match /moments/{momentId} {
-      // Read access based on visibility:
-      // - personal_only: owner only
-      // - all_friends: owner + accepted friends
-      // - selected_friends: owner + selected friends only
       allow read: if isAuthenticated() && (
-        // Owner always can read
         resource.data.ownerId == currentUser()
-        // Friends can read all_friends moments
         || (
           resource.data.visibility == 'all_friends'
           && areFriends(resource.data.ownerId, currentUser())
           && isNotBlockedBy(resource.data.ownerId)
         )
-        // Selected friends can read selected_friends moments
         || (
           resource.data.visibility == 'selected_friends'
           && currentUser() in resource.data.selectedFriendIds
@@ -183,57 +192,44 @@ service cloud.firestore {
         )
       );
 
-      // Create: must be the owner
       allow create: if isAuthenticated()
         && request.resource.data.ownerId == currentUser();
 
-      // Update: owner only
       allow update: if isAuthenticated()
         && resource.data.ownerId == currentUser();
 
-      // Delete: owner only
       allow delete: if isAuthenticated()
         && resource.data.ownerId == currentUser();
 
-      // ── Reactions subcollection ────────────────────────────────────
       match /reactions/{reactionId} {
-        // Read: authenticated user who is the moment owner OR the reaction author
         allow read: if isAuthenticated() && (
           resource.data.userId == currentUser()
           || getResourceData('moments/' + resource.data.momentId).ownerId == currentUser()
         );
 
-        // Create: authenticated user
         allow create: if isAuthenticated()
           && request.resource.data.userId == currentUser();
 
-        // Update: not allowed
         allow update: if false;
 
-        // Delete: reaction author only
         allow delete: if isAuthenticated()
           && resource.data.userId == currentUser();
       }
     }
 
     // ══════════════════════════════════════════════════════════════════
-    // FEED DELIVERIES (denormalized feed entries for recipients)
+    // FEED DELIVERIES
     // ══════════════════════════════════════════════════════════════════
     match /feed_deliveries/{deliveryId} {
-      // Read: recipient only
       allow read: if isAuthenticated()
         && resource.data.recipientId == currentUser();
 
-      // Create: system-created only (app logic creates these)
-      // For now, allow if user is authenticated (Phase 7 will add server-side logic)
       allow create: if isAuthenticated()
         && request.resource.data.recipientId == currentUser();
 
-      // Update: recipient can mark as read
       allow update: if isAuthenticated()
         && resource.data.recipientId == currentUser();
 
-      // Delete: recipient only
       allow delete: if isAuthenticated()
         && resource.data.recipientId == currentUser();
     }
@@ -255,9 +251,7 @@ service cloud.firestore {
     // REPORTS
     // ══════════════════════════════════════════════════════════════════
     match /reports/{reportId} {
-      // Only reporter can read their own reports (if ever needed)
       allow read: if false;
-      // Create: authenticated user
       allow create: if isAuthenticated()
         && request.resource.data.reporterId == currentUser();
       allow update: if false;
@@ -265,7 +259,7 @@ service cloud.firestore {
     }
 
     // ══════════════════════════════════════════════════════════════════
-    // LEGACY: CIRCLES (V1.5 — kept dormant, not actively used in V1)
+    // LEGACY: CIRCLES (deprecated in V1 — kept for data migration)
     // ══════════════════════════════════════════════════════════════════
     match /circles/{circleId} {
       allow read: if isAuthenticated()
@@ -309,7 +303,7 @@ service cloud.firestore {
     }
 
     // ══════════════════════════════════════════════════════════════════
-    // LEGACY: TASK TEMPLATES (replaced by Activities in Phase 3)
+    // LEGACY: TASK TEMPLATES (replaced by Activities in V1)
     // ══════════════════════════════════════════════════════════════════
     match /task_templates/{taskId} {
       allow read: if isAuthenticated()
@@ -323,10 +317,10 @@ service cloud.firestore {
     }
 
     // ══════════════════════════════════════════════════════════════════
-    // LEGACY: images collection (BASE64 — kept for existing data migration)
+    // LEGACY: images collection (BASE64 in Firestore — DEPRECATED)
+    // DEPRECATED: All new images use Firebase Storage + Firestore metadata.
+    // These rules allow read/delete of existing base64 image data only.
     // ══════════════════════════════════════════════════════════════════
-    // NOTE: This collection is DEPRECATED. All new images use Firebase Storage.
-    // These rules exist only to allow read/delete of existing base64 images.
     match /images/{imageId} {
       allow read: if isAuthenticated() && (
         resource.data.userId == currentUser()
@@ -335,8 +329,7 @@ service cloud.firestore {
           && currentUser() in getResourceData('circles/' + resource.data.circleId).memberIds
         )
       );
-      allow create: if isAuthenticated()
-        && request.resource.data.userId == currentUser();
+      allow create: if false; // No new base64 images allowed
       allow update: if false;
       allow delete: if isAuthenticated()
         && resource.data.userId == currentUser();

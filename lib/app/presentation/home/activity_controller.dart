@@ -3,6 +3,7 @@ import 'package:done_drop/features/auth/presentation/controllers/auth_controller
 import 'package:done_drop/firebase/repositories/activity_repository.dart';
 import 'package:done_drop/core/models/activity.dart';
 import 'package:done_drop/core/models/activity_instance.dart';
+import 'package:done_drop/core/models/completion_log.dart';
 import 'package:done_drop/core/constants/app_constants.dart';
 
 /// Controller for the discipline activity system.
@@ -129,19 +130,33 @@ class ActivityController extends GetxController {
   }
 
   /// Mark an activity as completed for today.
-  Future<ActivityInstance?> completeActivity(String activityId) async {
+  /// Creates a CompletionLog for streak verification + links to proof moment later.
+  Future<CompletionLog?> completeActivity(String activityId) async {
     final uid = _userId;
-    if (uid == null) throw Exception('Not signed in');
+    if (uid == null) return null;
 
-    // Create or get today's instance
     final instance = await _activityRepo.getOrCreateTodayInstance(activityId, uid);
+    if (instance.isCompleted) return null;
 
-    if (!instance.isCompleted) {
-      await _activityRepo.completeInstance(instance.id);
-      await _activityRepo.incrementStreak(activityId);
-    }
+    // Update instance status
+    await _activityRepo.completeInstance(instance.id);
 
-    return _activityRepo.getInstance(activityId, DateTime.now()) ?? instance;
+    // Create completion log for streak verification and audit trail
+    final now = DateTime.now();
+    final log = CompletionLog(
+      id: 'log_${now.millisecondsSinceEpoch}',
+      activityId: activityId,
+      activityInstanceId: instance.id,
+      ownerId: uid,
+      completedAt: now,
+      createdAt: now,
+    );
+    await _activityRepo.createCompletionLog(log);
+
+    // Update streak counters
+    await _activityRepo.incrementStreak(activityId);
+
+    return log;
   }
 
   /// Skip an activity for today (mark as missed).

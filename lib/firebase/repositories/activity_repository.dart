@@ -180,6 +180,14 @@ class ActivityRepository {
     });
   }
 
+  /// Link a moment to an activity instance after the moment is posted.
+  Future<void> linkMomentToInstance(String instanceId, String momentId) async {
+    await _instanceCol.doc(instanceId).update({
+      'momentId': momentId,
+      'updatedAt': DateTime.now().toIso8601String(),
+    });
+  }
+
   /// Batch-create instances for all active activities for a date range.
   Future<void> ensureInstancesExist(
     List<String> activityIds,
