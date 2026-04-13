@@ -55,9 +55,10 @@ class DDPrimaryButton extends StatelessWidget {
                     Text(
                       label,
                       style: const TextStyle(
+                        fontFamily: AppTypography.sansFamily,
                         color: Colors.white,
                         fontSize: 14,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w800, // Sharper bolder text
                         letterSpacing: 0.5,
                       ),
                     ),
@@ -127,9 +128,10 @@ class DDSecondaryButton extends StatelessWidget {
                     Text(
                       label,
                       style: TextStyle(
+                        fontFamily: AppTypography.sansFamily,
                         color: enabled ? AppColors.onSurface : AppColors.outline,
                         fontSize: 14,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700, // slightly bolder
                       ),
                     ),
                   ],
@@ -171,9 +173,10 @@ class DDTextButton extends StatelessWidget {
             Text(
               label,
               style: const TextStyle(
+                fontFamily: AppTypography.sansFamily,
                 color: AppColors.primary,
                 fontSize: 14,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
                 decoration: TextDecoration.underline,
                 decorationColor: AppColors.primary,
                 decorationThickness: 1,

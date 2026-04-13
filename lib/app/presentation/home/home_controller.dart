@@ -1,3 +1,5 @@
+import 'package:flutter/services.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:done_drop/features/auth/presentation/controllers/auth_controller.dart';
@@ -18,13 +20,17 @@ import 'package:done_drop/app/presentation/streak/streak_controller.dart';
 /// Uses LocalCacheService for instant startup: loads cached data synchronously,
 /// then streams Firestore data in the background for live updates.
 class HomeController extends GetxController {
-  HomeController(this._authController, this._userProfileRepo);
+  HomeController(
+    this._authController,
+    this._userProfileRepo,
+    this._activityRepo,
+    this._friendRepo,
+  );
 
   final AuthController _authController;
   final UserProfileRepository _userProfileRepo;
-
-  late final ActivityRepository _activityRepo;
-  late final FriendRepository _friendRepo;
+  final ActivityRepository _activityRepo;
+  final FriendRepository _friendRepo;
 
   String? get _userId => _authController.firebaseUser?.uid;
   String? get currentUserId => _userId;
@@ -59,8 +65,6 @@ class HomeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _activityRepo = ActivityRepository(FirebaseFirestore.instance);
-    _friendRepo = Get.find<FriendRepository>();
     _preloadCache();
   }
 
@@ -265,8 +269,75 @@ class HomeController extends GetxController {
 
     final newStreak = previousStreak + 1;
     _triggerMilestoneCelebration(activity, previousStreak, newStreak);
+    
+    _showCompletionRewardSheet(activityId, logId);
 
     return log;
+  }
+
+  void _showCompletionRewardSheet(String activityId, String logId) {
+    if (Get.isBottomSheetOpen == true) return;
+    
+    HapticFeedback.mediumImpact();
+
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Great job! 🎉', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            const Text('Habit completed. What would you like to do next?', style: TextStyle(color: Colors.grey, fontSize: 14)),
+            const SizedBox(height: 24),
+            ListTile(
+              leading: const Icon(Icons.check_circle_outline, color: Colors.green),
+              title: const Text('Save only', style: TextStyle(fontWeight: FontWeight.w600)),
+              onTap: () => Get.back(),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              tileColor: Colors.grey.withValues(alpha: 0.05),
+            ),
+            const SizedBox(height: 8),
+            ListTile(
+              leading: const Icon(Icons.camera_alt_outlined, color: Colors.blue),
+              title: const Text('Add proof photo', style: TextStyle(fontWeight: FontWeight.w600)),
+              onTap: () {
+                Get.back();
+                Get.toNamed(
+                  AppRoutes.capture,
+                  arguments: {
+                    'activityId': activityId,
+                    'completionLogId': logId,
+                  },
+                );
+              },
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              tileColor: Colors.blue.withValues(alpha: 0.05),
+            ),
+            const SizedBox(height: 8),
+            ListTile(
+              leading: const Icon(Icons.group_outlined, color: Colors.purple),
+              title: const Text('Share to buddy', style: TextStyle(fontWeight: FontWeight.w600)),
+              onTap: () {
+                Get.back();
+                // To be implemented in Social Layer Phase
+                Get.snackbar('Coming Soon', 'Buddy delivery is under construction.');
+              },
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              tileColor: Colors.purple.withValues(alpha: 0.05),
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+    );
   }
 
   /// Complete an activity and immediately open camera to capture proof moment.

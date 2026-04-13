@@ -103,9 +103,10 @@ class ActivityRepository {
   // ══════════════════════════════════════════════════════════════════
 
   /// Get instance for a specific activity on a specific date.
-  Future<ActivityInstance?> getInstance(String activityId, DateTime date) async {
+  Future<ActivityInstance?> getInstance(String activityId, String ownerId, DateTime date) async {
     final dateStr = _dateToString(date);
     final snap = await _instanceCol
+        .where('ownerId', isEqualTo: ownerId)
         .where('activityId', isEqualTo: activityId)
         .where('date', isEqualTo: dateStr)
         .limit(1)
@@ -136,6 +137,7 @@ class ActivityRepository {
 
     final snap = await _instanceCol
         .where('activityId', isEqualTo: activityId)
+        .where('ownerId', isEqualTo: ownerId)
         .where('date', isEqualTo: dateStr)
         .limit(1)
         .get();
@@ -270,10 +272,12 @@ class ActivityRepository {
   /// Count completions for an activity within a date range.
   Future<int> countCompletions(
     String activityId,
+    String ownerId,
     DateTime from,
     DateTime to,
   ) async {
     final snap = await _logCol
+        .where('ownerId', isEqualTo: ownerId)
         .where('activityId', isEqualTo: activityId)
         .where('completedAt', isGreaterThanOrEqualTo: from.toIso8601String())
         .where('completedAt', isLessThanOrEqualTo: to.toIso8601String())
@@ -283,8 +287,9 @@ class ActivityRepository {
   }
 
   /// Get streak for an activity from completion logs.
-  Future<int> calculateStreak(String activityId) async {
+  Future<int> calculateStreak(String activityId, String ownerId) async {
     final snap = await _logCol
+        .where('ownerId', isEqualTo: ownerId)
         .where('activityId', isEqualTo: activityId)
         .orderBy('completedAt', descending: true)
         .limit(100)

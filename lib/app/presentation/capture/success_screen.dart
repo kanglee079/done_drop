@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../core/theme/theme.dart';
 import '../../routes/app_routes.dart';
 import '../capture/moment_controller.dart';
+import '../home/navigation_controller.dart';
 
 /// DoneDrop Success Screen — Moment posted (or queued) confirmation.
 ///
@@ -84,13 +85,11 @@ class _SuccessScreenState extends State<SuccessScreen>
                 const SizedBox(height: AppSizes.space24),
 
                 // Title
-                Text(
-                  isProofMoment ? 'Proof Captured!' : 'Moment Captured',
+                const Text(
+                  'Moment Saved ✨',
                   style: TextStyle(
-                    fontFamily: AppTypography.serifFamily,
-                    fontSize: 38,
-                    fontWeight: FontWeight.w700,
-                    fontStyle: FontStyle.italic,
+                    fontSize: 32,
+                    fontWeight: FontWeight.w800,
                     color: AppColors.primary,
                   ),
                   textAlign: TextAlign.center,
@@ -99,13 +98,12 @@ class _SuccessScreenState extends State<SuccessScreen>
                 const SizedBox(height: AppSizes.space12),
 
                 // Subtitle
-                Text(
-                  isProofMoment
-                      ? 'Great work completing today\'s discipline.'
-                      : 'Your journey continues, one beautiful drop at a time.',
+                const Text(
+                  'Your discipline is growing. Stay consistent.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 16,
+                    fontWeight: FontWeight.w500,
                     color: AppColors.onSurfaceVariant,
                   ),
                 ),
@@ -183,14 +181,19 @@ class _SuccessScreenState extends State<SuccessScreen>
 
                 const SizedBox(height: AppSizes.space16),
 
-                // Secondary action — View Feed
+                // Secondary action — View Buddy Feed
                 TextButton(
-                  onPressed: () => Get.offAllNamed(AppRoutes.feed),
+                  onPressed: () {
+                    Get.offAllNamed(AppRoutes.home);
+                    final nav = Get.find<NavigationController>();
+                    nav.setTab(1); // Set to Buddy Feed tab
+                  },
                   child: const Text(
-                    'View Feed',
+                    'View Buddy Feed',
                     style: TextStyle(
                       color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
                     ),
                   ),
                 ),

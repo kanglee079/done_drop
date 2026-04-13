@@ -15,9 +15,8 @@ class DDBottomNavBar extends StatelessWidget {
 
   static const _navItems = [
     _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: 'Home'),
-    _NavItem(icon: Icons.group_outlined, activeIcon: Icons.group, label: 'Feed'),
-    _NavItem(icon: Icons.add_circle_outline, activeIcon: Icons.add_circle, label: 'Capture'),
-    _NavItem(icon: Icons.auto_awesome_mosaic_outlined, activeIcon: Icons.auto_awesome_mosaic, label: 'Wall'),
+    _NavItem(icon: Icons.group_outlined, activeIcon: Icons.group, label: 'Buddy Feed'),
+    _NavItem(icon: Icons.auto_awesome_mosaic_outlined, activeIcon: Icons.auto_awesome_mosaic, label: 'My Wall'),
     _NavItem(icon: Icons.settings_outlined, activeIcon: Icons.settings, label: 'Settings'),
   ];
 
@@ -48,34 +47,6 @@ class DDBottomNavBar extends StatelessWidget {
             children: List.generate(_navItems.length, (i) {
               final item = _navItems[i];
               final isActive = currentIndex == i;
-
-              // Center item (Capture) gets gradient background
-              if (i == 2) {
-                return GestureDetector(
-                  onTap: () => onTap(i),
-                  child: Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      gradient: AppColors.primaryGradient,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.3),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    transform: Matrix4.translationValues(0, -8, 0),
-                    child: Icon(
-                      isActive ? item.activeIcon : item.icon,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
-                );
-              }
 
               return Expanded(
                 child: GestureDetector(

@@ -87,31 +87,24 @@ class UserProfile {
 class UserSettings {
   const UserSettings({
     this.reminderEnabled = true,
-    // circleActivityEnabled deprecated in V1 — circles replaced by friends
-    @Deprecated('Circle model deprecated in V1') this.circleActivityEnabled = false,
     this.recapDayOfWeek = 6,
     this.recapTimeOfDay = '09:00',
     this.defaultVisibility = 'personal_only',
   });
 
   final bool reminderEnabled;
-  @Deprecated('Circle model deprecated in V1')
-  final bool circleActivityEnabled;
   final int recapDayOfWeek;
   final String recapTimeOfDay;
   final String defaultVisibility;
 
   UserSettings copyWith({
     bool? reminderEnabled,
-    @Deprecated('Circle model deprecated in V1') bool? circleActivityEnabled,
     int? recapDayOfWeek,
     String? recapTimeOfDay,
     String? defaultVisibility,
   }) =>
       UserSettings(
         reminderEnabled: reminderEnabled ?? this.reminderEnabled,
-        circleActivityEnabled:
-            circleActivityEnabled ?? this.circleActivityEnabled,
         recapDayOfWeek: recapDayOfWeek ?? this.recapDayOfWeek,
         recapTimeOfDay: recapTimeOfDay ?? this.recapTimeOfDay,
         defaultVisibility: defaultVisibility ?? this.defaultVisibility,
@@ -119,8 +112,6 @@ class UserSettings {
 
   Map<String, dynamic> toFirestore() => {
         'reminderEnabled': reminderEnabled,
-        // Keep for backward compat — circles deprecated in V1
-        'circleActivityEnabled': circleActivityEnabled,
         'recapDayOfWeek': recapDayOfWeek,
         'recapTimeOfDay': recapTimeOfDay,
         'defaultVisibility': defaultVisibility,
@@ -128,8 +119,6 @@ class UserSettings {
 
   factory UserSettings.fromFirestore(Map<String, dynamic> map) => UserSettings(
         reminderEnabled: map['reminderEnabled'] as bool? ?? true,
-        circleActivityEnabled:
-            map['circleActivityEnabled'] as bool? ?? false,
         recapDayOfWeek: map['recapDayOfWeek'] as int? ?? 6,
         recapTimeOfDay: map['recapTimeOfDay'] as String? ?? '09:00',
         defaultVisibility: map['defaultVisibility'] as String? ?? 'personal_only',
@@ -137,39 +126,23 @@ class UserSettings {
 }
 
 /// Widget preferences for iOS/Android home screen widgets.
-/// Home Widget feature is not in V1 scope — this model is deprecated.
-@Deprecated('Home Widget not in V1 scope')
 class WidgetPreferences {
-  @Deprecated('Home Widget not in V1 scope')
   const WidgetPreferences({
     this.showPersonal = true,
-    @Deprecated('Circle model deprecated in V1')
-    this.showCircle = false,
-    @Deprecated('Circle model deprecated in V1')
-    this.circleId,
     this.style = 'default',
   });
 
   final bool showPersonal;
-  @Deprecated('Circle model deprecated in V1')
-  final bool showCircle;
-  @Deprecated('Circle model deprecated in V1')
-  final String? circleId;
   final String style;
 
   Map<String, dynamic> toFirestore() => {
         'showPersonal': showPersonal,
-        // Keep for backward compat
-        'showCircle': showCircle,
-        'circleId': circleId,
         'style': style,
       };
 
   factory WidgetPreferences.fromFirestore(Map<String, dynamic> map) =>
       WidgetPreferences(
         showPersonal: map['showPersonal'] as bool? ?? true,
-        showCircle: map['showCircle'] as bool? ?? false,
-        circleId: map['circleId'] as String?,
         style: map['style'] as String? ?? 'default',
       );
 }

@@ -7,16 +7,16 @@ class AppColors {
   AppColors._();
 
   // ── Primary ──────────────────────────────────────────────────────────────
-  static const Color primary = Color(0xFF884532);
-  static const Color primaryContainer = Color(0xFFA65D48);
+  static const Color primary = Color(0xFF6366F1); // Indigo 500
+  static const Color primaryContainer = Color(0xFF4F46E5); // Indigo 600
   static const Color onPrimary = Color(0xFFFFFFFF);
-  static const Color onPrimaryContainer = Color(0xFFFFF4F1);
+  static const Color onPrimaryContainer = Color(0xFFE0E7FF);
 
   // Primary fixed (lighter variants for backgrounds)
-  static const Color primaryFixed = Color(0xFFFFDBD1);
-  static const Color primaryFixedDim = Color(0xFFFFB5A0);
-  static const Color onPrimaryFixed = Color(0xFF3A0A01);
-  static const Color onPrimaryFixedVariant = Color(0xFF733422);
+  static const Color primaryFixed = Color(0xFFE0E7FF);
+  static const Color primaryFixedDim = Color(0xFFC7D2FE);
+  static const Color onPrimaryFixed = Color(0xFF312E81);
+  static const Color onPrimaryFixedVariant = Color(0xFF3730A3);
 
   // ── Secondary ────────────────────────────────────────────────────────────
   static const Color secondary = Color(0xFF645D57);

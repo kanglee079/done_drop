@@ -9,6 +9,9 @@ class WeeklyRecap {
     this.topCategory,
     this.highlightMomentIds = const [],
     required this.createdAt,
+    this.bestDay,
+    this.totalProofsCaptured = 0,
+    this.consistencyScore = 0.0,
   });
 
   final String id;
@@ -19,6 +22,9 @@ class WeeklyRecap {
   final String? topCategory;
   final List<String> highlightMomentIds;
   final DateTime createdAt;
+  final DateTime? bestDay;
+  final int totalProofsCaptured;
+  final double consistencyScore;
 
   Map<String, dynamic> toFirestore() => {
         'id': id,
@@ -29,6 +35,9 @@ class WeeklyRecap {
         'topCategory': topCategory,
         'highlightMomentIds': highlightMomentIds,
         'createdAt': createdAt.toIso8601String(),
+        'bestDay': bestDay?.toIso8601String(),
+        'totalProofsCaptured': totalProofsCaptured,
+        'consistencyScore': consistencyScore,
       };
 
   factory WeeklyRecap.fromFirestore(Map<String, dynamic> map) => WeeklyRecap(
@@ -41,6 +50,9 @@ class WeeklyRecap {
         highlightMomentIds:
             (map['highlightMomentIds'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
         createdAt: DateTime.parse(map['createdAt'] as String),
+        bestDay: map['bestDay'] != null ? DateTime.parse(map['bestDay'] as String) : null,
+        totalProofsCaptured: map['totalProofsCaptured'] as int? ?? 0,
+        consistencyScore: (map['consistencyScore'] as num?)?.toDouble() ?? 0.0,
       );
 }
 

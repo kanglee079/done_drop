@@ -23,10 +23,10 @@ class AppSizes {
 
   // ── Border Radius ───────────────────────────────────────────────────────
   static const double radiusNone = 0;
-  static const double radiusSm = 8;
-  static const double radiusMd = 16; // default
-  static const double radiusLg = 32; // 2rem
-  static const double radiusXl = 48; // 3rem
+  static const double radiusSm = 6;
+  static const double radiusMd = 12; // sharper default
+  static const double radiusLg = 20; // 
+  static const double radiusXl = 32; //
   static const double radiusFull = 999;
 
   static BorderRadius get borderRadiusSm => BorderRadius.circular(radiusSm);

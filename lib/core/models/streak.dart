@@ -160,6 +160,7 @@ class StreakState {
     this.lastCompletedAt,
     this.isAtRisk = false,
     this.daysUntilRisk = 0,
+    this.freezesAvailable = 0,
   });
 
   final String activityId;
@@ -168,9 +169,15 @@ class StreakState {
   final DateTime? lastCompletedAt;
   final bool isAtRisk;
   final int daysUntilRisk;
+  final int freezesAvailable;
 
   bool get hasStreak => currentStreak > 0;
   bool get isNewRecord => longestStreak == currentStreak && currentStreak > 0;
+  bool canRecoverStreak(DateTime currentDate) {
+    if (lastCompletedAt == null) return false;
+    final diff = currentDate.difference(lastCompletedAt!).inDays;
+    return diff > 1 && diff <= 7 && freezesAvailable > 0;
+  }
 
   StreakMilestone? get currentMilestone => StreakMilestones.findForDays(currentStreak);
   StreakMilestone? get nextMilestone => StreakMilestones.findNextForDays(currentStreak);
@@ -197,5 +204,6 @@ class StreakState {
         lastCompletedAt: lastCompletedAt ?? this.lastCompletedAt,
         isAtRisk: isAtRisk ?? this.isAtRisk,
         daysUntilRisk: daysUntilRisk ?? this.daysUntilRisk,
+        freezesAvailable: freezesAvailable ?? this.freezesAvailable,
       );
 }

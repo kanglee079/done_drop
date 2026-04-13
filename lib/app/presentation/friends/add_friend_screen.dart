@@ -23,7 +23,7 @@ class AddFriendScreen extends StatelessWidget {
               icon: const Icon(Icons.arrow_back, color: AppColors.primary),
               onPressed: () => Get.back(),
             ),
-            title: const Text('Add Friend'),
+            title: const Text('Add Buddy'),
             centerTitle: true,
           ),
           body: SingleChildScrollView(
@@ -47,7 +47,7 @@ class AddFriendScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSizes.space8),
                 Text(
-                  'Enter your friend\'s username to send a friend request.',
+                  'Enter their username to send a buddy request.',
                   style: TextStyle(fontSize: 14, color: AppColors.onSurfaceVariant),
                 ),
                 const SizedBox(height: AppSizes.space32),
@@ -156,14 +156,14 @@ class _FriendCapBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Friend Limit Reached',
+                  'Buddy Limit Reached',
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     color: AppColors.primary,
                   ),
                 ),
                 Text(
-                  'Free plan allows up to $limit friends. Upgrade for more.',
+                  'Free plan allows up to $limit buddies. Upgrade for more.',
                   style: TextStyle(fontSize: 12, color: AppColors.onSurfaceVariant),
                 ),
               ],
@@ -214,12 +214,12 @@ class _FoundUserCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Send a friend request?',
+            'Send a buddy request?',
             style: TextStyle(fontSize: 13, color: AppColors.onSurfaceVariant),
           ),
           const SizedBox(height: AppSizes.space16),
           DDPrimaryButton(
-            label: 'Send Friend Request',
+            label: 'Send Buddy Request',
             icon: Icons.person_add_alt_1,
             onPressed: isLoading ? null : onSendRequest,
             isExpanded: true,
@@ -259,12 +259,12 @@ class _RequestSentCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Friend request sent to $name',
+            'Buddy request sent to $name',
             style: TextStyle(fontSize: 14, color: AppColors.onSurfaceVariant),
           ),
           const SizedBox(height: AppSizes.space16),
           DDSecondaryButton(
-            label: 'Add Another Friend',
+            label: 'Add Another Buddy',
             onPressed: onReset,
             isExpanded: true,
           ),

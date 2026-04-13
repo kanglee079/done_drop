@@ -10,9 +10,6 @@ abstract class AppRoutes {
   static const preview = '/preview';
   static const success = '/success';
   static const feed = '/feed';
-  // ── Circle routes DEPRECATED in V1 — removed ────────────────────────────
-  // static const invite = '/invite';
-  // static const joinCircle = '/join';
   static const memoryWall = '/wall';
   static const momentDetail = '/moment/:id';
   static const recap = '/recap';

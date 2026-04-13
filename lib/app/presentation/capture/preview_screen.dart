@@ -272,230 +272,63 @@ class _AudienceSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           'Share To',
           style: TextStyle(
-            fontFamily: AppTypography.serifFamily,
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-            color: AppColors.primary,
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+            color: AppColors.onSurface,
           ),
         ),
         const SizedBox(height: 8),
-        Text(
+        const Text(
           'Choose who can witness this moment.',
           style: TextStyle(fontSize: 14, color: AppColors.onSurfaceVariant),
         ),
         const SizedBox(height: AppSizes.space16),
 
-        // Personal Wall chip
-        Obx(() => _AudienceChip(
-          icon: Icons.person,
-          label: 'Personal Only',
+        Obx(() => _AudienceCard(
+          icon: Icons.lock_outline,
+          title: 'Just me',
+          subtitle: 'Keep this moment completely private.',
           isSelected: ctrl.visibility.value == AppConstants.visibilityPersonalOnly,
           onTap: () => ctrl.setVisibility(AppConstants.visibilityPersonalOnly),
         )),
         const SizedBox(height: AppSizes.space12),
 
-        // All Friends chip
-        Obx(() => _AudienceChip(
-          icon: Icons.people,
-          label: 'All Friends',
-          isSelected: ctrl.visibility.value == AppConstants.visibilityAllFriends,
-          onTap: () => ctrl.setVisibility(AppConstants.visibilityAllFriends),
-        )),
-        const SizedBox(height: AppSizes.space12),
-
-        // Selected Friends chip
-        Obx(() => _AudienceChip(
-          icon: Icons.group,
-          label: 'Selected Friends',
+        Obx(() => _AudienceCard(
+          icon: Icons.person_outline,
+          title: 'My buddy',
+          subtitle: 'Share only with your primary buddy.',
           isSelected: ctrl.visibility.value == AppConstants.visibilitySelectedFriends,
           onTap: () => ctrl.setVisibility(AppConstants.visibilitySelectedFriends),
         )),
+        const SizedBox(height: AppSizes.space12),
 
-        // Friend selector when "Selected Friends" is chosen
-        Obx(() {
-          if (ctrl.visibility.value != AppConstants.visibilitySelectedFriends) {
-            return const SizedBox.shrink();
-          }
-          return _FriendSelector(
-            selectedFriendIds: ctrl.selectedFriendIds,
-            onToggle: ctrl.toggleSelectedFriend,
-          );
-        }),
+        Obx(() => _AudienceCard(
+          icon: Icons.groups_outlined,
+          title: 'Close crew',
+          subtitle: 'Notify all your close friends.',
+          isSelected: ctrl.visibility.value == AppConstants.visibilityAllFriends,
+          onTap: () => ctrl.setVisibility(AppConstants.visibilityAllFriends),
+        )),
       ],
     );
   }
 }
 
-class _FriendSelector extends StatelessWidget {
-  const _FriendSelector({
-    required this.selectedFriendIds,
-    required this.onToggle,
-  });
-
-  final RxList<String> selectedFriendIds;
-  final void Function(String) onToggle;
-
-  @override
-  Widget build(BuildContext context) {
-    final friendRepo = Get.find<FriendRepository>();
-    final userProfileRepo = Get.find<UserProfileRepository>();
-
-    return FutureBuilder(
-      future: friendRepo.watchFriendships(
-        Get.find<HomeController>().currentUserId ?? '',
-      ).first,
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Padding(
-            padding: EdgeInsets.only(top: AppSizes.space12),
-            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-          );
-        }
-
-        final friendships = snapshot.data!;
-        if (friendships.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.only(top: AppSizes.space12),
-            child: Container(
-              padding: const EdgeInsets.all(AppSizes.space16),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceContainerLow,
-                borderRadius: AppSizes.borderRadiusMd,
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.info_outline, color: AppColors.outline, size: 18),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'No friends yet. Add friends first to share with them.',
-                      style: TextStyle(fontSize: 12, color: AppColors.onSurfaceVariant),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
-
-        return FutureBuilder(
-          future: Future.wait(
-            friendships.map((f) async {
-              final uid = Get.find<HomeController>().currentUserId ?? '';
-              final friendId = f.otherUserId(uid);
-              final result = await userProfileRepo.getUserProfile(friendId);
-              final profile = result.fold(
-                onSuccess: (data) => data,
-                onFailure: (_) => null,
-              );
-              return (friendId, profile);
-            }).toList(),
-          ),
-          builder: (context, snap) {
-            if (!snap.hasData) return const SizedBox.shrink();
-
-            return Padding(
-              padding: const EdgeInsets.only(top: AppSizes.space12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Select Friends',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.outline,
-                      letterSpacing: 1,
-                    ),
-                  ),
-                  const SizedBox(height: AppSizes.space8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: snap.data!.map((item) {
-                      final friendId = item.$1;
-                      final profile = item.$2;
-                      final name = profile?.displayName ?? 'Friend';
-                      final avatarUrl = profile?.avatarUrl;
-                      final isSelected = selectedFriendIds.contains(friendId);
-
-                      return GestureDetector(
-                        onTap: () => onToggle(friendId),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? AppColors.primaryContainer
-                                : AppColors.surfaceContainerLow,
-                            borderRadius: BorderRadius.circular(20),
-                            border: isSelected
-                                ? Border.all(color: AppColors.primary, width: 1.5)
-                                : null,
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              CircleAvatar(
-                                radius: 10,
-                                backgroundColor: AppColors.primaryFixed,
-                                backgroundImage: avatarUrl != null
-                                    ? NetworkImage(avatarUrl)
-                                    : null,
-                                child: avatarUrl == null
-                                    ? Icon(Icons.person, size: 10, color: AppColors.primary)
-                                    : null,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                name,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: isSelected
-                                      ? AppColors.onPrimaryContainer
-                                      : AppColors.onSurfaceVariant,
-                                ),
-                              ),
-                              if (isSelected) ...[
-                                const SizedBox(width: 4),
-                                Icon(Icons.check, size: 14, color: AppColors.primary),
-                              ],
-                            ],
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-}
-
-// Unused — kept for reference during Phase 3 (Circle V1.5)
-// class _CircleChips extends StatelessWidget {
-//   const _CircleChips({required this.ctrl});
-//   final MomentController ctrl;
-//   ...
-// }
-
-class _AudienceChip extends StatelessWidget {
-  const _AudienceChip({
+class _AudienceCard extends StatelessWidget {
+  const _AudienceCard({
     required this.icon,
-    required this.label,
+    required this.title,
+    required this.subtitle,
     required this.isSelected,
     required this.onTap,
   });
 
   final IconData icon;
-  final String label;
+  final String title;
+  final String subtitle;
   final bool isSelected;
   final VoidCallback onTap;
 
@@ -503,34 +336,57 @@ class _AudienceChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: AppSizes.space16, vertical: AppSizes.space12),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(AppSizes.space16),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryContainer : AppColors.surfaceContainerLow,
+          color: isSelected ? AppColors.primary.withValues(alpha: 0.05) : AppColors.surfaceContainerLow,
           borderRadius: AppSizes.borderRadiusMd,
-          border: isSelected ? Border.all(color: AppColors.primary, width: 1.5) : null,
+          border: Border.all(
+            color: isSelected ? AppColors.primary : Colors.transparent,
+            width: 1.5,
+          ),
         ),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 18,
-              color: isSelected ? AppColors.onPrimaryContainer : AppColors.onSurfaceVariant,
-            ),
-            const SizedBox(width: AppSizes.space8),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: isSelected ? AppColors.onPrimaryContainer : AppColors.onSurfaceVariant,
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isSelected ? AppColors.primary : AppColors.surfaceContainerHigh,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                size: 20,
+                color: isSelected ? Colors.white : AppColors.onSurfaceVariant,
               ),
             ),
-            if (isSelected) ...[
-              const SizedBox(width: AppSizes.space8),
-              Icon(Icons.check_circle, size: 16, color: AppColors.onPrimaryContainer),
-            ],
+            const SizedBox(width: AppSizes.space16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: isSelected ? AppColors.primary : AppColors.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (isSelected)
+              const Icon(Icons.check_circle, color: AppColors.primary),
           ],
         ),
       ),

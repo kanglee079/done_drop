@@ -25,8 +25,8 @@ class FriendsScreen extends StatelessWidget {
                 icon: const Icon(Icons.arrow_back, color: AppColors.primary),
                 onPressed: () => Get.back(),
               ),
-              title: Text(
-                'Friends',
+              title: const Text(
+                'Buddy Crew',
                 style: TextStyle(
                   fontFamily: AppTypography.serifFamily,
                   fontSize: 18,
@@ -48,9 +48,9 @@ class FriendsScreen extends StatelessWidget {
                 labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
                 tabs: [
                   Obx(() => Tab(
-                    child: Text(ctrl.isAtFriendCap
-                        ? 'Friends (${ctrl.friendCount.value}/${ctrl.maxFriends})'
-                        : 'Friends'),
+                    text: ctrl.isAtFriendCap
+                        ? 'Crew (${ctrl.friendCount.value}/${ctrl.maxFriends})'
+                        : 'Crew',
                   )),
                   Obx(() => Tab(
                     child: Row(
@@ -115,7 +115,8 @@ class _FriendsList extends StatelessWidget {
             ),
             const SizedBox(height: AppSizes.space8),
             Text(
-              'Add friends to share moments privately.',
+              'Add some buddies to keep you accountable.',
+              textAlign: TextAlign.center,
               style: TextStyle(fontSize: 14, color: AppColors.onSurfaceVariant),
             ),
             const SizedBox(height: AppSizes.space24),

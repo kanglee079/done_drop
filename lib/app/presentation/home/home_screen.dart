@@ -41,7 +41,6 @@ class HomeScreen extends StatelessWidget {
                 children: const [
                   _TodayTab(),
                   _FeedTab(),
-                  SizedBox(), // Placeholder — Capture opens as route
                   _WallTab(),
                   _SettingsTab(),
                 ],
@@ -49,14 +48,7 @@ class HomeScreen extends StatelessWidget {
             ),
             bottomNavigationBar: DDBottomNavBar(
               currentIndex: currentIndex,
-              onTap: (i) {
-                if (i == 2) {
-                  // Center button → open Capture screen as a route
-                  Get.toNamed(AppRoutes.capture);
-                } else {
-                  nav.setTab(i);
-                }
-              },
+              onTap: (i) => nav.setTab(i),
             ),
           ),
           // Streak milestone celebration overlay
@@ -84,12 +76,11 @@ class HomeScreen extends StatelessWidget {
     });
   }
 
-  /// Title mapping: tab 0=Home, 1=Feed, 2=Capture(skip), 3=Wall, 4=Settings
   String _titleForIndex(int i) => switch (i) {
     0 => 'DoneDrop',
-    1 => 'Feed',
-    3 => 'Memory Wall',
-    4 => 'Settings',
+    1 => 'Buddy Feed',
+    2 => 'Memory Wall',
+    3 => 'Settings',
     _ => 'DoneDrop',
   };
 
@@ -247,31 +238,66 @@ class _TodayContent extends StatelessWidget {
                   const SizedBox(height: AppSizes.space24),
                 ],
 
+                // ── Next Up ──────────────────────────────────────────────────
+                if (ctrl.activities.where((a) => !ctrl.isOverdue(a.id) && !ctrl.isCompletedToday(a.id)).isNotEmpty) ...[
+                  Builder(builder: (ctx) {
+                    final nextUp = ctrl.activities.where((a) => !ctrl.isOverdue(a.id) && !ctrl.isCompletedToday(a.id)).first;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                      const _SectionHeader(title: 'Next up', count: 0),
+                      const SizedBox(height: AppSizes.space12),
+                      _ActivityItem(
+                        activity: nextUp,
+                        instance: ctrl.getInstance(nextUp.id),
+                        isCompleted: false,
+                        isPending: true,
+                        isOverdue: false,
+                        isNextUp: true,
+                        onQuickComplete: () => ctrl.completeActivity(nextUp.id),
+                        onCompleteWithProof: () => ctrl.completeAndOpenCapture(nextUp.id),
+                        onSkip: () => ctrl.missActivity(nextUp.id),
+                      ),
+                      const SizedBox(height: AppSizes.space24),
+                      ]
+                    );
+                  }),
+                ],
+
                 // ── Today ───────────────────────────────────────────────────
-                _SectionHeader(
-                  title: "Today's Tasks",
-                  count: ctrl.pendingToday.value + ctrl.completedToday.value,
-                ),
-                const SizedBox(height: AppSizes.space12),
-                if (ctrl.activities.isEmpty)
+                if (ctrl.activities.where((a) => !ctrl.isOverdue(a.id) && !ctrl.isCompletedToday(a.id)).length > 1) ...[
+                  _SectionHeader(
+                    title: "Later Today",
+                    count: ctrl.activities.where((a) => !ctrl.isOverdue(a.id) && !ctrl.isCompletedToday(a.id)).length - 1,
+                  ),
+                  const SizedBox(height: AppSizes.space12),
+                  ...ctrl.activities
+                      .where((a) => !ctrl.isOverdue(a.id) && !ctrl.isCompletedToday(a.id))
+                      .skip(1)
+                      .map((a) => _ActivityItem(
+                        activity: a,
+                        instance: ctrl.getInstance(a.id),
+                        isCompleted: false,
+                        isPending: ctrl.isPendingToday(a.id),
+                        isOverdue: false,
+                        onQuickComplete: () => ctrl.completeActivity(a.id),
+                        onCompleteWithProof: () => ctrl.completeAndOpenCapture(a.id),
+                        onSkip: () => ctrl.missActivity(a.id),
+                      )),
+                ],
+                if (ctrl.activities.isEmpty) ...[
+                  const _SectionHeader(
+                    title: "Today's Tasks",
+                    count: 0,
+                  ),
+                  const SizedBox(height: AppSizes.space12),
                   _EmptyState(
                     title: 'No habits yet',
                     description: 'Create your first habit and capture proof moments to share with friends!',
                     actionLabel: 'Add Habit',
                     onAction: () => _showCreateActivityDialog(context),
-                  )
-                else ...ctrl.activities
-                    .where((a) => !ctrl.isOverdue(a.id) && !ctrl.isCompletedToday(a.id))
-                    .map((a) => _ActivityItem(
-                      activity: a,
-                      instance: ctrl.getInstance(a.id),
-                      isCompleted: false,
-                      isPending: ctrl.isPendingToday(a.id),
-                      isOverdue: false,
-                      onQuickComplete: () => ctrl.completeActivity(a.id),
-                      onCompleteWithProof: () => ctrl.completeAndOpenCapture(a.id),
-                      onSkip: () => ctrl.missActivity(a.id),
-                    )),
+                  ),
+                ],
 
                 // ── Completed ──────────────────────────────────────────────
                 if (ctrl.completedToday.value > 0) ...[
@@ -647,6 +673,7 @@ class _ActivityItem extends StatefulWidget {
     required this.isCompleted,
     required this.isPending,
     required this.isOverdue,
+    this.isNextUp = false,
     this.onQuickComplete,
     this.onCompleteWithProof,
     required this.onSkip,
@@ -657,6 +684,7 @@ class _ActivityItem extends StatefulWidget {
   final bool isCompleted;
   final bool isPending;
   final bool isOverdue;
+  final bool isNextUp;
   final VoidCallback? onQuickComplete;
   final VoidCallback? onCompleteWithProof;
   final VoidCallback onSkip;
@@ -715,6 +743,8 @@ class _ActivityItemState extends State<_ActivityItem> with SingleTickerProviderS
             ? AppColors.primary.withValues(alpha: 0.3)
             : AppColors.surfaceContainerHigh;
 
+    if (widget.isNextUp) return _buildNextUpLayout(context, borderColor);
+
     return ScaleTransition(
       scale: _scale,
       child: AnimatedContainer(
@@ -730,7 +760,6 @@ class _ActivityItemState extends State<_ActivityItem> with SingleTickerProviderS
         ),
         child: Row(
           children: [
-            // Checkbox with animation — shows spinner when THIS item is processing via checkbox
             GestureDetector(
               onTap: (widget.isPending || widget.isOverdue) && !widget.isCompleted && !_isProcessing
                   ? _handleComplete : null,
@@ -794,13 +823,6 @@ class _ActivityItemState extends State<_ActivityItem> with SingleTickerProviderS
                                         colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
                                       ),
                                 borderRadius: BorderRadius.circular(20),
-                                boxShadow: _isProcessing ? [] : [
-                                  BoxShadow(
-                                    color: const Color(0xFF6366F1).withValues(alpha: 0.3),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
                               ),
                               child: _isProcessing
                                   ? const SizedBox(
@@ -811,12 +833,6 @@ class _ActivityItemState extends State<_ActivityItem> with SingleTickerProviderS
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Icon(Icons.camera_alt, size: 14, color: Colors.white),
-                                        SizedBox(width: 6),
-                                        Text(
-                                          'Done! 📸', style: TextStyle(
-                                            color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13,
-                                          ),
-                                        ),
                                       ],
                                     ),
                             ),
@@ -828,13 +844,6 @@ class _ActivityItemState extends State<_ActivityItem> with SingleTickerProviderS
                       Text(
                         widget.activity.category!,
                         style: const TextStyle(fontSize: 12, color: AppColors.onSurfaceVariant),
-                      ),
-                    ],
-                    if (widget.isPending && !widget.isCompleted) ...[
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Tap ✓ to complete  •  Tap 📸 to capture & share',
-                        style: TextStyle(fontSize: 10, color: AppColors.outline),
                       ),
                     ],
                   ],
@@ -857,12 +866,152 @@ class _ActivityItemState extends State<_ActivityItem> with SingleTickerProviderS
                 ],
               ),
             ],
-            if (widget.isOverdue)
-              const Text('Missed', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.error))
-            else if (widget.isCompleted)
-              const Text('Captured ✨', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.primary)),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildNextUpLayout(BuildContext context, Color borderColor) {
+    return ScaleTransition(
+      scale: _scale,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: AppSizes.space12),
+        padding: const EdgeInsets.all(AppSizes.space20),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: AppSizes.borderRadiusMd,
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.3), width: 2.0),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.08),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            )
+          ]
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    widget.activity.title,
+                    style: const TextStyle(
+                      fontSize: 20, fontWeight: FontWeight.w700,
+                      color: AppColors.onSurface,
+                    ),
+                  ),
+                ),
+                if (widget.activity.currentStreak > 0) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.local_fire_department, size: 16, color: AppColors.primary),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${widget.activity.currentStreak}',
+                          style: const TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.w800,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            if (widget.activity.category != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                widget.activity.category!,
+                style: const TextStyle(fontSize: 14, color: AppColors.onSurfaceVariant),
+              ),
+            ],
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildActionButton(
+                    label: 'Complete now',
+                    icon: Icons.check,
+                    isPrimary: false,
+                    onTap: _handleComplete,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildActionButton(
+                    label: 'Complete + proof',
+                    icon: Icons.camera_alt,
+                    isPrimary: true,
+                    onTap: _handleCaptureComplete,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButton({required String label, required IconData icon, required bool isPrimary, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: _isProcessing ? null : onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: isPrimary ? null : AppColors.surface,
+          gradient: isPrimary
+              ? const LinearGradient(
+                  colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                )
+              : null,
+          border: isPrimary ? null : Border.all(color: AppColors.outlineVariant),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: isPrimary && !_isProcessing ? [
+            BoxShadow(
+              color: const Color(0xFF6366F1).withValues(alpha: 0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ] : [],
+        ),
+        child: _isProcessing
+            ? const Center(
+                child: SizedBox(
+                  width: 20, height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                ),
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, size: 16, color: isPrimary ? Colors.white : AppColors.onSurface),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      label, 
+                      style: TextStyle(
+                        color: isPrimary ? Colors.white : AppColors.onSurface,
+                        fontWeight: FontWeight.w700, fontSize: 13,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
       ),
     );
   }
@@ -1052,17 +1201,17 @@ class _EmptyFeedState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.people_outline, size: 56, color: AppColors.outlineVariant),
+            const Icon(Icons.group_outlined, size: 56, color: AppColors.outlineVariant),
             const SizedBox(height: AppSizes.space16),
             const Text(
-              'Friend Feed', style: TextStyle(
+              'Buddy Feed', style: TextStyle(
                 fontFamily: AppTypography.serifFamily, fontSize: 24, fontWeight: FontWeight.w600,
                 color: AppColors.onSurface,
               ),
             ),
             const SizedBox(height: 8),
             const Text(
-              'Private moments from your\naccepted friends will appear here.',
+              'Private proofs from your\nbuddy crew will appear here.',
               textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: AppColors.onSurfaceVariant),
             ),
             const SizedBox(height: AppSizes.space24),
@@ -1071,13 +1220,13 @@ class _EmptyFeedState extends StatelessWidget {
                 : const SizedBox.shrink()),
             const SizedBox(height: AppSizes.space12),
             Obx(() => DDSecondaryButton(
-              label: 'Friends (${ctrl.friendCount.value})',
-              icon: Icons.people_outline,
+              label: 'Buddy Crew (${ctrl.friendCount.value})',
+              icon: Icons.group_outlined,
               onPressed: () => Get.toNamed(AppRoutes.friends),
               isExpanded: false,
             )),
             const SizedBox(height: AppSizes.space12),
-            DDPrimaryButton(label: 'Add Friends', icon: Icons.person_add, onPressed: () => Get.toNamed(AppRoutes.addFriend), isExpanded: false),
+            DDPrimaryButton(label: 'Invite Buddy', icon: Icons.person_add, onPressed: () => Get.toNamed(AppRoutes.addFriend), isExpanded: false),
           ],
         ),
       ),
@@ -1213,8 +1362,8 @@ class _FeedVisibilityBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (icon, label) = switch (visibility) {
-      'all_friends' => (Icons.people, 'Friends'),
-      'selected_friends' => (Icons.group, 'Selected'),
+      'all_friends' => (Icons.groups, 'Crew'),
+      'selected_friends' => (Icons.person_outline, 'Buddy'),
       _ => (Icons.lock_outline, 'Personal'),
     };
     return Row(
