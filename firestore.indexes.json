@@ -1,6 +1,5 @@
 {
   "indexes": [
-    // ── activities ─────────────────────────────────────────────────────────────
     {
       "collectionGroup": "activities",
       "queryScope": "COLLECTION",
@@ -18,8 +17,6 @@
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
-
-    // ── activity_instances ─────────────────────────────────────────────────────
     {
       "collectionGroup": "activity_instances",
       "queryScope": "COLLECTION",
@@ -36,8 +33,6 @@
         { "fieldPath": "date", "order": "ASCENDING" }
       ]
     },
-
-    // ── completion_logs ────────────────────────────────────────────────────────
     {
       "collectionGroup": "completion_logs",
       "queryScope": "COLLECTION",
@@ -54,8 +49,6 @@
         { "fieldPath": "completedAt", "order": "DESCENDING" }
       ]
     },
-
-    // ── moments ───────────────────────────────────────────────────────────────
     {
       "collectionGroup": "moments",
       "queryScope": "COLLECTION",
@@ -84,8 +77,6 @@
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
-
-    // ── feed_deliveries ──────────────────────────────────────────────────────
     {
       "collectionGroup": "feed_deliveries",
       "queryScope": "COLLECTION",
@@ -103,8 +94,6 @@
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
-
-    // ── friendships ───────────────────────────────────────────────────────────
     {
       "collectionGroup": "friendships",
       "queryScope": "COLLECTION",
@@ -121,8 +110,6 @@
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
-
-    // ── friend_requests ───────────────────────────────────────────────────────
     {
       "collectionGroup": "friend_requests",
       "queryScope": "COLLECTION",
@@ -139,15 +126,6 @@
         { "fieldPath": "senderId", "order": "ASCENDING" },
         { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
-      ]
-    },
-
-    // ── users ────────────────────────────────────────────────────────────────
-    {
-      "collectionGroup": "users",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "username", "order": "ASCENDING" }
       ]
     }
   ],

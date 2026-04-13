@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:done_drop/data/local/models/pending_sync_item.dart';
 
@@ -86,13 +87,18 @@ class LocalDatabaseService {
     return _syncBox.values.where((item) => item.status == 'pending').length;
   }
 
-  /// Clear all completed items.
-  Future<void> clearCompleted() async {
-    final completedKeys = _syncBox.keys
+  /// Clear all items that have exceeded retry limit (stale failures).
+  Future<void> clearStaleFailures({int maxRetries = 3}) async {
+    final staleKeys = _syncBox.keys
         .whereType<int>()
-        .where((k) => _syncBox.get(k)?.status == 'completed')
+        .where((k) {
+          final item = _syncBox.get(k);
+          return item != null &&
+              item.status == 'failed' &&
+              item.retryCount >= maxRetries;
+        })
         .toList();
-    for (final key in completedKeys) {
+    for (final key in staleKeys) {
       await _syncBox.delete(key);
     }
   }
@@ -108,10 +114,19 @@ class LocalDatabaseService {
     }
   }
 
-  /// Watch pending count as a stream.
+  /// Watch pending count as a stream. Emits current count immediately, then on changes.
   Stream<int> watchPendingCount() {
-    return _syncBox.watch().map((_) {
-      return _syncBox.values.where((item) => item.status == 'pending').length;
+    final controller = StreamController<int>.broadcast();
+    // Emit current count immediately
+    controller.add(_syncBox.values
+        .where((item) => item.status == 'pending')
+        .length);
+    // Then emit on changes
+    _syncBox.watch().listen((_) {
+      controller.add(_syncBox.values
+          .where((item) => item.status == 'pending')
+          .length);
     });
+    return controller.stream;
   }
 }

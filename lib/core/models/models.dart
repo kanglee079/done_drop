@@ -1,4 +1,3 @@
-// Barrel export for core/models
 export 'user_profile.dart';
 export 'circle.dart';
 export 'moment.dart';
@@ -8,3 +7,4 @@ export 'activity_instance.dart';
 export 'completion_log.dart';
 export 'friend_request.dart';
 export 'friendship.dart';
+export 'streak.dart';

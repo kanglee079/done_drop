@@ -42,6 +42,8 @@ class BlockService extends GetxService {
     });
     // Remove any friend relationship
     await _removeFriendRelation(_userId!, targetUserId);
+    // Remove orphaned feed deliveries (moment was shared with this friend before block)
+    await _removeFeedDeliveries(_userId!, targetUserId);
   }
 
   /// Unblock a user.
@@ -54,30 +56,59 @@ class BlockService extends GetxService {
   Future<void> _removeFriendRelation(String uid1, String uid2) async {
     final batch = _db.batch();
 
-    // Find and delete friend request from uid1 -> uid2
+    // Cancel pending friend requests in both directions
     final req1 = await _db
         .collection('friend_requests')
         .where('senderId', isEqualTo: uid1)
         .where('receiverId', isEqualTo: uid2)
         .limit(1)
         .get();
-    for (final d in req1.docs) batch.delete(d.reference);
+    for (final d in req1.docs) {
+      batch.delete(d.reference);
+    }
 
-    // Find and delete friend request from uid2 -> uid1
     final req2 = await _db
         .collection('friend_requests')
         .where('senderId', isEqualTo: uid2)
         .where('receiverId', isEqualTo: uid1)
         .limit(1)
         .get();
-    for (final d in req2.docs) batch.delete(d.reference);
+    for (final d in req2.docs) {
+      batch.delete(d.reference);
+    }
 
-    // Remove from friends collection (both directions)
-    final friendDoc1 = _db.collection('friends').doc('${uid1}_$uid2');
-    final friendDoc2 = _db.collection('friends').doc('${uid2}_$uid1');
-    batch.delete(friendDoc1);
-    batch.delete(friendDoc2);
+    // Remove friendship document (sorted ID format)
+    final sorted = [uid1, uid2]..sort();
+    final friendshipDoc = _db.collection('friendships').doc('${sorted[0]}_${sorted[1]}');
+    batch.delete(friendshipDoc);
 
     await batch.commit();
+  }
+
+  /// Remove feed deliveries where this user was a recipient (blocks orphaned deliveries).
+  Future<void> _removeFeedDeliveries(String currentUserId, String targetUserId) async {
+    // Feed deliveries where currentUser is recipient and targetUser is owner
+    final snap1 = await _db
+        .collection('feed_deliveries')
+        .where('recipientId', isEqualTo: currentUserId)
+        .where('ownerId', isEqualTo: targetUserId)
+        .get();
+    final batch1 = _db.batch();
+    for (final d in snap1.docs) {
+      batch1.delete(d.reference);
+    }
+    await batch1.commit();
+
+    // Feed deliveries where currentUser is owner and targetUser is recipient
+    final snap2 = await _db
+        .collection('feed_deliveries')
+        .where('ownerId', isEqualTo: currentUserId)
+        .where('recipientId', isEqualTo: targetUserId)
+        .get();
+    final batch2 = _db.batch();
+    for (final d in snap2.docs) {
+      batch2.delete(d.reference);
+    }
+    await batch2.commit();
   }
 }

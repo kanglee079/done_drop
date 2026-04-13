@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:get/get.dart';
 import 'package:done_drop/firebase/repositories/moment_repository.dart';
 import 'package:done_drop/firebase/repositories/friend_repository.dart';
@@ -5,6 +6,7 @@ import 'package:done_drop/features/auth/presentation/controllers/auth_controller
 import 'package:done_drop/core/models/moment.dart';
 import 'package:done_drop/core/models/feed_delivery.dart';
 import 'package:done_drop/core/models/user_profile.dart';
+import 'package:done_drop/core/services/block_service.dart';
 import 'package:done_drop/features/auth/repositories/user_profile_repository.dart';
 import 'package:done_drop/app/presentation/feed/reaction_controller.dart';
 
@@ -17,23 +19,43 @@ class FeedController extends GetxController {
   FriendRepository get _friendRepo => Get.find<FriendRepository>();
   UserProfileRepository get _userProfileRepo => Get.find<UserProfileRepository>();
   AuthController get _authController => Get.find<AuthController>();
-
   String? get _userId => _authController.firebaseUser?.uid;
 
   final isLoading = true.obs;
   final RxList<Moment> moments = <Moment>[].obs;
   final RxList<FeedDelivery> deliveries = <FeedDelivery>[].obs;
   final RxMap<String, UserProfile> ownerProfiles = <String, UserProfile>{}.obs;
+  final RxSet<String> blockedUserIds = <String>{}.obs;
   final RxInt unreadCount = 0.obs;
   final RxInt friendCount = 0.obs;
 
   @override
   void onInit() {
     super.onInit();
+    _watchBlockedUsers();
     _watchFriendFeed();
     _watchUnreadCount();
     _watchFriendCount();
   }
+
+  void _watchBlockedUsers() {
+    final blockSvc = Get.find<BlockService>();
+    blockSvc.watchBlockedUserIds().listen((ids) {
+      blockedUserIds.clear();
+      blockedUserIds.addAll(ids);
+      // Re-filter feed when blocked list changes (removes orphaned moments)
+      _reapplyBlockFilter();
+    });
+  }
+
+  void _reapplyBlockFilter() {
+    // Re-run block filter on current moments without re-fetching Firestore
+    if (moments.isEmpty) return;
+    final filtered = moments.where((m) => !blockedUserIds.contains(m.ownerId)).toList();
+    moments.value = filtered;
+  }
+
+  StreamSubscription<List<FeedDelivery>>? _feedSubscription;
 
   void _watchFriendFeed() {
     final uid = _userId;
@@ -42,25 +64,30 @@ class FeedController extends GetxController {
       return;
     }
 
-    _momentRepo.watchFeedDeliveries(uid).listen((deliveryList) async {
+    _feedSubscription?.cancel();
+    _feedSubscription = _momentRepo.watchFeedDeliveries(uid).listen((deliveryList) async {
       deliveries.value = deliveryList;
-      isLoading.value = false;
 
       // Load moment details
       final momentIds = deliveryList.map((d) => d.momentId).whereType<String>().toList();
       final momentList = await _momentRepo.getMomentsForFeed(momentIds);
 
-      // Sort by delivery order (most recent first)
-      final momentMap = {for (final m in momentList) m.id: m};
-      moments.value = momentIds
-          .where((id) => momentMap.containsKey(id))
-          .map((id) => momentMap[id]!)
+      // Filter out moments from blocked users (client-side safety net)
+      final visibleMoments = momentList
+          .where((m) => !blockedUserIds.contains(m.ownerId))
           .toList();
 
+      // Sort by delivery order (most recent first), preserving delivery sequence
+      final momentMap = {for (final m in visibleMoments) m.id: m};
+      final visibleIds = momentIds.where((id) => momentMap.containsKey(id)).toList();
+      moments.value = visibleIds.map((id) => momentMap[id]!).toList();
+
       // Load owner profiles for display — batch fetch in parallel
-      final ownerIds = momentList.map((m) => m.ownerId).toSet().toList();
+      final ownerIds = visibleMoments.map((m) => m.ownerId).toSet().toList();
       final profiles = await _userProfileRepo.getUserProfiles(ownerIds);
       ownerProfiles.value = profiles;
+
+      isLoading.value = false;
     });
   }
 

@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:done_drop/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:done_drop/firebase/repositories/moment_repository.dart';
 import 'package:done_drop/core/models/moment.dart';
+import 'package:done_drop/core/constants/app_constants.dart';
 
 /// Controller for Memory Wall screen — personal moments grid.
 class MemoryWallController extends GetxController {
@@ -25,20 +26,8 @@ class MemoryWallController extends GetxController {
     return moments.where((m) => m.category == selectedCategory.value).toList();
   }
 
-  static const categories = [
-    'All Moments',
-    'Daily Wins',
-    'Travel',
-    'Reflections',
-    'Health & Fitness',
-    'Creative',
-    'Learning',
-    'Relationships',
-    'Nature',
-    'Food',
-    'Work',
-    'Monthly Highlights',
-  ];
+  /// Use AppConstants moment categories — discipline-first, no reflection/journal mindset.
+  static List<String> get categories => ['All Moments', ...AppConstants.momentCategories];
 
   @override
   void onInit() {
@@ -60,7 +49,16 @@ class MemoryWallController extends GetxController {
     selectedCategory.value = category == 'All Moments' ? '' : category;
   }
 
-  void deleteMoment(String momentId) {
-    _momentRepo.deleteMoment(momentId);
+  void deleteMoment(String momentId) async {
+    // Get the moment to find associated media and feed deliveries
+    final moment = await _momentRepo.getMoment(momentId);
+    if (moment != null) {
+      // Delete from Storage first (covers both original + thumbnail)
+      await _momentRepo.deleteMomentStorage(moment.ownerId, momentId);
+      // Delete feed deliveries for this moment
+      await _momentRepo.deleteFeedDeliveriesForMoment(momentId);
+    }
+    // Soft-delete the moment document
+    await _momentRepo.deleteMoment(momentId);
   }
 }

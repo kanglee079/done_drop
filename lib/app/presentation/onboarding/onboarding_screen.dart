@@ -89,7 +89,7 @@ class _WelcomePage extends StatelessWidget {
           ),
           const SizedBox(height: AppSizes.space24),
           Text(
-            'Life is a collection of done moments.',
+            'Hold yourself accountable.\nComplete your habits. Prove it.',
             textAlign: TextAlign.center,
             style: AppTypography.headlineMedium(color: AppColors.onSurface),
           ),

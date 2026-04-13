@@ -3,9 +3,7 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
 
-    // ══════════════════════════════════════════════════════════════════
-    // Helper functions
-    // ══════════════════════════════════════════════════════════════════
+    // ── Helpers ───────────────────────────────────────────────────────────────
 
     function isAuthenticated() {
       return request.auth != null;
@@ -23,49 +21,34 @@ service firebase.storage {
       return request.resource.contentType.matches('image/.*');
     }
 
-    function isUnderSize(int maxBytes) {
+    function isUnderSize(maxBytes) {
       return request.resource.size < maxBytes;
     }
 
-    // ══════════════════════════════════════════════════════════════════
-    // USER AVATARS
-    // ══════════════════════════════════════════════════════════════════
+    // ── USER AVATARS ────────────────────────────────────────────────────────
+
     match /avatars/{userId}/{fileName} {
-      // Anyone authenticated can read (needed for displaying friend profiles)
       allow read: if isAuthenticated();
-      // Only the owner can write their own avatar
       allow write: if isOwner(userId)
         && isImage()
-        && isUnderSize(5 * 1024 * 1024); // 5MB
+        && isUnderSize(5 * 1024 * 1024);
     }
 
-    // ══════════════════════════════════════════════════════════════════
-    // MOMENT IMAGES
-    // ══════════════════════════════════════════════════════════════════
+    // ── MOMENT IMAGES ────────────────────────────────────────────────────────
+    // Visibility enforcement is at Firestore level; storage only checks ownership.
+
     match /moments/{userId}/{momentId}/{fileName} {
-      // Only the owner can read/write their own moments
-      // NOTE: Moment visibility is enforced at the Firestore /moments/{momentId} level.
-      // Storage only checks ownership. Firestore rules enforce who can read the
-      // moment metadata (which contains the storage path).
       allow read: if isOwner(userId);
       allow write: if isOwner(userId)
         && isImage()
-        && isUnderSize(10 * 1024 * 1024); // 10MB
+        && isUnderSize(10 * 1024 * 1024);
     }
 
-    // ══════════════════════════════════════════════════════════════════
-    // LEGACY: CIRCLE COVER PHOTOS (V1.5 — dormant)
-    // ══════════════════════════════════════════════════════════════════
+    // ── LEGACY: CIRCLE COVER PHOTOS (V1 — dormant, read-only) ───────────────
+
     match /circles/{circleId}/{fileName} {
-      // Any authenticated user in the circle can read
       allow read: if isAuthenticated();
-      // Only circle members can write cover photos
-      // Note: circle membership check requires a Firestore lookup.
-      // For simplicity, we allow the authenticated user to write.
-      // Circle membership is enforced at Firestore level.
-      allow write: if isAuthenticated()
-        && isImage()
-        && isUnderSize(5 * 1024 * 1024); // 5MB
+      allow write: if false;
     }
   }
 }

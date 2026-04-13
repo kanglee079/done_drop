@@ -1,8 +1,16 @@
 # DoneDrop
 
-> Complete it. Capture it. Share the moment.
+> **Discipline-first. Private accountability. Proof of completion.**
 
-A private social memory app where users capture a real photo right after completing something meaningful — a task, habit, challenge, or small personal win — then share it with a private circle.
+DoneDrop là app kỷ luật cá nhân. Người dùng tạo hoạt động/routine,
+được nhắc nhở để thực hiện, hoàn thành xong thì ghi nhận completion log,
+có thể chụp ảnh làm proof moment, rồi chia sẻ riêng tư với bạn bè đã kết bạn.
+
+**DoneDrop KHÔNG PHẢI:**
+- Reflection diary
+- Circle-first social app
+- Instagram clone
+- Generic todo app
 
 ## Tech Stack
 
@@ -126,20 +134,16 @@ flutter build apk --debug
 - Warm shadows (outline color tint, not black)
 - 8pt grid spacing
 
-## Phase Plan
+## Sprint Recovery Plan
 
-| Phase | Feature |
-|-------|---------|
-| Phase 0 | Foundation, scaffold, theme, routing |
-| Phase 1 | Onboarding, Auth, Profile |
-| Phase 2 | Home, Task creation |
-| Phase 3 | Done → Capture → Post flow |
-| Phase 4 | Circles, Invites, Feed |
-| Phase 5 | Memory Wall, Recap, Streaks |
-| Phase 6 | Settings, Privacy, Moderation |
-| Phase 7 | Premium, RevenueCat |
-| Phase 8 | Widgets, Notifications, Polish |
-| Phase 9 | Tests, Firestore rules, Release readiness |
+**Product Direction:** DoneDrop is discipline-first, private-friend, proof-of-completion.
+Not a reflection diary, not a circle-first social app, not an Instagram clone.
+
+| Sprint | Focus |
+|--------|-------|
+| Sprint 1 | Relock direction, infrastructure, media pipeline |
+| Sprint 2 | Discipline engine, friend model, offline-first |
+| Sprint 3 | UI/UX polish, responsive, beta hardening |
 
 ## License
 

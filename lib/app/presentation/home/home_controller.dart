@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:done_drop/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:done_drop/features/auth/repositories/user_profile_repository.dart';
 import 'package:done_drop/core/models/user_profile.dart';
@@ -10,15 +11,20 @@ import 'package:done_drop/core/models/completion_log.dart';
 import 'package:done_drop/app/routes/app_routes.dart';
 import 'package:done_drop/core/services/connectivity_service.dart';
 import 'package:done_drop/core/services/offline_queue_service.dart';
+import 'package:done_drop/core/services/local_cache_service.dart';
+import 'package:done_drop/app/presentation/streak/streak_controller.dart';
 
 /// Home controller — manages bottom nav state and provides data to HomeScreen tabs.
+/// Uses LocalCacheService for instant startup: loads cached data synchronously,
+/// then streams Firestore data in the background for live updates.
 class HomeController extends GetxController {
-  HomeController();
+  HomeController(this._authController, this._userProfileRepo);
+
+  final AuthController _authController;
+  final UserProfileRepository _userProfileRepo;
 
   late final ActivityRepository _activityRepo;
   late final FriendRepository _friendRepo;
-  AuthController get _authController => Get.find<AuthController>();
-  UserProfileRepository get _userProfileRepo => Get.find<UserProfileRepository>();
 
   String? get _userId => _authController.firebaseUser?.uid;
   String? get currentUserId => _userId;
@@ -47,17 +53,57 @@ class HomeController extends GetxController {
   /// Friend count for display in stats header
   final RxInt friendCount = 0.obs;
 
+  /// Loading state: false once cached data is loaded (never blocks UI after first paint).
   final RxBool isLoading = true.obs;
 
   @override
   void onInit() {
     super.onInit();
-    _activityRepo = ActivityRepository(Get.find());
+    _activityRepo = ActivityRepository(FirebaseFirestore.instance);
     _friendRepo = Get.find<FriendRepository>();
+    _preloadCache();
+  }
+
+  /// Load from local cache first — synchronous, no loading spinner.
+  /// Then stream Firestore data for live updates.
+  Future<void> _preloadCache() async {
+    final cache = LocalCacheService.instance;
+    final cachedActs = cache.loadCachedActivities();
+    final cachedInsts = cache.loadCachedTodayInstances();
+
+    if (cachedActs.isNotEmpty) {
+      activities.value = cachedActs.map((m) => Activity.fromFirestore(m)).toList();
+    }
+    if (cachedInsts.isNotEmpty) {
+      todayInstances.clear();
+      for (final m in cachedInsts) {
+        final inst = ActivityInstance.fromFirestore(m);
+        todayInstances[inst.activityId] = inst;
+      }
+      _recalcStats();
+    }
+
+    if (cachedActs.isNotEmpty) isLoading.value = false;
+
+    // 2. Stream Firestore data in background
     _watchProfile();
     _watchActivities();
     _watchTodayInstances();
     _watchFriendCount();
+
+    // 3. Pre-generate future instances
+    _ensureUpcomingInstances();
+  }
+
+  /// Pre-generate activity instances for today + next 7 days at app startup.
+  Future<void> _ensureUpcomingInstances() async {
+    final uid = _userId;
+    if (uid == null) return;
+    try {
+      await _activityRepo.ensureUpcomingInstances(uid, daysAhead: 7);
+    } catch (_) {
+      // Non-critical: instances are created on-demand when accessed anyway
+    }
   }
 
   void _watchFriendCount() {
@@ -80,10 +126,14 @@ class HomeController extends GetxController {
     final uid = _userId;
     if (uid == null) return;
 
-    _activityRepo.watchActiveActivities(uid).listen((list) {
+    _activityRepo.watchActiveActivities(uid).listen((list) async {
       activities.value = list;
       _recalcStats();
       isLoading.value = false;
+      // Persist to local cache for next startup
+      await LocalCacheService.instance.cacheActivities(
+        list.map((a) => a.toFirestore()).toList(),
+      );
     });
 
     _activityRepo.watchCompletionLogs(uid, limit: 100).listen((logs) {
@@ -95,12 +145,15 @@ class HomeController extends GetxController {
     final uid = _userId;
     if (uid == null) return;
 
-    _activityRepo.watchTodayInstances(uid).listen((instances) {
+    _activityRepo.watchTodayInstances(uid).listen((instances) async {
       todayInstances.clear();
       for (final inst in instances) {
         todayInstances[inst.activityId] = inst;
       }
       _recalcStats();
+      await LocalCacheService.instance.cacheTodayInstances(
+        instances.map((i) => i.toFirestore()).toList(),
+      );
     });
   }
 
@@ -111,7 +164,6 @@ class HomeController extends GetxController {
     overdueToday.value = instances.where((i) => i.isOverdue).length;
 
     if (activities.isNotEmpty) {
-      // Use longestStreak (best ever) not currentStreak
       currentBestStreak.value = activities
           .map((a) => a.longestStreak)
           .reduce((a, b) => a > b ? a : b);
@@ -172,14 +224,16 @@ class HomeController extends GetxController {
   }
 
   /// Complete an activity for today.
-  /// Creates a CompletionLog for streak verification + links to proof moment later.
-  /// Queues the completion if offline (via OfflineQueueService).
   Future<CompletionLog?> completeActivity(String activityId) async {
     final uid = _userId;
     if (uid == null) return null;
 
     final instance = await _activityRepo.getOrCreateTodayInstance(activityId, uid);
     if (instance.isCompleted) return null;
+
+    final activity = activities.firstWhereOrNull((a) => a.id == activityId);
+    if (activity == null) return null;
+    final previousStreak = activity.currentStreak;
 
     final now = DateTime.now();
     final logId = 'log_${now.millisecondsSinceEpoch}';
@@ -194,7 +248,6 @@ class HomeController extends GetxController {
 
     final connectivity = Get.find<ConnectivityService>();
     if (!connectivity.isOnline.value) {
-      // Queue for later sync
       final queue = Get.find<OfflineQueueService>();
       await queue.queueCompleteActivity(
         activityId: activityId,
@@ -205,16 +258,18 @@ class HomeController extends GetxController {
       return log;
     }
 
-    // Online: complete immediately
     await _activityRepo.completeInstance(instance.id);
     await _activityRepo.createCompletionLog(log);
     await _activityRepo.incrementStreak(activityId);
+    await LocalCacheService.instance.invalidateTodayInstances();
+
+    final newStreak = previousStreak + 1;
+    _triggerMilestoneCelebration(activity, previousStreak, newStreak);
 
     return log;
   }
 
   /// Complete an activity and immediately open camera to capture proof moment.
-  /// Returns the CompletionLog id, or null if already completed.
   Future<String?> completeAndOpenCapture(String activityId) async {
     final uid = _userId;
     if (uid == null) return null;
@@ -222,10 +277,11 @@ class HomeController extends GetxController {
     final instance = await _activityRepo.getOrCreateTodayInstance(activityId, uid);
     if (instance.isCompleted) return null;
 
-    // Complete instance
+    final activity = activities.firstWhereOrNull((a) => a.id == activityId);
+    final previousStreak = activity?.currentStreak ?? 0;
+
     await _activityRepo.completeInstance(instance.id);
 
-    // Create completion log
     final now = DateTime.now();
     final logId = 'log_${now.millisecondsSinceEpoch}';
     final log = CompletionLog(
@@ -237,11 +293,13 @@ class HomeController extends GetxController {
       createdAt: now,
     );
     await _activityRepo.createCompletionLog(log);
-
-    // Update streak
     await _activityRepo.incrementStreak(activityId);
+    await LocalCacheService.instance.invalidateTodayInstances();
 
-    // Navigate to capture with proof moment context
+    if (activity != null) {
+      _triggerMilestoneCelebration(activity, previousStreak, previousStreak + 1);
+    }
+
     Get.toNamed(
       AppRoutes.capture,
       arguments: {
@@ -253,19 +311,30 @@ class HomeController extends GetxController {
     return logId;
   }
 
+  void _triggerMilestoneCelebration(Activity activity, int before, int after) {
+    if (!Get.isRegistered<StreakController>()) return;
+    final streakCtrl = Get.find<StreakController>();
+    streakCtrl.onActivityCompleted(
+      activity: activity,
+      previousStreak: before,
+      newStreak: after,
+    );
+  }
+
   /// Archive an activity.
   Future<void> archiveActivity(String activityId) async {
     await _activityRepo.archiveActivity(activityId);
   }
 
   /// Mark today's instance of an activity as missed.
-  /// Unlike archive, this keeps the activity but marks today as skipped.
   Future<void> missActivity(String activityId) async {
     final uid = _userId;
     if (uid == null) return;
     final instance = await _activityRepo.getOrCreateTodayInstance(activityId, uid);
     if (!instance.isCompleted) {
       await _activityRepo.missInstance(instance.id);
+      await _activityRepo.resetStreak(activityId);
+      await LocalCacheService.instance.invalidateTodayInstances();
     }
   }
 
@@ -274,6 +343,8 @@ class HomeController extends GetxController {
   }
 
   Future<void> signOut() async {
+    await LocalCacheService.instance.clearAll();
     await _authController.signOut();
   }
 }
+

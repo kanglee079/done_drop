@@ -29,49 +29,52 @@ class PreviewScreen extends StatelessWidget {
       ctrl.setImagePath(imagePath);
     }
 
-    return Scaffold(
-      backgroundColor: AppColors.surface,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Top bar
-            _PreviewTopBar(ctrl: ctrl),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: AppSizes.space24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Image preview
-                    if (imagePath != null)
-                      ClipRRect(
-                        borderRadius: AppSizes.borderRadiusLg,
-                        child: AspectRatio(
-                          aspectRatio: 4 / 5,
-                          child: Image.file(
-                            File(imagePath),
-                            fit: BoxFit.cover,
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        backgroundColor: AppColors.surface,
+        body: SafeArea(
+          child: Column(
+            children: [
+              // Top bar
+              _PreviewTopBar(ctrl: ctrl),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSizes.space24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Image preview
+                      if (imagePath != null)
+                        ClipRRect(
+                          borderRadius: AppSizes.borderRadiusLg,
+                          child: AspectRatio(
+                            aspectRatio: 4 / 5,
+                            child: Image.file(
+                              File(imagePath),
+                              fit: BoxFit.cover,
+                            ),
                           ),
                         ),
-                      ),
-                    const SizedBox(height: AppSizes.space24),
+                      const SizedBox(height: AppSizes.space24),
 
-                    // Caption
-                    _CaptionField(ctrl: ctrl),
-                    const SizedBox(height: AppSizes.space24),
+                      // Caption
+                      _CaptionField(ctrl: ctrl),
+                      const SizedBox(height: AppSizes.space24),
 
-                    // Category
-                    _CategorySelector(ctrl: ctrl),
-                    const SizedBox(height: AppSizes.space24),
+                      // Category
+                      _CategorySelector(ctrl: ctrl),
+                      const SizedBox(height: AppSizes.space24),
 
-                    // Audience
-                    _AudienceSection(ctrl: ctrl),
-                    const SizedBox(height: AppSizes.space48),
-                  ],
+                      // Audience
+                      _AudienceSection(ctrl: ctrl),
+                      const SizedBox(height: AppSizes.space48),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

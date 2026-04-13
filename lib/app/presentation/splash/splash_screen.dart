@@ -27,6 +27,7 @@ class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fade;
+  Timer? _navTimer;
   bool _hasNavigated = false;
 
   @override
@@ -42,7 +43,7 @@ class _SplashScreenState extends State<SplashScreen>
     _controller.forward();
 
     // Delay navigation to allow animation + auth state to settle
-    Future.delayed(const Duration(milliseconds: 1500), _navigate);
+    _navTimer = Timer(const Duration(milliseconds: 1500), _navigate);
   }
 
   void _navigate() {
@@ -66,6 +67,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   void dispose() {
+    _navTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }

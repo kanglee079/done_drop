@@ -3,10 +3,12 @@ import 'package:get/get.dart';
 import 'package:done_drop/features/auth/repositories/auth_repository.dart';
 import 'package:done_drop/features/auth/repositories/user_profile_repository.dart';
 import 'package:done_drop/app/routes/app_routes.dart';
+import 'package:done_drop/app/presentation/home/home_controller.dart';
 import 'package:done_drop/core/errors/failures.dart';
 import 'package:done_drop/core/errors/result.dart';
 import 'package:done_drop/core/services/analytics_service.dart';
 import 'package:done_drop/core/models/user_profile.dart';
+import 'package:done_drop/core/theme/theme.dart';
 
 class SignUpController extends GetxController {
   SignUpController(this._authRepo, this._userProfileRepo);
@@ -109,7 +111,15 @@ class SignUpController extends GetxController {
           await _userProfileRepo.createUserProfile(profile);
         }
 
+        // Navigate to home — show "create first activity" dialog if no activities exist.
         Get.offAllNamed(AppRoutes.home);
+        // Prompt to create first activity after a short delay so HomeScreen is mounted.
+        Future.delayed(const Duration(milliseconds: 800), () {
+          final homeCtrl = Get.isRegistered<HomeController>() ? Get.find<HomeController>() : null;
+          if (homeCtrl != null && homeCtrl.activities.isEmpty) {
+            _showFirstActivityDialog(homeCtrl);
+          }
+        });
       },
       onFailure: (failure) {
         final msg = failure is AppFailure
@@ -123,6 +133,70 @@ class SignUpController extends GetxController {
 
   void goToSignIn() {
     Get.back();
+  }
+
+  /// Shows a guided dialog to create the user's first activity after sign-up.
+  void _showFirstActivityDialog(HomeController ctrl) {
+    final titleCtrl = TextEditingController();
+    Get.dialog(
+      AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.celebration, color: AppColors.primary),
+            SizedBox(width: 8),
+            Text('Welcome! 🎉'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Create your first daily activity.\nKeep your streak alive every day!',
+              style: TextStyle(fontSize: 14, color: AppColors.onSurfaceVariant),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: titleCtrl,
+              autofocus: true,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: const InputDecoration(
+                hintText: 'e.g., Morning run, Read 30 pages, Meditate...',
+                labelText: 'Activity name',
+                prefixIcon: Icon(Icons.task_alt),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Skip'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final title = titleCtrl.text.trim();
+              if (title.isNotEmpty) {
+                ctrl.createActivity(title: title);
+                Get.back();
+                Get.snackbar(
+                  'Streak started! 🔥',
+                  'Complete this every day to build your streak.',
+                  snackPosition: SnackPosition.BOTTOM,
+                  duration: const Duration(seconds: 4),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Start'),
+          ),
+        ],
+      ),
+      barrierDismissible: false,
+    );
   }
 
   @override

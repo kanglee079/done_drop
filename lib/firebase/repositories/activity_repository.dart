@@ -188,6 +188,25 @@ class ActivityRepository {
     });
   }
 
+  /// Ensure activity instances exist for today + next N days for all active activities.
+  /// Called at app startup to pre-generate instances so pending/complete tracking
+  /// is ready from day one.
+  Future<void> ensureUpcomingInstances(String userId, {int daysAhead = 7}) async {
+    final snap = await _activityCol
+        .where('ownerId', isEqualTo: userId)
+        .where('isArchived', isEqualTo: false)
+        .get();
+
+    if (snap.docs.isEmpty) return;
+
+    final activityIds = snap.docs.map((d) => d.id).toList();
+    final today = DateTime.now();
+    final from = DateTime(today.year, today.month, today.day);
+    final to = from.add(Duration(days: daysAhead - 1));
+
+    await ensureInstancesExist(activityIds, userId, from, to);
+  }
+
   /// Batch-create instances for all active activities for a date range.
   Future<void> ensureInstancesExist(
     List<String> activityIds,
@@ -239,6 +258,13 @@ class ActivityRepository {
         .snapshots()
         .map((snap) =>
             snap.docs.map((d) => CompletionLog.fromFirestore(d.data())).toList());
+  }
+
+  /// Update CompletionLog with the momentId after a proof moment is posted.
+  Future<void> updateCompletionLogMomentId(String completionLogId, String momentId) async {
+    await _logCol.doc(completionLogId).update({
+      'momentId': momentId,
+    });
   }
 
   /// Count completions for an activity within a date range.

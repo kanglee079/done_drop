@@ -13,13 +13,6 @@ import '../presentation/capture/preview_screen.dart';
 import '../presentation/capture/success_screen.dart';
 import '../presentation/feed/feed_screen.dart';
 import '../presentation/feed/feed_binding.dart';
-// Circle screens deprecated in V1 — kept but not routed
-// import '../presentation/feed/circle_detail_screen.dart';
-// import '../presentation/feed/circle_detail_binding.dart';
-// import '../presentation/feed/create_circle_screen.dart';
-import '../presentation/feed/invite_screen.dart';
-import '../presentation/feed/invite_binding.dart';
-import '../presentation/feed/join_circle_screen.dart';
 import '../presentation/memory_wall/memory_wall_screen.dart';
 import '../presentation/memory_wall/memory_wall_binding.dart';
 import '../presentation/recap/recap_screen.dart';
@@ -37,6 +30,10 @@ import '../presentation/friends/friends_screen.dart';
 import '../presentation/friends/friends_binding.dart';
 import '../presentation/friends/add_friend_screen.dart';
 import '../presentation/friends/add_friend_binding.dart';
+import '../presentation/leaderboard/leaderboard_screen.dart';
+import '../presentation/leaderboard/leaderboard_binding.dart';
+import '../presentation/streak/streak_history_screen.dart';
+import '../presentation/streak/streak_binding.dart';
 import '../presentation/home/home_binding.dart';
 import '../../features/auth/presentation/bindings/sign_in_binding.dart';
 import '../../features/auth/presentation/bindings/sign_up_binding.dart';
@@ -119,34 +116,6 @@ class AppPages {
       middlewares: [AuthGuard()],
       transition: Transition.fadeIn,
     ),
-    // ── Circle routes DEPRECATED in V1 ────────────────────────────────────
-    // GetPage(
-    //   name: AppRoutes.circleDetail,
-    //   page: () => const CircleDetailScreen(),
-    //   binding: CircleDetailBinding(),
-    //   middlewares: [AuthGuard()],
-    //   transition: Transition.rightToLeft,
-    // ),
-    // GetPage(
-    //   name: AppRoutes.createCircle,
-    //   page: () => const CreateCircleScreen(),
-    //   middlewares: [AuthGuard()],
-    //   transition: Transition.downToUp,
-    // ),
-    // ───────────────────────────────────────────────────────────────────────
-    GetPage(
-      name: AppRoutes.invite,
-      page: () => const InviteScreen(),
-      binding: InviteBinding(),
-      middlewares: [AuthGuard()],
-      transition: Transition.rightToLeft,
-    ),
-    GetPage(
-      name: AppRoutes.joinCircle,
-      page: () => const JoinCircleScreen(),
-      middlewares: [AuthGuard()],
-      transition: Transition.rightToLeft,
-    ),
     GetPage(
       name: AppRoutes.memoryWall,
       page: () => const MemoryWallScreen(),
@@ -206,6 +175,20 @@ class AppPages {
       name: AppRoutes.addFriend,
       page: () => const AddFriendScreen(),
       binding: AddFriendBinding(),
+      middlewares: [AuthGuard()],
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: AppRoutes.leaderboard,
+      page: () => const LeaderboardScreen(),
+      binding: LeaderboardBinding(),
+      middlewares: [AuthGuard()],
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: AppRoutes.streakHistory,
+      page: () => const StreakHistoryScreen(),
+      binding: StreakBinding(),
       middlewares: [AuthGuard()],
       transition: Transition.rightToLeft,
     ),

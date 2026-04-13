@@ -13,17 +13,18 @@ import 'core/services/media_service.dart';
 import 'core/services/local_database_service.dart';
 import 'core/services/connectivity_service.dart';
 import 'core/services/offline_queue_service.dart';
+import 'core/services/local_cache_service.dart';
 import 'features/auth/data/onboarding_service.dart';
 import 'features/auth/data/firebase_auth_provider.dart';
 import 'features/auth/data/firestore_user_profile_provider.dart';
 import 'features/auth/repositories/auth_repository.dart';
 import 'features/auth/repositories/user_profile_repository.dart';
 import 'features/auth/presentation/controllers/auth_controller.dart';
-import 'firebase/repositories/circle_repository.dart';
 import 'firebase/repositories/moment_repository.dart';
 import 'firebase/repositories/friend_repository.dart';
 import 'firebase/repositories/report_repository.dart';
 import 'firebase/repositories/activity_repository.dart';
+import 'core/services/streak_service.dart';
 import 'core/services/block_service.dart';
 import 'app/presentation/feed/reaction_controller.dart';
 
@@ -52,6 +53,7 @@ void main() async {
   await StorageService.instance.init();
   await NotificationService.instance.init();
   await LocalDatabaseService.instance.init();
+  await LocalCacheService.instance.init();
 
   // Register MediaService as a permanent GetX service
   Get.put<MediaService>(MediaService.instance, permanent: true);
@@ -105,10 +107,10 @@ void _registerAuthDependencies() {
 
   // Data Repositories (used across authenticated screens)
   Get.put<ActivityRepository>(ActivityRepository(FirebaseFirestore.instance), permanent: true);
-  Get.put<CircleRepository>(CircleRepository(FirebaseFirestore.instance), permanent: true);
   Get.put<MomentRepository>(MomentRepository(FirebaseFirestore.instance), permanent: true);
   Get.put<FriendRepository>(FriendRepository(FirebaseFirestore.instance), permanent: true);
   Get.put<ReportRepository>(ReportRepository(), permanent: true);
   Get.put<BlockService>(BlockService(), permanent: true);
+  Get.put<StreakService>(StreakService(), permanent: true);
   Get.put<ReactionController>(ReactionController(), permanent: true);
 }

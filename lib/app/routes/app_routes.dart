@@ -10,12 +10,9 @@ abstract class AppRoutes {
   static const preview = '/preview';
   static const success = '/success';
   static const feed = '/feed';
-  // ── Circle routes DEPRECATED in V1 ─────────────────────────────────────
-  // static const circleDetail = '/circle/:id';
-  // static const createCircle = '/circle/create';
-  // static const invite = '/invite/:circleId';
-  static const invite = '/invite';
-  static const joinCircle = '/join';
+  // ── Circle routes DEPRECATED in V1 — removed ────────────────────────────
+  // static const invite = '/invite';
+  // static const joinCircle = '/join';
   static const memoryWall = '/wall';
   static const momentDetail = '/moment/:id';
   static const recap = '/recap';
@@ -27,4 +24,6 @@ abstract class AppRoutes {
   static const blocked = '/blocked';
   static const friends = '/friends';
   static const addFriend = '/friends/add';
+  static const leaderboard = '/leaderboard';
+  static const streakHistory = '/streak-history';
 }

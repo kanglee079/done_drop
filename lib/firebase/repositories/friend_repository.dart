@@ -52,11 +52,26 @@ class FriendRepository {
         });
   }
 
-  /// Get the count of accepted friends for a user.
+  /// Get count of accepted friends.
   Future<int> getFriendCount(String userId) async {
     final snap1 = await _friendshipsCol.where('userId1', isEqualTo: userId).count().get();
     final snap2 = await _friendshipsCol.where('userId2', isEqualTo: userId).count().get();
     return (snap1.count ?? 0) + (snap2.count ?? 0);
+  }
+
+  /// Get all accepted friendships for a user (one-shot, not a stream).
+  Future<List<Friendship>> getFriends(String userId) async {
+    final snap1 = await _friendshipsCol.where('userId1', isEqualTo: userId).get();
+    final snap2 = await _friendshipsCol.where('userId2', isEqualTo: userId).get();
+    final all = <Friendship>[];
+    for (final d in snap1.docs) {
+      all.add(Friendship.fromFirestore(d.data()));
+    }
+    for (final d in snap2.docs) {
+      all.add(Friendship.fromFirestore(d.data()));
+    }
+    all.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return all;
   }
 
   /// Check if user can add more friends (under cap).
@@ -142,18 +157,26 @@ class FriendRepository {
       return Result.failure(AppFailure.unexpected('Request is not pending'));
     }
 
-    // Enforce cap on sender (the one who will gain a friend)
+    // Enforce cap on both sides: sender (who gets a new friend) and receiver (who also gets a new friend)
     final senderId = request.senderId;
-    final canAdd = await canAddFriend(senderId);
-    if (!canAdd) {
+    final receiverId = request.receiverId;
+
+    final senderCanAdd = await canAddFriend(senderId);
+    if (!senderCanAdd) {
       return Result.failure(AppFailure.forbidden(
-          'This user has reached the maximum of $maxFriendsFree friends.'));
+          '${request.senderDisplayName ?? 'This user'} has reached the maximum of $maxFriendsFree friends.'));
+    }
+
+    final receiverCanAdd = await canAddFriend(receiverId);
+    if (!receiverCanAdd) {
+      return Result.failure(AppFailure.forbidden(
+          'You have reached the maximum of $maxFriendsFree friends. Remove a friend to accept new ones.'));
     }
 
     // Update request to accepted
     await _requestsCol.doc(requestId).update({'status': 'accepted'});
 
-    // Create friendship document
+    // Create friendship document (idempotent: sender and receiver both use same doc)
     final friendship = Friendship.create(request.senderId, request.receiverId);
     await _friendshipsCol.doc(friendship.id).set(friendship.toFirestore());
 

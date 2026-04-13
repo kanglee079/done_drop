@@ -46,8 +46,8 @@ class OfflineQueueService extends GetxService {
   }
 
   void _watchPendingCount() {
-    _db.watchPendingCount().listen((count) {
-      pendingCount.value = count;
+    _db.watchPendingCount().listen((n) {
+      pendingCount.value = n;
     });
   }
 
@@ -117,7 +117,7 @@ class OfflineQueueService extends GetxService {
   /// Called automatically when connectivity is restored, or manually by the user.
   Future<void> syncQueue() async {
     if (isSyncing.value) return;
-    if (!await _connectivity.isOnline()) return;
+    if (!_connectivity.isOnline.value) return;
 
     isSyncing.value = true;
 
@@ -264,6 +264,13 @@ class OfflineQueueService extends GetxService {
       if (friendIds.isNotEmpty) {
         await _createFeedDeliveries(db, momentId, ownerId, visibility!, friendIds);
       }
+    }
+
+    // 5. Link moment back to CompletionLog for audit trail (if proof moment)
+    if (completionLogId != null) {
+      await db.collection('completion_logs').doc(completionLogId).update({
+        'momentId': momentId,
+      });
     }
   }
 

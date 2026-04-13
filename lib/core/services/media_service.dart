@@ -1,9 +1,87 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart' show compute;
 import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
 import 'package:done_drop/core/models/moment.dart' show MediaMetadata, MomentMediaMetadata;
+
+// ── Isolate Processing ──────────────────────────────────────────────────────
+// Must be top-level functions (not instance methods) for compute().
+
+/// Data passed to the isolate for image processing.
+class _ImageProcessRequest {
+  final Uint8List sourceBytes;
+  final int maxOriginalWidth;
+  final int maxOriginalHeight;
+  final int thumbnailWidth;
+  final int originalQuality;
+  final int thumbQuality;
+
+  _ImageProcessRequest({
+    required this.sourceBytes,
+    required this.maxOriginalWidth,
+    required this.maxOriginalHeight,
+    required this.thumbnailWidth,
+    required this.originalQuality,
+    required this.thumbQuality,
+  });
+}
+
+/// Result from the isolate image processing.
+class _ImageProcessResult {
+  final Uint8List originalBytes;
+  final Uint8List thumbBytes;
+  final int origWidth;
+  final int origHeight;
+
+  _ImageProcessResult({
+    required this.originalBytes,
+    required this.thumbBytes,
+    required this.origWidth,
+    required this.origHeight,
+  });
+}
+
+/// Top-level function that runs in a separate isolate.
+/// Decodes once, resizes twice, encodes twice — all off the main thread.
+_ImageProcessResult _processImageInIsolate(_ImageProcessRequest req) {
+  final decoded = img.decodeImage(req.sourceBytes);
+  if (decoded == null) {
+    throw Exception('Failed to decode image');
+  }
+
+  // Resize original
+  int ow = decoded.width, oh = decoded.height;
+  if (ow > req.maxOriginalWidth || oh > req.maxOriginalHeight) {
+    final r = (req.maxOriginalWidth / ow) < (req.maxOriginalHeight / oh)
+        ? req.maxOriginalWidth / ow
+        : req.maxOriginalHeight / oh;
+    ow = (ow * r).round();
+    oh = (oh * r).round();
+  }
+  final originalImage = img.copyResize(decoded, width: ow, height: oh);
+
+  // Resize thumbnail
+  final thumbMaxH = (req.thumbnailWidth * 1.5).round();
+  int tw = decoded.width, th = decoded.height;
+  if (tw > req.thumbnailWidth || th > thumbMaxH) {
+    final r = (req.thumbnailWidth / tw) < (thumbMaxH / th)
+        ? req.thumbnailWidth / tw
+        : thumbMaxH / th;
+    tw = (tw * r).round();
+    th = (th * r).round();
+  }
+  final thumbImage = img.copyResize(decoded, width: tw, height: th);
+
+  return _ImageProcessResult(
+    originalBytes: Uint8List.fromList(img.encodeJpg(originalImage, quality: req.originalQuality)),
+    thumbBytes: Uint8List.fromList(img.encodeJpg(thumbImage, quality: req.thumbQuality)),
+    origWidth: originalImage.width,
+    origHeight: originalImage.height,
+  );
+}
 
 /// Service for managing media uploads to Firebase Storage.
 ///
@@ -20,11 +98,11 @@ class MediaService {
 
   final _storage = FirebaseStorage.instance;
 
-  static const int _maxOriginalWidth = 1920;
-  static const int _maxOriginalHeight = 1920;
+  static const int _maxOriginalWidth = 1080;  // 1080p is plenty for mobile social
+  static const int _maxOriginalHeight = 1080;
   static const int _thumbnailWidth = 400;
-  static const int _originalQuality = 85;
-  static const int _thumbQuality = 75;
+  static const int _originalQuality = 80;  // 80% is visually indistinguishable, much smaller files
+  static const int _thumbQuality = 70;
   static const int _maxAvatarSizeBytes = 5 * 1024 * 1024; // 5MB
   static const int _maxMomentSizeBytes = 10 * 1024 * 1024; // 10MB
 
@@ -91,6 +169,26 @@ class MediaService {
     );
 
     return Uint8List.fromList(img.encodeJpg(resized, quality: quality));
+  }
+
+  /// Resize an already-decoded image in memory (avoids re-reading file + re-decoding).
+  img.Image _resizeFromImage(
+    img.Image image, {
+    required int maxWidth,
+    required int maxHeight,
+  }) {
+    int targetWidth = image.width;
+    int targetHeight = image.height;
+
+    if (targetWidth > maxWidth || targetHeight > maxHeight) {
+      final ratioW = maxWidth / targetWidth;
+      final ratioH = maxHeight / targetHeight;
+      final ratio = ratioW < ratioH ? ratioW : ratioH;
+      targetWidth = (targetWidth * ratio).round();
+      targetHeight = (targetHeight * ratio).round();
+    }
+
+    return img.copyResize(image, width: targetWidth, height: targetHeight);
   }
 
   // ── Upload Helpers ────────────────────────────────────────────────────────
@@ -163,64 +261,58 @@ class MediaService {
 
   /// Upload moment images (original + thumbnail). Returns metadata for Firestore.
   ///
-  /// Uploads two files:
-  ///   /moments/{userId}/{momentId}/original.jpg
-  ///   /moments/{userId}/{momentId}/thumb.jpg
+  /// Performance optimizations:
+  ///   1. Decode + resize + encode in a BACKGROUND ISOLATE (no UI jank)
+  ///   2. Upload original + thumbnail in PARALLEL (Future.wait)
+  ///   3. Cache both files in PARALLEL (non-blocking)
   Future<MomentMediaMetadata> uploadMomentImages({
     required String userId,
     required String momentId,
     required String localFilePath,
   }) async {
-    // Upload original (resized to max 1920px)
-    final originalBytes = await _resizeAndCompress(
-      localFilePath,
-      maxWidth: _maxOriginalWidth,
-      maxHeight: _maxOriginalHeight,
-      quality: _originalQuality,
-    );
+    // 1. Read source file
+    final sourceBytes = await File(localFilePath).readAsBytes();
 
-    if (originalBytes.length > _maxMomentSizeBytes) {
+    // 2. Process image in background isolate (decode + resize + encode)
+    //    This keeps the UI thread completely free during CPU-heavy work.
+    final processed = await compute(_processImageInIsolate, _ImageProcessRequest(
+      sourceBytes: sourceBytes,
+      maxOriginalWidth: _maxOriginalWidth,
+      maxOriginalHeight: _maxOriginalHeight,
+      thumbnailWidth: _thumbnailWidth,
+      originalQuality: _originalQuality,
+      thumbQuality: _thumbQuality,
+    ));
+
+    if (processed.originalBytes.length > _maxMomentSizeBytes) {
       throw MediaUploadException('Moment image exceeds maximum size of 10MB');
     }
 
+    // 3. Upload BOTH in parallel (network I/O — already async, doesn't block UI)
     final originalPath = 'moments/$userId/$momentId/original.jpg';
-    final originalResult = await _uploadBytes(
-      originalPath,
-      originalBytes,
-      mimeType: 'image/jpeg',
-    );
-
-    // Decode to get original dimensions
-    final decoded = img.decodeImage(originalBytes);
-    final origWidth = decoded?.width ?? _maxOriginalWidth;
-    final origHeight = decoded?.height ?? _maxOriginalHeight;
-
-    // Upload thumbnail (resized to 400px wide)
-    final thumbBytes = await _resizeAndCompress(
-      localFilePath,
-      maxWidth: _thumbnailWidth,
-      maxHeight: (_thumbnailWidth * 1.5).round(),
-      quality: _thumbQuality,
-    );
-
     final thumbPath = 'moments/$userId/$momentId/thumb.jpg';
-    final thumbResult = await _uploadBytes(
-      thumbPath,
-      thumbBytes,
-      mimeType: 'image/jpeg',
-    );
 
-    // Cache both locally
-    await _cacheLocally(originalPath, originalBytes);
-    await _cacheLocally(thumbPath, thumbBytes);
+    final results = await Future.wait([
+      _uploadBytes(originalPath, processed.originalBytes, mimeType: 'image/jpeg'),
+      _uploadBytes(thumbPath, processed.thumbBytes, mimeType: 'image/jpeg'),
+    ]);
+
+    final originalResult = results[0];
+    final thumbResult = results[1];
+
+    // 4. Cache BOTH in parallel (non-blocking fire-and-forget)
+    unawaited(Future.wait([
+      _cacheLocally(originalPath, processed.originalBytes),
+      _cacheLocally(thumbPath, processed.thumbBytes),
+    ]));
 
     return MomentMediaMetadata(
       original: MediaMetadata(
         storagePath: originalResult.storagePath,
         downloadUrl: originalResult.downloadUrl,
         mimeType: 'image/jpeg',
-        width: origWidth,
-        height: origHeight,
+        width: processed.origWidth,
+        height: processed.origHeight,
         bytesUploaded: originalResult.bytesUploaded,
         ownerId: userId,
         momentId: momentId,

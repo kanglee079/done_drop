@@ -197,6 +197,8 @@ class MomentController extends GetxController {
       if (_activityId != null && _completionLogId != null) {
         final instance = await _activityRepo.getOrCreateTodayInstance(_activityId!, uid);
         await _activityRepo.linkMomentToInstance(instance.id, momentId);
+        // Link moment back to CompletionLog for audit trail
+        await _activityRepo.updateCompletionLogMomentId(_completionLogId!, momentId);
       }
 
       // Create feed deliveries for shared moments

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:done_drop/core/constants/app_constants.dart';
 import 'package:done_drop/core/models/models.dart';
 import 'package:done_drop/core/models/feed_delivery.dart';
@@ -40,6 +41,22 @@ class MomentRepository {
       'isDeleted': true,
       'updatedAt': DateTime.now().toIso8601String(),
     });
+  }
+
+  /// Delete Storage files for a moment (original + thumbnail).
+  Future<void> deleteMomentStorage(String ownerId, String momentId) async {
+    try {
+      await FirebaseStorage.instance
+          .ref()
+          .child('moments/$ownerId/$momentId/original.jpg')
+          .delete();
+    } catch (_) {}
+    try {
+      await FirebaseStorage.instance
+          .ref()
+          .child('moments/$ownerId/$momentId/thumb.jpg')
+          .delete();
+    } catch (_) {}
   }
 
   /// Personal wall: all personal-only moments by user

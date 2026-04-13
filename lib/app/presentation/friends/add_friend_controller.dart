@@ -78,6 +78,14 @@ class AddFriendController extends GetxController {
     final user = foundUser.value;
     if (user == null) return;
 
+    // Final cap check on sender side
+    final uid = _currentUserId;
+    if (uid == null) return;
+    if (!(await _friendRepo.canAddFriend(uid))) {
+      errorMessage.value = 'You have reached the maximum of $maxFriends friends.';
+      return;
+    }
+
     isSearching.value = true;
     errorMessage.value = null;
 
