@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-/// DoneDrop Color Palette — "Clean Premium Social"
-/// Design System: Elysian Archive / Digital Heirloom
+/// DoneDrop Color Palette — "Discipline-first Premium"
+/// Design System: Warm surface + Indigo accent
 /// No pure blacks, warm tones, premium feel
 class AppColors {
   AppColors._();
@@ -51,7 +51,7 @@ class AppColors {
   static const Color surfaceContainerHigh = Color(0xFFE9E8E5);
   static const Color surfaceContainerHighest = Color(0xFFE3E2E0);
   static const Color surfaceDim = Color(0xFFDBDAD7);
-  static const Color surfaceTint = Color(0xFF904B37);
+  static const Color surfaceTint = Color(0xFF6366F1); // Match primary
 
   // ── On Surface ──────────────────────────────────────────────────────────
   static const Color onSurface = Color(0xFF1A1C1A);
@@ -61,7 +61,7 @@ class AppColors {
   // ── Inverse ──────────────────────────────────────────────────────────────
   static const Color inverseSurface = Color(0xFF2F312F);
   static const Color inverseOnSurface = Color(0xFFF2F1EE);
-  static const Color inversePrimary = Color(0xFFFFB5A0);
+  static const Color inversePrimary = Color(0xFFC7D2FE); // Indigo 200 — matches primary
 
   // ── Outline & Borders ────────────────────────────────────────────────────
   static const Color outline = Color(0xFF86736E);

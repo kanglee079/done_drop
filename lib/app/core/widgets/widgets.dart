@@ -6,6 +6,7 @@ export 'dd_nav_bar.dart';
 export 'dd_loading.dart';
 export 'dd_states.dart';
 export 'dd_moment_card.dart';
+export 'dd_moment_tile.dart';
 export 'dd_scaffold.dart';
 export 'dd_chip.dart';
 export 'dd_reaction.dart';

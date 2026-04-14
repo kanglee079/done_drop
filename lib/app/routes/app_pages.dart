@@ -109,31 +109,13 @@ class AppPages {
       middlewares: [AuthGuard()],
       transition: Transition.fadeIn,
     ),
-    GetPage(
-      name: AppRoutes.feed,
-      page: () => const FeedScreen(),
-      binding: FeedBinding(),
-      middlewares: [AuthGuard()],
-      transition: Transition.fadeIn,
-    ),
-    GetPage(
-      name: AppRoutes.memoryWall,
-      page: () => const MemoryWallScreen(),
-      binding: MemoryWallBinding(),
-      middlewares: [AuthGuard()],
-      transition: Transition.fadeIn,
-    ),
+    // NOTE: Feed, MemoryWall, and Settings are embedded as tabs in HomeScreen.
+    // They do NOT need standalone routes.
+    // If deep linking is added later, re-add them with proper bindings.
     GetPage(
       name: AppRoutes.recap,
       page: () => const RecapScreen(),
       binding: RecapBinding(),
-      middlewares: [AuthGuard()],
-      transition: Transition.rightToLeft,
-    ),
-    GetPage(
-      name: AppRoutes.settings,
-      page: () => const SettingsScreen(),
-      binding: SettingsBinding(),
       middlewares: [AuthGuard()],
       transition: Transition.rightToLeft,
     ),

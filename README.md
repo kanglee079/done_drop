@@ -116,9 +116,9 @@ flutter build apk --debug
 
 ### Colors
 
-- **Primary**: `#884532` (warm terracotta)
+- **Primary**: `#6366F1` (indigo — discipline, focus)
+- **Primary Container**: `#4F46E5` (deeper indigo — CTAs, gradients)
 - **Surface**: `#FAF9F6` (warm cream)
-- **Tertiary Fixed**: `#D2E7DC` (mint — for date chips)
 
 ### Typography
 

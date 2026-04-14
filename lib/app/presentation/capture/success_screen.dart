@@ -45,6 +45,13 @@ class _SuccessScreenState extends State<SuccessScreen>
     super.dispose();
   }
 
+  /// Clean up MomentController to prevent stale proof context on next capture.
+  void _cleanupMomentController() {
+    if (Get.isRegistered<MomentController>()) {
+      Get.delete<MomentController>();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Read proof/queued context from MomentController (shared across flow)
@@ -151,7 +158,10 @@ class _SuccessScreenState extends State<SuccessScreen>
 
                 // Primary action — Return Home
                 GestureDetector(
-                  onTap: () => Get.offAllNamed(AppRoutes.home),
+                  onTap: () {
+                    _cleanupMomentController();
+                    Get.offAllNamed(AppRoutes.home);
+                  },
                   child: Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 18),
@@ -184,6 +194,7 @@ class _SuccessScreenState extends State<SuccessScreen>
                 // Secondary action — View Buddy Feed
                 TextButton(
                   onPressed: () {
+                    _cleanupMomentController();
                     Get.offAllNamed(AppRoutes.home);
                     final nav = Get.find<NavigationController>();
                     nav.setTab(1); // Set to Buddy Feed tab

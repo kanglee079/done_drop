@@ -251,14 +251,24 @@ class OfflineQueueService extends GetxService {
     // 4. Create feed deliveries
     final visibility = momentData['visibility'] as String?;
     if (visibility == 'all_friends') {
-      final friendships = await db
+      // Query both sides — Friendship.create() sorts IDs lexicographically,
+      // so the current user can be either userId1 or userId2.
+      final snap1 = await db
           .collection('friendships')
           .where('userId1', isEqualTo: ownerId)
           .get();
-      final friendIds = friendships.docs
-          .map((d) => d.data()['userId2'] as String)
-          .toList();
-      await _createFeedDeliveries(db, momentId, ownerId, visibility!, friendIds);
+      final snap2 = await db
+          .collection('friendships')
+          .where('userId2', isEqualTo: ownerId)
+          .get();
+      final friendIds = <String>{};
+      for (final d in snap1.docs) {
+        friendIds.add(d.data()['userId2'] as String);
+      }
+      for (final d in snap2.docs) {
+        friendIds.add(d.data()['userId1'] as String);
+      }
+      await _createFeedDeliveries(db, momentId, ownerId, visibility!, friendIds.toList());
     } else if (visibility == 'selected_friends') {
       final friendIds = (momentData['selectedFriendIds'] as List<dynamic>?)?.cast<String>() ?? [];
       if (friendIds.isNotEmpty) {

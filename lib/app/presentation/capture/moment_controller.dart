@@ -64,50 +64,21 @@ class MomentController extends GetxController {
 
   /// Initialize proof moment context from route arguments.
   /// Call this from PreviewScreen before using postMoment.
+  /// ALWAYS resets proof context first to prevent stale state from previous flows.
   void initFromArgs(Map<String, dynamic>? args) {
+    // Always clear proof context to prevent stale state
+    _activityId = null;
+    _completionLogId = null;
+
     if (args == null) return;
     _activityId = args['activityId'] as String?;
     _completionLogId = args['completionLogId'] as String?;
   }
 
-  /// Complete an activity and immediately open capture for proof moment.
-  /// Returns the completionLog on success, null on failure or if already completed.
-  Future<CompletionLog?> completeAndPrepareCapture(String activityId) async {
-    final uid = _userId;
-    if (uid == null) return null;
-
-    final instance = await _activityRepo.getOrCreateTodayInstance(activityId, uid);
-    if (instance.isCompleted) {
-      // Already completed — just open capture
-      _activityId = activityId;
-      _completionLogId = null;
-      return null;
-    }
-
-    // Complete instance
-    await _activityRepo.completeInstance(instance.id);
-
-    // Create completion log
-    final now = DateTime.now();
-    final log = CompletionLog(
-      id: 'log_${now.millisecondsSinceEpoch}',
-      activityId: activityId,
-      activityInstanceId: instance.id,
-      ownerId: uid,
-      completedAt: now,
-      createdAt: now,
-    );
-    await _activityRepo.createCompletionLog(log);
-
-    // Update streak
-    await _activityRepo.incrementStreak(activityId);
-
-    // Set proof moment context
-    _activityId = activityId;
-    _completionLogId = log.id;
-
-    return log;
-  }
+  // NOTE: completeAndPrepareCapture() has been removed.
+  // Activity completion is now handled by ActivityCompletionService
+  // before entering the capture flow. This controller only handles
+  // the moment posting + media upload concerns.
 
   Future<void> postMoment() async {
     if (_imagePath == null) {
