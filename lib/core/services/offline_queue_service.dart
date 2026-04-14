@@ -4,6 +4,8 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:get/get.dart';
 import 'package:done_drop/core/services/local_database_service.dart';
 import 'package:done_drop/core/services/connectivity_service.dart';
+import 'package:done_drop/core/services/activity_completion_service.dart';
+import 'package:done_drop/core/services/feed_delivery_planner.dart';
 import 'package:done_drop/data/local/models/pending_sync_item.dart';
 import 'package:done_drop/core/models/moment.dart';
 import 'package:done_drop/core/models/completion_log.dart';
@@ -17,11 +19,12 @@ import 'package:done_drop/core/models/completion_log.dart';
 ///
 /// Queued items are stored in Isar via LocalDatabaseService.
 /// Sync is triggered automatically when ConnectivityService detects online status.
-class OfflineQueueService extends GetxService {
+class OfflineQueueService extends GetxService implements HabitCompletionQueue {
   OfflineQueueService();
 
   LocalDatabaseService get _db => LocalDatabaseService.instance;
   ConnectivityService get _connectivity => Get.find<ConnectivityService>();
+  final FeedDeliveryPlanner _deliveryPlanner = const FeedDeliveryPlanner();
 
   /// Whether currently syncing
   final RxBool isSyncing = false.obs;
@@ -68,7 +71,9 @@ class OfflineQueueService extends GetxService {
     required String ownerId,
     required Map<String, dynamic> momentData,
     required String localMediaPath,
+    required List<String> recipientIds,
     String? activityId,
+    String? activityInstanceId,
     String? completionLogId,
   }) async {
     await _db.addSyncItem(
@@ -78,7 +83,9 @@ class OfflineQueueService extends GetxService {
           'momentId': momentId,
           'ownerId': ownerId,
           'momentData': momentData,
+          'recipientIds': recipientIds,
           'activityId': activityId,
+          'activityInstanceId': activityInstanceId,
           'completionLogId': completionLogId,
           'createdAt': DateTime.now().toIso8601String(),
         },
@@ -91,11 +98,13 @@ class OfflineQueueService extends GetxService {
   }
 
   /// Queue an activity completion for sync when online.
-  Future<void> queueCompleteActivity({
+  @override
+  Future<void> queueCompleteHabit({
     required String activityId,
     required String instanceId,
     required String ownerId,
     required String completionLogId,
+    required DateTime completedAt,
   }) async {
     await _db.addSyncItem(
       PendingSyncItem.create(
@@ -105,7 +114,7 @@ class OfflineQueueService extends GetxService {
           'instanceId': instanceId,
           'ownerId': ownerId,
           'completionLogId': completionLogId,
-          'completedAt': DateTime.now().toIso8601String(),
+          'completedAt': completedAt.toIso8601String(),
         },
         targetId: instanceId,
         priority: 5,
@@ -157,7 +166,11 @@ class OfflineQueueService extends GetxService {
     final ownerId = payload['ownerId'] as String;
     final momentId = payload['momentId'] as String;
     final momentData = payload['momentData'] as Map<String, dynamic>;
+    final recipientIds =
+        (payload['recipientIds'] as List<dynamic>? ?? const <dynamic>[])
+            .cast<String>();
     final activityId = payload['activityId'] as String?;
+    final activityInstanceId = payload['activityInstanceId'] as String?;
     final completionLogId = payload['completionLogId'] as String?;
 
     final db = FirebaseFirestore.instance;
@@ -176,7 +189,10 @@ class OfflineQueueService extends GetxService {
         final downloadUrl = await originalRef.getDownloadURL();
 
         // Build MomentMedia with original + thumbnail metadata
-        final thumbPath = item.storagePath!.replaceAll('original.jpg', 'thumb.jpg');
+        final thumbPath = item.storagePath!.replaceAll(
+          'original.jpg',
+          'thumb.jpg',
+        );
         final thumbRef = storage.ref().child(thumbPath);
         final thumbUpload = thumbRef.putFile(
           io.File(item.localFilePath!),
@@ -221,7 +237,9 @@ class OfflineQueueService extends GetxService {
       activityId: activityId,
       completionLogId: completionLogId,
       visibility: momentData['visibility'] as String? ?? 'personal_only',
-      selectedFriendIds: (momentData['selectedFriendIds'] as List<dynamic>?)?.cast<String>() ?? [],
+      selectedFriendIds:
+          (momentData['selectedFriendIds'] as List<dynamic>?)?.cast<String>() ??
+          [],
       media: momentMedia ?? MomentMedia.empty(),
       caption: momentData['caption'] as String? ?? '',
       category: momentData['category'] as String?,
@@ -236,44 +254,24 @@ class OfflineQueueService extends GetxService {
     await db.collection('moments').doc(momentId).set(moment.toFirestore());
 
     // 3. Link moment to activity instance if proof moment
-    if (activityId != null && completionLogId != null) {
-      final instanceSnap = await db
-          .collection('activity_instances')
-          .where('activityId', isEqualTo: activityId)
-          .where('ownerId', isEqualTo: ownerId)
-          .limit(1)
-          .get();
-      if (instanceSnap.docs.isNotEmpty) {
-        await instanceSnap.docs.first.reference.update({'momentId': momentId});
-      }
+    if (activityInstanceId != null && completionLogId != null) {
+      await db.collection('activity_instances').doc(activityInstanceId).update({
+        'momentId': momentId,
+        'updatedAt': DateTime.now().toIso8601String(),
+      });
     }
 
     // 4. Create feed deliveries
     final visibility = momentData['visibility'] as String?;
-    if (visibility == 'all_friends') {
-      // Query both sides — Friendship.create() sorts IDs lexicographically,
-      // so the current user can be either userId1 or userId2.
-      final snap1 = await db
-          .collection('friendships')
-          .where('userId1', isEqualTo: ownerId)
-          .get();
-      final snap2 = await db
-          .collection('friendships')
-          .where('userId2', isEqualTo: ownerId)
-          .get();
-      final friendIds = <String>{};
-      for (final d in snap1.docs) {
-        friendIds.add(d.data()['userId2'] as String);
-      }
-      for (final d in snap2.docs) {
-        friendIds.add(d.data()['userId1'] as String);
-      }
-      await _createFeedDeliveries(db, momentId, ownerId, visibility!, friendIds.toList());
-    } else if (visibility == 'selected_friends') {
-      final friendIds = (momentData['selectedFriendIds'] as List<dynamic>?)?.cast<String>() ?? [];
-      if (friendIds.isNotEmpty) {
-        await _createFeedDeliveries(db, momentId, ownerId, visibility!, friendIds);
-      }
+    if (visibility != null && recipientIds.isNotEmpty) {
+      await _createFeedDeliveries(
+        db,
+        momentId: momentId,
+        ownerId: ownerId,
+        visibility: visibility,
+        recipientIds: recipientIds,
+        createdAt: createdAt,
+      );
     }
 
     // 5. Link moment back to CompletionLog for audit trail (if proof moment)
@@ -310,7 +308,10 @@ class OfflineQueueService extends GetxService {
       completedAt: completedAt,
       createdAt: completedAt,
     );
-    await db.collection('completion_logs').doc(completionLogId).set(log.toFirestore());
+    await db
+        .collection('completion_logs')
+        .doc(completionLogId)
+        .set(log.toFirestore());
 
     // 3. Increment streak
     final activityRef = db.collection('activities').doc(activityId);
@@ -331,28 +332,26 @@ class OfflineQueueService extends GetxService {
   }
 
   Future<void> _createFeedDeliveries(
-    FirebaseFirestore db,
-    String momentId,
-    String ownerId,
-    String visibility,
-    List<String> recipientIds,
-  ) async {
-    if (recipientIds.isEmpty) return;
-    final now = DateTime.now();
+    FirebaseFirestore db, {
+    required String momentId,
+    required String ownerId,
+    required String visibility,
+    required List<String> recipientIds,
+    required DateTime createdAt,
+  }) async {
+    final deliveries = _deliveryPlanner.buildDeliveries(
+      momentId: momentId,
+      ownerId: ownerId,
+      visibility: visibility,
+      createdAt: createdAt,
+      recipientIds: recipientIds,
+    );
+    if (deliveries.isEmpty) return;
     final batch = db.batch();
-    for (final rid in recipientIds) {
-      final docId = 'del_${now.millisecondsSinceEpoch}_$rid';
+    for (final delivery in deliveries) {
       batch.set(
-        db.collection('feed_deliveries').doc(docId),
-        {
-          'id': docId,
-          'recipientId': rid,
-          'momentId': momentId,
-          'ownerId': ownerId,
-          'visibility': visibility,
-          'createdAt': now.toIso8601String(),
-          'isRead': false,
-        },
+        db.collection('feed_deliveries').doc(delivery.id),
+        delivery.toFirestore(),
       );
     }
     await batch.commit();

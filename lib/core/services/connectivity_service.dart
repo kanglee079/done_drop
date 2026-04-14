@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'package:get/get.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:done_drop/core/services/activity_completion_service.dart';
 
 /// Service that monitors network connectivity.
 /// Exposes a reactive `isOnline` stream so any service/widget can listen.
-class ConnectivityService extends GetxService {
+class ConnectivityService extends GetxService
+    implements ConnectivityStatusReader {
   ConnectivityService();
 
   final _connectivity = Connectivity();
@@ -14,6 +16,9 @@ class ConnectivityService extends GetxService {
 
   /// Callbacks registered for connectivity changes.
   final List<void Function(bool isOnline)> _listeners = [];
+
+  @override
+  bool get isOnlineNow => isOnline.value;
 
   Future<ConnectivityService> init() async {
     // Check initial state
@@ -27,10 +32,12 @@ class ConnectivityService extends GetxService {
   }
 
   void _updateStatus(List<ConnectivityResult> results) {
-    final hasConnection = results.any((r) =>
-        r == ConnectivityResult.wifi ||
-        r == ConnectivityResult.mobile ||
-        r == ConnectivityResult.ethernet);
+    final hasConnection = results.any(
+      (r) =>
+          r == ConnectivityResult.wifi ||
+          r == ConnectivityResult.mobile ||
+          r == ConnectivityResult.ethernet,
+    );
     isOnline.value = hasConnection;
 
     // Notify all registered listeners

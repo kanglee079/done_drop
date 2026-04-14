@@ -6,6 +6,7 @@ import 'package:done_drop/app/core/widgets/widgets.dart';
 import 'package:done_drop/app/presentation/feed/feed_controller.dart';
 import 'package:done_drop/app/presentation/feed/reaction_controller.dart';
 import 'package:done_drop/app/routes/app_routes.dart';
+import 'package:done_drop/firebase/repositories/activity_repository.dart';
 
 /// DoneDrop Feed Screen — Private friend feed view
 class FeedScreen extends StatelessWidget {
@@ -14,7 +15,7 @@ class FeedScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetBuilder<FeedController>(
-      init: FeedController(),
+      init: FeedController(Get.find<ActivityRepository>()),
       builder: (ctrl) {
         return Scaffold(
           backgroundColor: AppColors.surface,
@@ -40,13 +41,18 @@ class FeedScreen extends StatelessWidget {
             ),
             centerTitle: true,
             actions: [
-              Obx(() => ctrl.unreadCount.value > 0
-                  ? IconButton(
-                      icon: const Icon(Icons.done_all, color: AppColors.primary),
-                      onPressed: ctrl.markAllRead,
-                      tooltip: 'Mark all as read',
-                    )
-                  : const SizedBox.shrink()),
+              Obx(
+                () => ctrl.unreadCount.value > 0
+                    ? IconButton(
+                        icon: const Icon(
+                          Icons.done_all,
+                          color: AppColors.primary,
+                        ),
+                        onPressed: ctrl.markAllRead,
+                        tooltip: 'Mark all as read',
+                      )
+                    : const SizedBox.shrink(),
+              ),
             ],
           ),
           body: Obx(() {
@@ -60,7 +66,11 @@ class FeedScreen extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.people_outline, size: 56, color: AppColors.outlineVariant),
+                    Icon(
+                      Icons.people_outline,
+                      size: 56,
+                      color: AppColors.outlineVariant,
+                    ),
                     const SizedBox(height: AppSizes.space16),
                     Text(
                       'No moments yet',
@@ -75,7 +85,10 @@ class FeedScreen extends StatelessWidget {
                     Text(
                       'Moments shared by your friends\nwill appear here.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 14, color: AppColors.onSurfaceVariant),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppColors.onSurfaceVariant,
+                      ),
                     ),
                     const SizedBox(height: AppSizes.space24),
                     DDSecondaryButton(
@@ -145,8 +158,9 @@ class _MomentTile extends StatelessWidget {
                 CircleAvatar(
                   radius: 16,
                   backgroundColor: AppColors.primaryFixed,
-                  backgroundImage:
-                      ownerAvatar != null ? NetworkImage(ownerAvatar!) : null,
+                  backgroundImage: ownerAvatar != null
+                      ? NetworkImage(ownerAvatar!)
+                      : null,
                   child: ownerAvatar == null
                       ? Icon(Icons.person, size: 16, color: AppColors.primary)
                       : null,
@@ -186,9 +200,8 @@ class _MomentTile extends StatelessWidget {
             child: CachedNetworkImage(
               imageUrl: moment.media.thumbnail.downloadUrl,
               fit: BoxFit.cover,
-              placeholder: (_, __) => Container(
-                color: AppColors.surfaceContainerHighest,
-              ),
+              placeholder: (_, __) =>
+                  Container(color: AppColors.surfaceContainerHighest),
               errorWidget: (_, __, ___) => Container(
                 color: AppColors.surfaceContainerHighest,
                 child: const Icon(Icons.broken_image, color: AppColors.outline),
@@ -215,30 +228,38 @@ class _MomentTile extends StatelessWidget {
                 // Reaction bar
                 Row(
                   children: [
-                    ...reactionCtrl.reactionTypes.map((type) => Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: GestureDetector(
-                            onTap: () => reactionCtrl.toggleReaction(
-                              momentId: moment.id,
-                              reactionType: type,
+                    ...reactionCtrl.reactionTypes.map(
+                      (type) => Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: GestureDetector(
+                          onTap: () => reactionCtrl.toggleReaction(
+                            momentId: moment.id,
+                            reactionType: type,
+                          ),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
                             ),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: AppColors.surfaceContainerHighest,
-                                borderRadius: AppSizes.borderRadiusFull,
-                              ),
-                              child: Text(
-                                reactionCtrl.reactionIcon(type),
-                                style: const TextStyle(fontSize: 16),
-                              ),
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceContainerHighest,
+                              borderRadius: AppSizes.borderRadiusFull,
+                            ),
+                            child: Text(
+                              reactionCtrl.reactionIcon(type),
+                              style: const TextStyle(fontSize: 16),
                             ),
                           ),
-                        )),
+                        ),
+                      ),
+                    ),
                     const Spacer(),
                     if (moment.category != null)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
@@ -289,10 +310,7 @@ class _VisibilityBadge extends StatelessWidget {
       children: [
         Icon(icon, size: 12, color: AppColors.outline),
         const SizedBox(width: 2),
-        Text(
-          label,
-          style: TextStyle(fontSize: 10, color: AppColors.outline),
-        ),
+        Text(label, style: TextStyle(fontSize: 10, color: AppColors.outline)),
       ],
     );
   }

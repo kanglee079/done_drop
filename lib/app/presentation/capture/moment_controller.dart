@@ -1,26 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:done_drop/features/auth/presentation/controllers/auth_controller.dart';
-import 'package:done_drop/firebase/repositories/moment_repository.dart';
-import 'package:done_drop/firebase/repositories/friend_repository.dart';
-import 'package:done_drop/firebase/repositories/activity_repository.dart';
-import 'package:done_drop/core/models/moment.dart';
-import 'package:done_drop/core/models/completion_log.dart';
-import 'package:done_drop/core/services/media_service.dart';
-import 'package:done_drop/core/services/analytics_service.dart';
-import 'package:done_drop/core/services/connectivity_service.dart';
-import 'package:done_drop/core/services/offline_queue_service.dart';
 import 'package:done_drop/app/routes/app_routes.dart';
 import 'package:done_drop/core/constants/app_constants.dart';
+import 'package:done_drop/core/models/moment.dart';
+import 'package:done_drop/core/services/analytics_service.dart';
+import 'package:done_drop/core/services/connectivity_service.dart';
+import 'package:done_drop/core/services/feed_delivery_planner.dart';
+import 'package:done_drop/core/services/media_service.dart';
+import 'package:done_drop/core/services/offline_queue_service.dart';
+import 'package:done_drop/features/auth/presentation/controllers/auth_controller.dart';
+import 'package:done_drop/firebase/repositories/activity_repository.dart';
+import 'package:done_drop/firebase/repositories/friend_repository.dart';
+import 'package:done_drop/firebase/repositories/moment_repository.dart';
 
-/// Controller for the capture/post moment flow.
+class MomentSubmissionResult {
+  const MomentSubmissionResult({
+    required this.isProofMoment,
+    required this.wasOfflineQueued,
+  });
+
+  final bool isProofMoment;
+  final bool wasOfflineQueued;
+}
+
+/// Controller for the capture and preview flow.
 ///
-/// Supports two modes:
-/// 1. Free capture — user opens capture screen directly (no linked activity)
-/// 2. Proof moment — user completes an activity and is redirected to capture
-///    (activityId + completionLogId passed via route arguments)
-///
-/// Both modes post a Moment with optional activity linkage.
+/// The controller owns one capture session at a time and is created by the
+/// capture route binding. Preview and success reuse the same session.
 class MomentController extends GetxController {
   MomentController();
 
@@ -29,56 +36,57 @@ class MomentController extends GetxController {
   ActivityRepository get _activityRepo => Get.find<ActivityRepository>();
   AuthController get _authController => Get.find<AuthController>();
   MediaService get _mediaService => MediaService.instance;
+  FeedDeliveryPlanner get _deliveryPlanner => const FeedDeliveryPlanner();
 
-  // ── Proof moment context ────────────────────────────────────────────────
-  // Set when user completes an activity from Today tab
-  String? _activityId;
-  String? _completionLogId;
-
-  /// Whether this moment is a proof of a completed activity.
-  bool get isProofMoment => _activityId != null;
-
-  /// ── Post form state ──────────────────────────────────────────────────
   final captionController = TextEditingController();
   final Rx<String> visibility = AppConstants.visibilityPersonalOnly.obs;
   final RxList<String> selectedFriendIds = <String>[].obs;
   final Rx<String> selectedCategory = ''.obs;
-
-  // Post state
   final isPosting = false.obs;
   final RxnString errorMessage = RxnString();
+  final Rxn<MomentSubmissionResult> lastSubmission =
+      Rxn<MomentSubmissionResult>();
 
   String? _imagePath;
-
-  /// Public getter for the selected image path.
-  String? get imagePath => _imagePath;
-
-  /// Whether the last post was queued for offline sync.
-  bool wasOfflineQueued = false;
-
-  void setImagePath(String path) {
-    _imagePath = path;
-  }
+  String? _activityId;
+  String? _activityInstanceId;
+  String? _completionLogId;
+  bool _sessionInitialized = false;
 
   String? get _userId => _authController.firebaseUser?.uid;
 
-  /// Initialize proof moment context from route arguments.
-  /// Call this from PreviewScreen before using postMoment.
-  /// ALWAYS resets proof context first to prevent stale state from previous flows.
-  void initFromArgs(Map<String, dynamic>? args) {
-    // Always clear proof context to prevent stale state
-    _activityId = null;
-    _completionLogId = null;
+  String? get imagePath => _imagePath;
+  String? get activityId => _activityId;
+  String? get activityInstanceId => _activityInstanceId;
+  String? get completionLogId => _completionLogId;
+  bool get isProofMoment => _activityId != null;
 
-    if (args == null) return;
-    _activityId = args['activityId'] as String?;
-    _completionLogId = args['completionLogId'] as String?;
+  void startCaptureSession(Map<String, dynamic>? args) {
+    if (_sessionInitialized && !_isSameContext(args)) {
+      resetComposer();
+    }
+
+    _sessionInitialized = true;
+    _activityId = args?['activityId'] as String?;
+    _activityInstanceId = args?['activityInstanceId'] as String?;
+    _completionLogId = args?['completionLogId'] as String?;
+    _imagePath = null;
+    errorMessage.value = null;
+    lastSubmission.value = null;
   }
 
-  // NOTE: completeAndPrepareCapture() has been removed.
-  // Activity completion is now handled by ActivityCompletionService
-  // before entering the capture flow. This controller only handles
-  // the moment posting + media upload concerns.
+  void hydratePreview(Map<String, dynamic>? args) {
+    final imagePath = args?['imagePath'] as String?;
+    if (imagePath != null && imagePath.isNotEmpty) {
+      _imagePath = imagePath;
+      errorMessage.value = null;
+    }
+  }
+
+  void attachImage(String path) {
+    _imagePath = path;
+    errorMessage.value = null;
+  }
 
   Future<void> postMoment() async {
     if (_imagePath == null) {
@@ -97,63 +105,53 @@ class MomentController extends GetxController {
 
     final momentId = 'moment_${DateTime.now().millisecondsSinceEpoch}';
     final now = DateTime.now();
-
-    // Build moment data for offline queueing
     final postVisibility = visibility.value;
-    final friendsIds = postVisibility == AppConstants.visibilitySelectedFriends
-        ? selectedFriendIds.toList()
-        : <String>[];
+    final caption = captionController.text.trim();
+    final category = selectedCategory.value.isEmpty
+        ? null
+        : selectedCategory.value;
+    final recipientIds = await _resolveRecipientIds(uid, postVisibility);
 
     final momentData = {
       'visibility': postVisibility,
-      'selectedFriendIds': friendsIds,
-      'caption': captionController.text.trim(),
-      'category': selectedCategory.value.isEmpty ? null : selectedCategory.value,
+      'selectedFriendIds': selectedFriendIds.toList(),
+      'caption': caption,
+      'category': category,
       'completedAt': now.toIso8601String(),
       'createdAt': now.toIso8601String(),
       'updatedAt': now.toIso8601String(),
     };
 
     try {
-      // Check connectivity
       final connectivity = Get.find<ConnectivityService>();
-      if (!connectivity.isOnline.value) {
-        // Offline: queue for later sync
-        wasOfflineQueued = true;
-        final queue = Get.find<OfflineQueueService>();
-        await queue.queueCreateMoment(
+      if (!connectivity.isOnlineNow) {
+        await _queueMomentForSync(
           momentId: momentId,
           ownerId: uid,
+          recipientIds: recipientIds,
           momentData: momentData,
-          localMediaPath: _imagePath!,
-          activityId: _activityId,
-          completionLogId: _completionLogId,
         );
-        isPosting.value = false;
-        // Navigate to success — moment will appear after sync
-        Get.offNamed(AppRoutes.success);
+        await _finishSubmission(wasOfflineQueued: true);
         return;
       }
 
-      // Online: upload normally
       final media = await _mediaService.uploadMomentImages(
         userId: uid,
         momentId: momentId,
         localFilePath: _imagePath!,
       );
 
-      // Create moment document in Firestore with optional activity linkage
       final moment = Moment(
         id: momentId,
         ownerId: uid,
         activityId: _activityId,
-        activityInstanceId: null,
+        activityInstanceId: _activityInstanceId,
         completionLogId: _completionLogId,
         visibility: postVisibility,
-        selectedFriendIds: friendsIds,
+        selectedFriendIds: selectedFriendIds.toList(),
         media: media,
-        caption: captionController.text.trim(),
-        category: selectedCategory.value.isEmpty ? null : selectedCategory.value,
+        caption: caption,
+        category: category,
         completedAt: now,
         createdAt: now,
         updatedAt: now,
@@ -163,51 +161,28 @@ class MomentController extends GetxController {
       );
 
       await _momentRepo.createMoment(moment);
-
-      // Update activity instance with momentId if this is a proof moment
-      if (_activityId != null && _completionLogId != null) {
-        final instance = await _activityRepo.getOrCreateTodayInstance(_activityId!, uid);
-        await _activityRepo.linkMomentToInstance(instance.id, momentId);
-        // Link moment back to CompletionLog for audit trail
-        await _activityRepo.updateCompletionLogMomentId(_completionLogId!, momentId);
-      }
-
-      // Create feed deliveries for shared moments
-      if (postVisibility == AppConstants.visibilityAllFriends) {
-        final friendships = await _friendRepo.watchFriendships(uid).first;
-        final friendIds = friendships.map((f) => f.otherUserId(uid)).toList();
-        await _momentRepo.createFeedDeliveries(
-          momentId: momentId,
-          ownerId: uid,
-          visibility: postVisibility,
-          recipientIds: friendIds,
-        );
-      } else if (postVisibility == AppConstants.visibilitySelectedFriends &&
-          friendsIds.isNotEmpty) {
-        await _momentRepo.createFeedDeliveries(
-          momentId: momentId,
-          ownerId: uid,
-          visibility: postVisibility,
-          recipientIds: friendsIds,
-        );
-      }
+      await _linkProofMoment(momentId);
+      await _momentRepo.createFeedDeliveries(
+        momentId: momentId,
+        ownerId: uid,
+        visibility: postVisibility,
+        recipientIds: recipientIds,
+      );
 
       AnalyticsService.instance.momentPosted(
         visibility: postVisibility,
-        category: selectedCategory.value.isEmpty ? null : selectedCategory.value,
+        category: category,
       );
-
+      await _finishSubmission(wasOfflineQueued: false);
+    } catch (error) {
       isPosting.value = false;
-      Get.offNamed(AppRoutes.success);
-    } catch (e) {
-      isPosting.value = false;
-      errorMessage.value = 'Failed to post moment: ${e.toString()}';
+      errorMessage.value = 'Failed to post moment: $error';
     }
   }
 
-  void setVisibility(String v) {
-    visibility.value = v;
-    if (v != AppConstants.visibilitySelectedFriends) {
+  void setVisibility(String nextVisibility) {
+    visibility.value = nextVisibility;
+    if (nextVisibility != AppConstants.visibilitySelectedFriends) {
       selectedFriendIds.clear();
     }
   }
@@ -215,24 +190,109 @@ class MomentController extends GetxController {
   void toggleSelectedFriend(String friendId) {
     if (selectedFriendIds.contains(friendId)) {
       selectedFriendIds.remove(friendId);
-    } else {
-      selectedFriendIds.add(friendId);
+      return;
     }
+    selectedFriendIds.add(friendId);
   }
 
-  void setCategory(String? cat) {
-    selectedCategory.value = cat ?? '';
+  void setCategory(String? category) {
+    selectedCategory.value = category ?? '';
   }
 
-  void reset() {
+  void resetComposer() {
     captionController.clear();
     visibility.value = AppConstants.visibilityPersonalOnly;
     selectedFriendIds.clear();
     selectedCategory.value = '';
+    errorMessage.value = null;
+    isPosting.value = false;
+    lastSubmission.value = null;
     _imagePath = null;
     _activityId = null;
+    _activityInstanceId = null;
     _completionLogId = null;
+    _sessionInitialized = false;
+  }
+
+  Future<void> _queueMomentForSync({
+    required String momentId,
+    required String ownerId,
+    required List<String> recipientIds,
+    required Map<String, dynamic> momentData,
+  }) async {
+    await Get.find<OfflineQueueService>().queueCreateMoment(
+      momentId: momentId,
+      ownerId: ownerId,
+      momentData: momentData,
+      localMediaPath: _imagePath!,
+      recipientIds: recipientIds,
+      activityId: _activityId,
+      activityInstanceId: _activityInstanceId,
+      completionLogId: _completionLogId,
+    );
+  }
+
+  Future<List<String>> _resolveRecipientIds(
+    String uid,
+    String postVisibility,
+  ) async {
+    if (postVisibility == AppConstants.visibilityAllFriends) {
+      final friendships = await _friendRepo.getFriends(uid);
+      final friendIds = friendships
+          .map((friendship) => friendship.otherUserId(uid))
+          .toList();
+      return _deliveryPlanner.resolveRecipientIds(
+        visibility: postVisibility,
+        allFriendIds: friendIds,
+        selectedFriendIds: selectedFriendIds,
+      );
+    }
+
+    return _deliveryPlanner.resolveRecipientIds(
+      visibility: postVisibility,
+      allFriendIds: const <String>[],
+      selectedFriendIds: selectedFriendIds,
+    );
+  }
+
+  Future<void> _linkProofMoment(String momentId) async {
+    if (_activityInstanceId != null && _completionLogId != null) {
+      await _activityRepo.linkMomentToInstance(_activityInstanceId!, momentId);
+      await _activityRepo.updateCompletionLogMomentId(
+        _completionLogId!,
+        momentId,
+      );
+      return;
+    }
+
+    if (_activityId != null && _completionLogId != null && _userId != null) {
+      final instance = await _activityRepo.getOrCreateTodayInstance(
+        _activityId!,
+        _userId!,
+      );
+      await _activityRepo.linkMomentToInstance(instance.id, momentId);
+      await _activityRepo.updateCompletionLogMomentId(
+        _completionLogId!,
+        momentId,
+      );
+    }
+  }
+
+  Future<void> _finishSubmission({required bool wasOfflineQueued}) async {
+    await HapticFeedback.mediumImpact();
+    isPosting.value = false;
     errorMessage.value = null;
+    lastSubmission.value = MomentSubmissionResult(
+      isProofMoment: isProofMoment,
+      wasOfflineQueued: wasOfflineQueued,
+    );
+    Get.offNamed(AppRoutes.success);
+  }
+
+  bool _isSameContext(Map<String, dynamic>? args) {
+    return _activityId == args?['activityId'] &&
+        _activityInstanceId == args?['activityInstanceId'] &&
+        _completionLogId == args?['completionLogId'];
   }
 
   @override

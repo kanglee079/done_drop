@@ -1,62 +1,104 @@
 part of '../home_screen.dart';
 
-// ── FEED TAB ─────────────────────────────────────────────────────────────────
-
 class _FeedTab extends StatelessWidget {
   const _FeedTab();
 
   @override
   Widget build(BuildContext context) {
-    // Obx alone handles reactivity — no GetBuilder wrapper to avoid double rebuild.
     return Obx(() {
-      final ctrl = Get.find<FeedController>();
-      if (ctrl.isLoading.value) {
-        return _FeedShimmer();
+      final controller = Get.find<FeedController>();
+      if (controller.isLoading.value) {
+        return const _FeedLoadingState();
       }
-      if (ctrl.moments.isEmpty) {
-        return _EmptyFeedState(ctrl: ctrl);
+      if (controller.moments.isEmpty) {
+        return _EmptyBuddyState(controller: controller);
       }
-      return ListView.builder(
-        padding: const EdgeInsets.symmetric(vertical: AppSizes.space12),
-        itemCount: ctrl.moments.length,
-        itemBuilder: (_, i) => _FeedMomentCard(
-          moment: ctrl.moments[i],
-          ownerName: ctrl.getOwnerName(ctrl.moments[i].ownerId),
-          ownerAvatar: ctrl.getOwnerAvatar(ctrl.moments[i].ownerId),
+
+      return ListView.separated(
+        padding: const EdgeInsets.fromLTRB(
+          AppSizes.space24,
+          AppSizes.space12,
+          AppSizes.space24,
+          120,
         ),
+        itemBuilder: (context, index) {
+          final moment = controller.moments[index];
+          return _BuddyMomentCard(
+            key: ValueKey('buddy-${moment.id}'),
+            moment: moment,
+            ownerName: controller.getOwnerName(moment.ownerId),
+            ownerAvatar: controller.getOwnerAvatar(moment.ownerId),
+            activityTitle: controller.activityTitleFor(moment),
+          );
+        },
+        separatorBuilder: (_, __) => const SizedBox(height: AppSizes.space16),
+        itemCount: controller.moments.length,
       );
     });
   }
 }
 
-class _FeedShimmer extends StatelessWidget {
+class _EmptyBuddyState extends StatelessWidget {
+  const _EmptyBuddyState({required this.controller});
+
+  final FeedController controller;
+
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(AppSizes.space16),
-      itemCount: 3,
-      itemBuilder: (_, __) => Shimmer.fromColors(
-        baseColor: Colors.grey[300]!,
-        highlightColor: Colors.grey[100]!,
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSizes.space24),
         child: Container(
-          margin: const EdgeInsets.only(bottom: AppSizes.space16),
+          width: double.infinity,
+          padding: const EdgeInsets.all(AppSizes.space24),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceContainerLowest,
+            borderRadius: AppSizes.borderRadiusLg,
+          ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Row(
-                children: [
-                  Container(width: 32, height: 32, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle)),
-                  const SizedBox(width: 8),
-                  Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Container(height: 12, width: 100, color: Colors.white),
-                    Container(height: 10, width: 60, color: Colors.white),
-                  ]),
-                ],
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: AppColors.primaryFixed,
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: const Icon(
+                  Icons.group_outlined,
+                  color: AppColors.primary,
+                  size: 34,
+                ),
               ),
-              const SizedBox(height: 12),
-              Container(height: 200, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12))),
-              const SizedBox(height: 12),
-              Container(height: 14, width: double.infinity, color: Colors.white),
+              const SizedBox(height: AppSizes.space16),
+              Text(
+                'Your buddy feed is private by design.',
+                textAlign: TextAlign.center,
+                style: AppTypography.headlineSmall(color: AppColors.onSurface),
+              ),
+              const SizedBox(height: AppSizes.space8),
+              Text(
+                'Invite a few close people you trust to keep the proof loop intimate.',
+                textAlign: TextAlign.center,
+                style: AppTypography.bodyMedium(
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: AppSizes.space20),
+              FilledButton.icon(
+                onPressed: () => Get.toNamed(AppRoutes.addFriend),
+                icon: const Icon(Icons.person_add_alt_1_rounded),
+                label: const Text('Invite buddy'),
+              ),
+              const SizedBox(height: AppSizes.space12),
+              TextButton(
+                onPressed: () => Get.toNamed(AppRoutes.friends),
+                child: Text(
+                  'Manage circle (${controller.friendCount.value})',
+                  style: AppTypography.labelLarge(color: AppColors.primary),
+                ),
+              ),
             ],
           ),
         ),
@@ -65,156 +107,151 @@ class _FeedShimmer extends StatelessWidget {
   }
 }
 
-class _EmptyFeedState extends StatelessWidget {
-  const _EmptyFeedState({required this.ctrl});
-  final FeedController ctrl;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSizes.space32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.group_outlined, size: 56, color: AppColors.outlineVariant),
-            const SizedBox(height: AppSizes.space16),
-            const Text(
-              'Buddy Feed', style: TextStyle(
-                fontFamily: AppTypography.serifFamily, fontSize: 24, fontWeight: FontWeight.w600,
-                color: AppColors.onSurface,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Private proofs from your\nbuddy crew will appear here.',
-              textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: AppColors.onSurfaceVariant),
-            ),
-            const SizedBox(height: AppSizes.space24),
-            Obx(() => ctrl.unreadCount.value > 0
-                ? DDSecondaryButton(label: 'Mark All Read', icon: Icons.done_all, onPressed: ctrl.markAllRead, isExpanded: false)
-                : const SizedBox.shrink()),
-            const SizedBox(height: AppSizes.space12),
-            Obx(() => DDSecondaryButton(
-              label: 'Buddy Crew (${ctrl.friendCount.value})',
-              icon: Icons.group_outlined,
-              onPressed: () => Get.toNamed(AppRoutes.friends),
-              isExpanded: false,
-            )),
-            const SizedBox(height: AppSizes.space12),
-            DDPrimaryButton(label: 'Invite Buddy', icon: Icons.person_add, onPressed: () => Get.toNamed(AppRoutes.addFriend), isExpanded: false),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _FeedMomentCard extends StatelessWidget {
-  const _FeedMomentCard({required this.moment, required this.ownerName, required this.ownerAvatar});
+class _BuddyMomentCard extends StatelessWidget {
+  const _BuddyMomentCard({
+    super.key,
+    required this.moment,
+    required this.ownerName,
+    required this.ownerAvatar,
+    required this.activityTitle,
+  });
 
   final Moment moment;
   final String ownerName;
   final String? ownerAvatar;
+  final String? activityTitle;
 
   @override
   Widget build(BuildContext context) {
-    final reactionCtrl = Get.find<ReactionController>();
+    final reactionController = Get.find<ReactionController>();
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: AppSizes.space16, vertical: AppSizes.space8),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
+        color: AppColors.surfaceContainerLowest,
         borderRadius: AppSizes.borderRadiusLg,
+        boxShadow: AppColors.cardShadow,
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Owner header
-          Container(
-            padding: const EdgeInsets.all(AppSizes.space12),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSizes.space16,
+              AppSizes.space16,
+              AppSizes.space16,
+              AppSizes.space12,
+            ),
             child: Row(
               children: [
                 CircleAvatar(
-                  radius: 16,
+                  radius: 20,
                   backgroundColor: AppColors.primaryFixed,
-                  backgroundImage: ownerAvatar != null ? NetworkImage(ownerAvatar!) : null,
+                  backgroundImage: ownerAvatar != null
+                      ? NetworkImage(ownerAvatar!)
+                      : null,
                   child: ownerAvatar == null
-                      ? const Icon(Icons.person, size: 16, color: AppColors.primary) : null,
+                      ? Text(
+                          ownerName.characters.first.toUpperCase(),
+                          style: AppTypography.labelLarge(
+                            color: AppColors.primary,
+                          ),
+                        )
+                      : null,
                 ),
-                const SizedBox(width: AppSizes.space8),
+                const SizedBox(width: AppSizes.space12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(ownerName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.onSurface)),
-                      Text(_timeAgo(moment.createdAt), style: const TextStyle(fontSize: 11, color: AppColors.outline)),
+                      Text(
+                        ownerName,
+                        style: AppTypography.labelLarge(
+                          color: AppColors.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: AppSizes.space2),
+                      Text(
+                        _formatTime(moment.createdAt),
+                        style: AppTypography.bodySmall(
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                _FeedVisibilityBadge(visibility: moment.visibility),
+                _VisibilityChip(visibility: moment.visibility),
               ],
             ),
           ),
-
-          // Image
           AspectRatio(
-            aspectRatio: 1,
+            aspectRatio: 4 / 5,
             child: CachedNetworkImage(
               imageUrl: moment.media.thumbnail.downloadUrl,
               fit: BoxFit.cover,
-              placeholder: (_, __) => Container(color: AppColors.surfaceContainerHighest),
+              placeholder: (_, __) =>
+                  Container(color: AppColors.surfaceContainerHigh),
               errorWidget: (_, __, ___) => Container(
-                color: AppColors.surfaceContainerHighest,
-                child: const Icon(Icons.broken_image, color: AppColors.outline),
+                color: AppColors.surfaceContainerHigh,
+                child: const Icon(
+                  Icons.broken_image_outlined,
+                  color: AppColors.outline,
+                ),
               ),
             ),
           ),
-
-          // Caption + Reactions
           Padding(
             padding: const EdgeInsets.all(AppSizes.space16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (moment.caption.isNotEmpty) ...[
-                  Text(moment.caption, style: const TextStyle(fontSize: 14, color: AppColors.onSurface, height: 1.4)),
-                  const SizedBox(height: AppSizes.space12),
-                ],
-                Row(
+                Wrap(
+                  spacing: AppSizes.space8,
+                  runSpacing: AppSizes.space8,
                   children: [
-                    ...reactionCtrl.reactionTypes.map((type) => Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: GestureDetector(
-                        onTap: () {
-                          HapticFeedback.selectionClick();
-                          reactionCtrl.toggleReaction(momentId: moment.id, reactionType: type);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: AppColors.surfaceContainerHighest,
-                            borderRadius: AppSizes.borderRadiusFull,
-                          ),
-                          child: Text(reactionCtrl.reactionIcon(type), style: const TextStyle(fontSize: 16)),
-                        ),
+                    if (activityTitle != null)
+                      _MetaChip(
+                        icon: Icons.check_circle_outline,
+                        label: activityTitle!,
+                        color: AppColors.primary,
+                        background: AppColors.primaryFixed,
                       ),
-                    )),
-                    const Spacer(),
-                    if (moment.category != null)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          moment.category!,
-                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.primary),
-                        ),
+                    if ((moment.category ?? '').isNotEmpty)
+                      _MetaChip(
+                        icon: Icons.auto_awesome_outlined,
+                        label: moment.category!,
+                        color: AppColors.tertiary,
+                        background: AppColors.tertiaryFixed,
                       ),
                   ],
+                ),
+                if (moment.caption.isNotEmpty) ...[
+                  const SizedBox(height: AppSizes.space12),
+                  Text(
+                    moment.caption,
+                    style: AppTypography.bodyMedium(color: AppColors.onSurface),
+                  ),
+                ],
+                const SizedBox(height: AppSizes.space16),
+                Row(
+                  children: reactionController.reactionTypes
+                      .map((reactionType) {
+                        return Padding(
+                          padding: const EdgeInsets.only(
+                            right: AppSizes.space8,
+                          ),
+                          child: _ReactionPill(
+                            label: reactionController.reactionIcon(
+                              reactionType,
+                            ),
+                            onTap: () => reactionController.toggleReaction(
+                              momentId: moment.id,
+                              reactionType: reactionType,
+                            ),
+                          ),
+                        );
+                      })
+                      .toList(growable: false),
                 ),
               ],
             ),
@@ -224,33 +261,137 @@ class _FeedMomentCard extends StatelessWidget {
     );
   }
 
-  String _timeAgo(DateTime dt) {
-    final diff = DateTime.now().difference(dt);
-    if (diff.inMinutes < 1) return 'just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    if (diff.inDays < 7) return '${diff.inDays}d ago';
-    return '${dt.day}/${dt.month}/${dt.year}';
+  String _formatTime(DateTime createdAt) {
+    final difference = DateTime.now().difference(createdAt);
+    if (difference.inMinutes < 1) return 'Just now';
+    if (difference.inHours < 1) return '${difference.inMinutes}m ago';
+    if (difference.inDays < 1) return '${difference.inHours}h ago';
+    return DateFormat('MMM d').format(createdAt);
   }
 }
 
-class _FeedVisibilityBadge extends StatelessWidget {
-  const _FeedVisibilityBadge({required this.visibility});
+class _MetaChip extends StatelessWidget {
+  const _MetaChip({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.background,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+  final Color background;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSizes.space10,
+        vertical: AppSizes.space8,
+      ),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: AppSizes.borderRadiusFull,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: AppSizes.space6),
+          Text(label, style: AppTypography.bodySmall(color: color)),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReactionPill extends StatelessWidget {
+  const _ReactionPill({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: AppSizes.borderRadiusFull,
+        onTap: onTap,
+        child: Ink(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSizes.space12,
+            vertical: AppSizes.space10,
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceContainerLow,
+            borderRadius: AppSizes.borderRadiusFull,
+          ),
+          child: Text(label, style: const TextStyle(fontSize: 18)),
+        ),
+      ),
+    );
+  }
+}
+
+class _VisibilityChip extends StatelessWidget {
+  const _VisibilityChip({required this.visibility});
+
   final String visibility;
 
   @override
   Widget build(BuildContext context) {
     final (icon, label) = switch (visibility) {
-      'all_friends' => (Icons.groups, 'Crew'),
-      'selected_friends' => (Icons.person_outline, 'Buddy'),
-      _ => (Icons.lock_outline, 'Personal'),
+      AppConstants.visibilityAllFriends => (Icons.groups_outlined, 'Crew'),
+      AppConstants.visibilitySelectedFriends => (Icons.person_outline, 'Buddy'),
+      _ => (Icons.lock_outline, 'Private'),
     };
-    return Row(
-      children: [
-        Icon(icon, size: 12, color: AppColors.outline),
-        const SizedBox(width: 2),
-        Text(label, style: const TextStyle(fontSize: 10, color: AppColors.outline)),
-      ],
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSizes.space10,
+        vertical: AppSizes.space8,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLow,
+        borderRadius: AppSizes.borderRadiusFull,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: AppColors.onSurfaceVariant),
+          const SizedBox(width: AppSizes.space4),
+          Text(
+            label,
+            style: AppTypography.bodySmall(color: AppColors.onSurfaceVariant),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FeedLoadingState extends StatelessWidget {
+  const _FeedLoadingState();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.separated(
+      padding: const EdgeInsets.all(AppSizes.space24),
+      itemBuilder: (_, __) => Shimmer.fromColors(
+        baseColor: AppColors.surfaceContainerHigh,
+        highlightColor: AppColors.surfaceContainerLowest,
+        child: Container(
+          height: 360,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: AppSizes.borderRadiusLg,
+          ),
+        ),
+      ),
+      separatorBuilder: (_, __) => const SizedBox(height: AppSizes.space16),
+      itemCount: 3,
     );
   }
 }

@@ -1,33 +1,35 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:done_drop/core/theme/theme.dart';
-import 'package:done_drop/core/constants/app_constants.dart';
-import 'package:done_drop/core/errors/result.dart';
 import 'package:done_drop/app/presentation/capture/moment_controller.dart';
-import 'package:done_drop/app/presentation/home/home_controller.dart';
-import 'package:done_drop/firebase/repositories/friend_repository.dart';
+import 'package:done_drop/core/constants/app_constants.dart';
+import 'package:done_drop/core/models/friendship.dart';
+import 'package:done_drop/core/models/user_profile.dart';
+import 'package:done_drop/core/theme/theme.dart';
+import 'package:done_drop/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:done_drop/features/auth/repositories/user_profile_repository.dart';
+import 'package:done_drop/firebase/repositories/friend_repository.dart';
 
-/// DoneDrop Preview Screen — caption, audience selection, and post moment.
-class PreviewScreen extends StatelessWidget {
+class PreviewScreen extends StatefulWidget {
   const PreviewScreen({super.key});
 
   @override
+  State<PreviewScreen> createState() => _PreviewScreenState();
+}
+
+class _PreviewScreenState extends State<PreviewScreen> {
+  late final MomentController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = Get.find<MomentController>();
+    _controller.hydratePreview(Get.arguments as Map<String, dynamic>?);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Get or create MomentController; share it across preview flow
-    final ctrl = Get.put(MomentController());
-
-    // If imagePath was passed, set it on the controller
-    final args = Get.arguments as Map<String, dynamic>?;
-    final imagePath = args?['imagePath'] as String?;
-
-    // Initialize proof moment context if coming from activity completion
-    ctrl.initFromArgs(args);
-
-    if (imagePath != null) {
-      ctrl.setImagePath(imagePath);
-    }
+    final imagePath = _controller.imagePath;
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
@@ -36,15 +38,18 @@ class PreviewScreen extends StatelessWidget {
         body: SafeArea(
           child: Column(
             children: [
-              // Top bar
-              _PreviewTopBar(ctrl: ctrl),
+              _PreviewTopBar(controller: _controller),
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSizes.space24),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSizes.space24,
+                    AppSizes.space8,
+                    AppSizes.space24,
+                    AppSizes.space32,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Image preview
                       if (imagePath != null)
                         ClipRRect(
                           borderRadius: AppSizes.borderRadiusLg,
@@ -56,19 +61,14 @@ class PreviewScreen extends StatelessWidget {
                             ),
                           ),
                         ),
-                      const SizedBox(height: AppSizes.space24),
-
-                      // Caption
-                      _CaptionField(ctrl: ctrl),
-                      const SizedBox(height: AppSizes.space24),
-
-                      // Category
-                      _CategorySelector(ctrl: ctrl),
-                      const SizedBox(height: AppSizes.space24),
-
-                      // Audience
-                      _AudienceSection(ctrl: ctrl),
-                      const SizedBox(height: AppSizes.space48),
+                      const SizedBox(height: AppSizes.space20),
+                      _ProofSummary(controller: _controller),
+                      const SizedBox(height: AppSizes.space20),
+                      _CaptionField(controller: _controller),
+                      const SizedBox(height: AppSizes.space20),
+                      _CategorySelector(controller: _controller),
+                      const SizedBox(height: AppSizes.space20),
+                      _AudienceSection(controller: _controller),
                     ],
                   ),
                 ),
@@ -82,93 +82,141 @@ class PreviewScreen extends StatelessWidget {
 }
 
 class _PreviewTopBar extends StatelessWidget {
-  const _PreviewTopBar({required this.ctrl});
-  final MomentController ctrl;
+  const _PreviewTopBar({required this.controller});
+
+  final MomentController controller;
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() => Padding(
-      padding: const EdgeInsets.all(AppSizes.space16),
-      child: Row(
+    return Obx(
+      () => Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSizes.space12,
+          vertical: AppSizes.space8,
+        ),
+        child: Row(
+          children: [
+            IconButton(
+              onPressed: controller.isPosting.value ? null : Get.back,
+              icon: const Icon(Icons.arrow_back, color: AppColors.primary),
+            ),
+            Expanded(
+              child: Text(
+                controller.isProofMoment ? 'Proof Preview' : 'Moment Preview',
+                textAlign: TextAlign.center,
+                style: AppTypography.titleLarge(color: AppColors.onSurface),
+              ),
+            ),
+            TextButton(
+              onPressed: controller.isPosting.value
+                  ? null
+                  : controller.postMoment,
+              child: controller.isPosting.value
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.primary,
+                      ),
+                    )
+                  : Text(
+                      controller.isProofMoment ? 'Save' : 'Post',
+                      style: AppTypography.labelLarge(color: AppColors.primary),
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProofSummary extends StatelessWidget {
+  const _ProofSummary({required this.controller});
+
+  final MomentController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSizes.space20),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLowest,
+        borderRadius: AppSizes.borderRadiusLg,
+        border: Border.all(color: AppColors.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back, color: AppColors.primary),
-            onPressed: ctrl.isPosting.value ? null : () => Get.back(),
-          ),
-          Expanded(
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSizes.space12,
+              vertical: AppSizes.space8,
+            ),
+            decoration: BoxDecoration(
+              color: controller.isProofMoment
+                  ? AppColors.primaryFixed
+                  : AppColors.tertiaryFixed,
+              borderRadius: AppSizes.borderRadiusFull,
+            ),
             child: Text(
-              // "Proof Moment" when coming from activity completion
-              ctrl.isProofMoment ? 'Proof Moment' : 'Post Moment',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: AppTypography.serifFamily,
-                fontSize: 18,
-                fontStyle: FontStyle.italic,
-                color: AppColors.primary,
+              controller.isProofMoment ? 'Habit proof' : 'Private moment',
+              style: AppTypography.labelMedium(
+                color: controller.isProofMoment
+                    ? AppColors.primary
+                    : AppColors.tertiary,
               ),
             ),
           ),
-          TextButton(
-            onPressed: ctrl.isPosting.value ? null : ctrl.postMoment,
-            child: ctrl.isPosting.value
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
-                  )
-                : Text(
-                    ctrl.isProofMoment ? 'Save' : 'Post',
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+          const SizedBox(height: AppSizes.space16),
+          Text(
+            controller.isProofMoment
+                ? 'This post stays linked to the habit you just completed.'
+                : 'You can save this privately or share it with a small buddy circle.',
+            style: AppTypography.titleMedium(color: AppColors.onSurface),
+          ),
+          const SizedBox(height: AppSizes.space8),
+          Text(
+            controller.isProofMoment
+                ? 'Posting here will only handle the proof image, audience, and linking. Completion is already locked in.'
+                : 'Keep the loop simple: save only, add proof, or share privately.',
+            style: AppTypography.bodySmall(color: AppColors.onSurfaceVariant),
           ),
         ],
       ),
-    ));
+    );
   }
 }
 
 class _CaptionField extends StatelessWidget {
-  const _CaptionField({required this.ctrl});
-  final MomentController ctrl;
+  const _CaptionField({required this.controller});
+
+  final MomentController controller;
 
   @override
   Widget build(BuildContext context) {
-    final isProof = ctrl.isProofMoment;
+    final hintText = controller.isProofMoment
+        ? 'Add a short note about what you finished…'
+        : 'Add context if you want to remember this later…';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Caption',
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            color: AppColors.outline,
-            letterSpacing: 1,
-          ),
+          style: AppTypography.labelMedium(color: AppColors.onSurfaceVariant),
         ),
         const SizedBox(height: AppSizes.space8),
         TextField(
-          controller: ctrl.captionController,
-          maxLength: 300,
-          maxLines: 3,
-          style: TextStyle(
-            fontFamily: AppTypography.serifFamily,
-            fontSize: 20,
-            fontStyle: FontStyle.italic,
-            color: AppColors.onSurface,
-          ),
+          controller: controller.captionController,
+          maxLength: AppConstants.maxCaptionLength,
+          maxLines: 4,
+          style: AppTypography.bodyLarge(color: AppColors.onSurface),
           decoration: InputDecoration(
-            // Proof moments don't require a caption; free captures can add one optionally
-            hintText: isProof ? 'Add a caption for your proof (optional)...' : 'Add a short caption...',
-            hintStyle: TextStyle(
-              color: AppColors.outline.withValues(alpha: 0.4),
-              fontStyle: FontStyle.italic,
-            ),
+            hintText: hintText,
             filled: true,
-            fillColor: AppColors.surfaceContainerHighest,
+            fillColor: AppColors.surfaceContainerLowest,
             border: OutlineInputBorder(
               borderRadius: AppSizes.borderRadiusMd,
               borderSide: BorderSide.none,
@@ -177,11 +225,14 @@ class _CaptionField extends StatelessWidget {
           ),
         ),
         Obx(() {
-          final msg = ctrl.errorMessage.value;
-          if (msg == null) return const SizedBox.shrink();
+          final message = controller.errorMessage.value;
+          if (message == null) return const SizedBox.shrink();
           return Padding(
             padding: const EdgeInsets.only(top: AppSizes.space8),
-            child: Text(msg, style: TextStyle(color: AppColors.error, fontSize: 12)),
+            child: Text(
+              message,
+              style: AppTypography.bodySmall(color: AppColors.error),
+            ),
           );
         }),
       ],
@@ -190,72 +241,85 @@ class _CaptionField extends StatelessWidget {
 }
 
 class _CategorySelector extends StatelessWidget {
-  const _CategorySelector({required this.ctrl});
-  final MomentController ctrl;
+  const _CategorySelector({required this.controller});
 
-  // Use constants instead of hardcoded list
-  List<String> get categories => AppConstants.momentCategories;
+  final MomentController controller;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Category',
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            color: AppColors.outline,
-            letterSpacing: 1,
-          ),
+          style: AppTypography.labelMedium(color: AppColors.onSurfaceVariant),
         ),
         const SizedBox(height: AppSizes.space8),
-        Obx(() => SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              _CategoryChip(
-                label: 'None',
-                isSelected: ctrl.selectedCategory.value.isEmpty,
-                onTap: () => ctrl.setCategory(null),
-              ),
-              ...categories.map((cat) => _CategoryChip(
-                label: cat,
-                isSelected: ctrl.selectedCategory.value == cat,
-                onTap: () => ctrl.setCategory(cat),
-              )),
-            ],
+        Obx(
+          () => SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _CategoryChip(
+                  label: 'None',
+                  isSelected: controller.selectedCategory.value.isEmpty,
+                  onTap: () => controller.setCategory(null),
+                ),
+                ...AppConstants.momentCategories.map(
+                  (category) => _CategoryChip(
+                    label: category,
+                    isSelected: controller.selectedCategory.value == category,
+                    onTap: () => controller.setCategory(category),
+                  ),
+                ),
+              ],
+            ),
           ),
-        )),
+        ),
       ],
     );
   }
 }
 
 class _CategoryChip extends StatelessWidget {
-  const _CategoryChip({required this.label, required this.isSelected, required this.onTap});
+  const _CategoryChip({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(right: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryFixed : AppColors.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: isSelected ? AppColors.primary : AppColors.onSurfaceVariant,
+    return Padding(
+      padding: const EdgeInsets.only(right: AppSizes.space8),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: AppSizes.borderRadiusFull,
+          onTap: onTap,
+          child: Ink(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSizes.space12,
+              vertical: AppSizes.space10,
+            ),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? AppColors.primaryFixed
+                  : AppColors.surfaceContainerLow,
+              borderRadius: AppSizes.borderRadiusFull,
+            ),
+            child: Text(
+              label,
+              style: AppTypography.labelMedium(
+                color: isSelected
+                    ? AppColors.primary
+                    : AppColors.onSurfaceVariant,
+              ),
+            ),
           ),
         ),
       ),
@@ -264,54 +328,70 @@ class _CategoryChip extends StatelessWidget {
 }
 
 class _AudienceSection extends StatelessWidget {
-  const _AudienceSection({required this.ctrl});
-  final MomentController ctrl;
+  const _AudienceSection({required this.controller});
+
+  final MomentController controller;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Share To',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w800,
-            color: AppColors.onSurface,
-          ),
+        Text(
+          'Audience',
+          style: AppTypography.titleMedium(color: AppColors.onSurface),
         ),
-        const SizedBox(height: 8),
-        const Text(
-          'Choose who can witness this moment.',
-          style: TextStyle(fontSize: 14, color: AppColors.onSurfaceVariant),
+        const SizedBox(height: AppSizes.space8),
+        Text(
+          'Keep it intimate. No public feed, no broadcasting.',
+          style: AppTypography.bodySmall(color: AppColors.onSurfaceVariant),
         ),
         const SizedBox(height: AppSizes.space16),
-
-        Obx(() => _AudienceCard(
-          icon: Icons.lock_outline,
-          title: 'Just me',
-          subtitle: 'Keep this moment completely private.',
-          isSelected: ctrl.visibility.value == AppConstants.visibilityPersonalOnly,
-          onTap: () => ctrl.setVisibility(AppConstants.visibilityPersonalOnly),
-        )),
-        const SizedBox(height: AppSizes.space12),
-
-        Obx(() => _AudienceCard(
-          icon: Icons.person_outline,
-          title: 'My buddy',
-          subtitle: 'Share only with your primary buddy.',
-          isSelected: ctrl.visibility.value == AppConstants.visibilitySelectedFriends,
-          onTap: () => ctrl.setVisibility(AppConstants.visibilitySelectedFriends),
-        )),
-        const SizedBox(height: AppSizes.space12),
-
-        Obx(() => _AudienceCard(
-          icon: Icons.groups_outlined,
-          title: 'Close crew',
-          subtitle: 'Notify all your close friends.',
-          isSelected: ctrl.visibility.value == AppConstants.visibilityAllFriends,
-          onTap: () => ctrl.setVisibility(AppConstants.visibilityAllFriends),
-        )),
+        Obx(
+          () => Column(
+            children: [
+              _AudienceCard(
+                icon: Icons.lock_outline,
+                title: 'Save only',
+                subtitle: 'Keep this proof entirely private.',
+                isSelected:
+                    controller.visibility.value ==
+                    AppConstants.visibilityPersonalOnly,
+                onTap: () => controller.setVisibility(
+                  AppConstants.visibilityPersonalOnly,
+                ),
+              ),
+              const SizedBox(height: AppSizes.space12),
+              _AudienceCard(
+                icon: Icons.person_outline,
+                title: 'Share privately',
+                subtitle: 'Pick a buddy or a small circle.',
+                isSelected:
+                    controller.visibility.value ==
+                    AppConstants.visibilitySelectedFriends,
+                onTap: () => controller.setVisibility(
+                  AppConstants.visibilitySelectedFriends,
+                ),
+              ),
+              const SizedBox(height: AppSizes.space12),
+              _AudienceCard(
+                icon: Icons.groups_outlined,
+                title: 'Close crew',
+                subtitle: 'Send it to everyone in your accountability circle.',
+                isSelected:
+                    controller.visibility.value ==
+                    AppConstants.visibilityAllFriends,
+                onTap: () =>
+                    controller.setVisibility(AppConstants.visibilityAllFriends),
+              ),
+              if (controller.visibility.value ==
+                  AppConstants.visibilitySelectedFriends) ...[
+                const SizedBox(height: AppSizes.space16),
+                _SelectedFriendPicker(controller: controller),
+              ],
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -334,62 +414,160 @@ class _AudienceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(AppSizes.space16),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withValues(alpha: 0.05) : AppColors.surfaceContainerLow,
-          borderRadius: AppSizes.borderRadiusMd,
-          border: Border.all(
-            color: isSelected ? AppColors.primary : Colors.transparent,
-            width: 1.5,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: AppSizes.borderRadiusLg,
+        onTap: onTap,
+        child: Ink(
+          padding: const EdgeInsets.all(AppSizes.space16),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppColors.primary.withValues(alpha: 0.06)
+                : AppColors.surfaceContainerLowest,
+            borderRadius: AppSizes.borderRadiusLg,
+            border: Border.all(
+              color: isSelected ? AppColors.primary : AppColors.outlineVariant,
+              width: isSelected ? 1.5 : 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? AppColors.primary
+                      : AppColors.surfaceContainerHigh,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(
+                  icon,
+                  color: isSelected
+                      ? AppColors.onPrimary
+                      : AppColors.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(width: AppSizes.space12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: AppTypography.labelLarge(
+                        color: isSelected
+                            ? AppColors.primary
+                            : AppColors.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: AppSizes.space4),
+                    Text(
+                      subtitle,
+                      style: AppTypography.bodySmall(
+                        color: AppColors.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (isSelected)
+                const Icon(Icons.check_circle, color: AppColors.primary),
+            ],
           ),
         ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.primary : AppColors.surfaceContainerHigh,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                icon,
-                size: 20,
-                color: isSelected ? Colors.white : AppColors.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(width: AppSizes.space16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: isSelected ? AppColors.primary : AppColors.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: AppColors.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (isSelected)
-              const Icon(Icons.check_circle, color: AppColors.primary),
-          ],
-        ),
       ),
+    );
+  }
+}
+
+class _SelectedFriendPicker extends StatelessWidget {
+  const _SelectedFriendPicker({required this.controller});
+
+  final MomentController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final authController = Get.find<AuthController>();
+    final friendRepository = Get.find<FriendRepository>();
+    final userProfileRepository = Get.find<UserProfileRepository>();
+    final currentUserId = authController.firebaseUser?.uid;
+
+    if (currentUserId == null) {
+      return const SizedBox.shrink();
+    }
+
+    return StreamBuilder<List<Friendship>>(
+      stream: friendRepository.watchFriendships(currentUserId),
+      builder: (context, snapshot) {
+        final friendships = snapshot.data ?? const <Friendship>[];
+        if (friendships.isEmpty) {
+          return Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(AppSizes.space16),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceContainerLow,
+              borderRadius: AppSizes.borderRadiusMd,
+            ),
+            child: Text(
+              'Add a buddy first to share proof privately.',
+              style: AppTypography.bodySmall(color: AppColors.onSurfaceVariant),
+            ),
+          );
+        }
+
+        final friendIds = friendships
+            .map((friendship) => friendship.otherUserId(currentUserId))
+            .toList(growable: false);
+
+        return FutureBuilder<Map<String, UserProfile>>(
+          future: userProfileRepository.getUserProfiles(friendIds),
+          builder: (context, profileSnapshot) {
+            final profiles =
+                profileSnapshot.data ?? const <String, UserProfile>{};
+
+            return Obx(
+              () => Wrap(
+                spacing: AppSizes.space8,
+                runSpacing: AppSizes.space8,
+                children: friendIds
+                    .map((friendId) {
+                      final profile = profiles[friendId];
+                      final displayName =
+                          profile?.displayName ?? profile?.username ?? 'Buddy';
+                      final isSelected = controller.selectedFriendIds.contains(
+                        friendId,
+                      );
+
+                      return FilterChip(
+                        selected: isSelected,
+                        label: Text(displayName),
+                        avatar: CircleAvatar(
+                          backgroundColor: AppColors.primaryFixed,
+                          backgroundImage: profile?.avatarUrl != null
+                              ? NetworkImage(profile!.avatarUrl!)
+                              : null,
+                          child: profile?.avatarUrl == null
+                              ? Text(
+                                  displayName.characters.first.toUpperCase(),
+                                  style: AppTypography.labelMedium(
+                                    color: AppColors.primary,
+                                  ),
+                                )
+                              : null,
+                        ),
+                        selectedColor: AppColors.primaryFixed,
+                        onSelected: (_) =>
+                            controller.toggleSelectedFriend(friendId),
+                      );
+                    })
+                    .toList(growable: false),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

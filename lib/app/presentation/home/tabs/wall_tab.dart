@@ -1,148 +1,295 @@
 part of '../home_screen.dart';
 
-// ── WALL TAB ─────────────────────────────────────────────────────────────────
-
 class _WallTab extends StatelessWidget {
   const _WallTab();
 
   @override
   Widget build(BuildContext context) {
-    final authController = Get.find<AuthController>();
-    final uid = authController.firebaseUser?.uid;
+    return Obx(() {
+      final controller = Get.find<MemoryWallController>();
+      if (controller.isLoading.value) {
+        return const _WallLoadingState();
+      }
 
-    if (uid == null) return _buildEmptyState();
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSizes.space16),
-      child: _WallContent(userId: uid),
-    );
+      final groupedMoments = controller.groupedMomentsByMonth;
+      if (groupedMoments.isEmpty) {
+        return const _EmptyWallState();
+      }
+
+      final sections = groupedMoments.entries.toList(growable: false);
+      return ListView.separated(
+        padding: const EdgeInsets.fromLTRB(
+          AppSizes.space24,
+          AppSizes.space12,
+          AppSizes.space24,
+          120,
+        ),
+        itemCount: sections.length,
+        separatorBuilder: (_, __) => const SizedBox(height: AppSizes.space24),
+        itemBuilder: (context, index) {
+          final section = sections[index];
+          return _WallMonthSection(
+            key: ValueKey('wall-${section.key}'),
+            title: section.key,
+            moments: section.value,
+          );
+        },
+      );
+    });
   }
-
-  Widget _buildEmptyState() => Center(
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSizes.space24),
-      child: DDEmptyState(
-        title: 'Memory Wall',
-        description: 'Your proof moments appear here.',
-        icon: Icons.auto_awesome_mosaic_outlined,
-        actionLabel: 'Capture your first moment',
-        onAction: () => Get.toNamed(AppRoutes.capture),
-      ),
-    ),
-  );
 }
 
-class _WallContent extends StatelessWidget {
-  const _WallContent({required this.userId});
-  final String userId;
+class _WallMonthSection extends StatelessWidget {
+  const _WallMonthSection({
+    super.key,
+    required this.title,
+    required this.moments,
+  });
+
+  final String title;
+  final List<Moment> moments;
 
   @override
   Widget build(BuildContext context) {
-    final momentRepo = Get.find<MomentRepository>();
+    final leadMoment = moments.first;
+    final trailingMoments = moments.skip(1).toList(growable: false);
 
-    return StreamBuilder<List<Moment>>(
-      stream: momentRepo.watchPersonalMoments(userId),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return _WallShimmer();
-        }
-
-        final moments = snapshot.data ?? [];
-        if (moments.isEmpty) return _WallEmptyState();
-
-        return GridView.builder(
-          padding: const EdgeInsets.only(top: AppSizes.space8, bottom: AppSizes.space8),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            mainAxisSpacing: AppSizes.space8,
-            crossAxisSpacing: AppSizes.space8,
-            childAspectRatio: 1,
-          ),
-          itemCount: moments.length,
-          itemBuilder: (_, i) => _WallMomentTile(moment: moments[i]),
-        );
-      },
-    );
-  }
-}
-
-class _WallShimmer extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return GridView.builder(
-      padding: const EdgeInsets.only(top: AppSizes.space8),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2, mainAxisSpacing: AppSizes.space8, crossAxisSpacing: AppSizes.space8,
-      ),
-      itemCount: 6,
-      itemBuilder: (_, __) => Shimmer.fromColors(
-        baseColor: Colors.grey[300]!,
-        highlightColor: Colors.grey[100]!,
-        child: Container(decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: AppSizes.borderRadiusMd,
-        )),
-      ),
-    );
-  }
-}
-
-class _WallEmptyState extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) => Center(
-    child: Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Icon(Icons.auto_awesome_mosaic_outlined, size: 80, color: AppColors.outlineVariant),
-        const SizedBox(height: AppSizes.space24),
-        const Text(
-          'No moments yet',
-          style: TextStyle(fontFamily: AppTypography.serifFamily, fontSize: 24, fontWeight: FontWeight.w600, color: AppColors.onSurface),
+        Text(
+          title,
+          style: AppTypography.titleLarge(color: AppColors.onSurface),
         ),
-        const SizedBox(height: 8),
-        const Text(
-          'Your proof moments appear here.',
-          style: TextStyle(fontFamily: AppTypography.serifFamily, fontSize: 16, color: AppColors.onSurfaceVariant),
+        const SizedBox(height: AppSizes.space4),
+        Text(
+          '${moments.length} private moments',
+          style: AppTypography.bodySmall(color: AppColors.onSurfaceVariant),
         ),
-        const SizedBox(height: AppSizes.space24),
-        DDPrimaryButton(
-          label: 'Capture your first moment',
-          icon: Icons.camera_alt,
-          onPressed: () => Get.toNamed(AppRoutes.capture),
-          isExpanded: false,
-        ),
+        const SizedBox(height: AppSizes.space16),
+        _WallLeadCard(moment: leadMoment),
+        if (trailingMoments.isNotEmpty) ...[
+          const SizedBox(height: AppSizes.space12),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: AppSizes.space12,
+              crossAxisSpacing: AppSizes.space12,
+              childAspectRatio: 0.88,
+            ),
+            itemCount: trailingMoments.length,
+            itemBuilder: (context, index) => _WallTileCard(
+              key: ValueKey('wall-tile-${trailingMoments[index].id}'),
+              moment: trailingMoments[index],
+            ),
+          ),
+        ],
       ],
-    ),
-  );
+    );
+  }
 }
 
-class _WallMomentTile extends StatelessWidget {
-  const _WallMomentTile({required this.moment});
+class _WallLeadCard extends StatelessWidget {
+  const _WallLeadCard({required this.moment});
+
   final Moment moment;
 
   @override
   Widget build(BuildContext context) {
-    return DDMomentTile(
-      imageUrl: moment.media.thumbnail.downloadUrl,
-      caption: moment.caption.isNotEmpty ? moment.caption : null,
-      category: moment.category,
-      onLongPress: () async {
-        final confirmed = await Get.dialog<bool>(
-          AlertDialog(
-            title: const Text('Delete Moment'),
-            content: const Text('Are you sure you want to delete this moment?'),
-            actions: [
-              TextButton(onPressed: () => Get.back(result: false), child: const Text('Cancel')),
-              TextButton(
-                onPressed: () => Get.back(result: true),
-                child: const Text('Delete', style: TextStyle(color: AppColors.error)),
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLowest,
+        borderRadius: AppSizes.borderRadiusLg,
+        boxShadow: AppColors.cardShadow,
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AspectRatio(
+            aspectRatio: 16 / 9,
+            child: CachedNetworkImage(
+              imageUrl: moment.media.original.downloadUrl.isEmpty
+                  ? moment.media.thumbnail.downloadUrl
+                  : moment.media.original.downloadUrl,
+              fit: BoxFit.cover,
+              placeholder: (_, __) =>
+                  Container(color: AppColors.surfaceContainerHigh),
+              errorWidget: (_, __, ___) => Container(
+                color: AppColors.surfaceContainerHigh,
+                child: const Icon(Icons.broken_image_outlined),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(AppSizes.space16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if ((moment.category ?? '').isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSizes.space10,
+                      vertical: AppSizes.space8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.tertiaryFixed,
+                      borderRadius: AppSizes.borderRadiusFull,
+                    ),
+                    child: Text(
+                      moment.category!,
+                      style: AppTypography.bodySmall(color: AppColors.tertiary),
+                    ),
+                  ),
+                if ((moment.category ?? '').isNotEmpty)
+                  const SizedBox(height: AppSizes.space12),
+                Text(
+                  moment.caption.isEmpty
+                      ? 'A private proof from ${DateFormat('MMM d').format(moment.createdAt)}'
+                      : moment.caption,
+                  style: AppTypography.bodyLarge(color: AppColors.onSurface),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WallTileCard extends StatelessWidget {
+  const _WallTileCard({super.key, required this.moment});
+
+  final Moment moment;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLowest,
+        borderRadius: AppSizes.borderRadiusLg,
+        border: Border.all(color: AppColors.outlineVariant),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: CachedNetworkImage(
+              imageUrl: moment.media.thumbnail.downloadUrl,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              placeholder: (_, __) =>
+                  Container(color: AppColors.surfaceContainerHigh),
+              errorWidget: (_, __, ___) => Container(
+                color: AppColors.surfaceContainerHigh,
+                child: const Icon(Icons.broken_image_outlined),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(AppSizes.space12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  DateFormat('MMM d').format(moment.createdAt),
+                  style: AppTypography.bodySmall(
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: AppSizes.space4),
+                Text(
+                  moment.caption.isEmpty ? 'Saved privately' : moment.caption,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.labelMedium(color: AppColors.onSurface),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyWallState extends StatelessWidget {
+  const _EmptyWallState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSizes.space24),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(AppSizes.space24),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceContainerLowest,
+            borderRadius: AppSizes.borderRadiusLg,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: AppColors.tertiaryFixed,
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: const Icon(
+                  Icons.photo_library_outlined,
+                  color: AppColors.tertiary,
+                  size: 34,
+                ),
+              ),
+              const SizedBox(height: AppSizes.space16),
+              Text(
+                'Your wall starts with one kept promise.',
+                textAlign: TextAlign.center,
+                style: AppTypography.headlineSmall(color: AppColors.onSurface),
+              ),
+              const SizedBox(height: AppSizes.space8),
+              Text(
+                'Capture a proof moment and it will land here as part of your private archive.',
+                textAlign: TextAlign.center,
+                style: AppTypography.bodyMedium(
+                  color: AppColors.onSurfaceVariant,
+                ),
               ),
             ],
           ),
-        );
-        if (confirmed == true) {
-          Get.find<MomentRepository>().deleteMoment(moment.id);
-        }
-      },
+        ),
+      ),
+    );
+  }
+}
+
+class _WallLoadingState extends StatelessWidget {
+  const _WallLoadingState();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.separated(
+      padding: const EdgeInsets.all(AppSizes.space24),
+      itemBuilder: (_, __) => Shimmer.fromColors(
+        baseColor: AppColors.surfaceContainerHigh,
+        highlightColor: AppColors.surfaceContainerLowest,
+        child: Container(
+          height: 280,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: AppSizes.borderRadiusLg,
+          ),
+        ),
+      ),
+      separatorBuilder: (_, __) => const SizedBox(height: AppSizes.space20),
+      itemCount: 3,
     );
   }
 }
