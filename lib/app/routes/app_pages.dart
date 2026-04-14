@@ -8,6 +8,7 @@ import '../presentation/auth/sign_up_screen.dart';
 import '../presentation/auth/forgot_password_screen.dart';
 import '../presentation/auth/forgot_password_binding.dart';
 import '../presentation/home/home_screen.dart';
+import '../presentation/capture/capture_binding.dart';
 import '../presentation/capture/capture_screen.dart';
 import '../presentation/capture/preview_screen.dart';
 import '../presentation/capture/success_screen.dart';
@@ -93,6 +94,7 @@ class AppPages {
     GetPage(
       name: AppRoutes.capture,
       page: () => const CaptureScreen(),
+      binding: CaptureBinding(),
       middlewares: [AuthGuard()],
       transition: Transition.downToUp,
       transitionDuration: const Duration(milliseconds: 400),

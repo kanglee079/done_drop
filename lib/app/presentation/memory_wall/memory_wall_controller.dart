@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:done_drop/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:done_drop/firebase/repositories/moment_repository.dart';
 import 'package:done_drop/core/models/moment.dart';
@@ -26,8 +27,20 @@ class MemoryWallController extends GetxController {
     return moments.where((m) => m.category == selectedCategory.value).toList();
   }
 
+  Map<String, List<Moment>> get groupedMomentsByMonth {
+    final grouped = <String, List<Moment>>{};
+    for (final moment in filteredMoments) {
+      final key = DateFormat('MMMM yyyy').format(moment.createdAt);
+      grouped.putIfAbsent(key, () => <Moment>[]).add(moment);
+    }
+    return grouped;
+  }
+
   /// Use AppConstants moment categories — discipline-first, no reflection/journal mindset.
-  static List<String> get categories => ['All Moments', ...AppConstants.momentCategories];
+  static List<String> get categories => [
+    'All Moments',
+    ...AppConstants.momentCategories,
+  ];
 
   @override
   void onInit() {

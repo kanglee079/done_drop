@@ -8,20 +8,20 @@ class AppMotion {
   AppMotion._();
 
   // ── Durations ──────────────────────────────────────────────────────────
-  /// Micro-interactions: checkbox, toggle, color change
-  static const Duration fast = Duration(milliseconds: 200);
+  /// Tap feedback, press states, and icon toggles.
+  static const Duration fast = Duration(milliseconds: 160);
 
-  /// Standard transitions: slide in, fade, scale
-  static const Duration medium = Duration(milliseconds: 300);
+  /// Card state changes and small layout updates.
+  static const Duration medium = Duration(milliseconds: 220);
 
-  /// Emphasized transitions: page reveal, overlay, celebration
-  static const Duration slow = Duration(milliseconds: 500);
+  /// Bottom sheets, success reveals, and major content swaps.
+  static const Duration slow = Duration(milliseconds: 420);
 
-  /// Hero / large-scale transitions
-  static const Duration hero = Duration(milliseconds: 400);
+  /// Hero transitions and large shell movement.
+  static const Duration hero = Duration(milliseconds: 360);
 
-  /// Celebration animations (confetti, milestone overlay)
-  static const Duration celebration = Duration(milliseconds: 700);
+  /// Celebration animations (confetti, milestone overlay).
+  static const Duration celebration = Duration(milliseconds: 480);
 
   // ── Curves ─────────────────────────────────────────────────────────────
   /// Default ease for most transitions

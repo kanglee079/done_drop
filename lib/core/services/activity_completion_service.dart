@@ -3,33 +3,59 @@ import 'package:get/get.dart';
 import 'package:done_drop/core/models/activity.dart';
 import 'package:done_drop/core/models/activity_instance.dart';
 import 'package:done_drop/core/models/completion_log.dart';
-import 'package:done_drop/firebase/repositories/activity_repository.dart';
-import 'package:done_drop/core/services/connectivity_service.dart';
-import 'package:done_drop/core/services/offline_queue_service.dart';
-import 'package:done_drop/core/services/local_cache_service.dart';
-import 'package:done_drop/app/presentation/streak/streak_controller.dart';
+import 'package:done_drop/core/constants/app_constants.dart';
 
-/// Single source of truth for completing an activity.
-///
-/// Replaces the duplicated completion logic that previously existed in:
-/// - HomeController.completeActivity()
-/// - HomeController.completeAndOpenCapture()
-/// - MomentController.completeAndPrepareCapture()
-/// - ActivityController.completeActivity()
-///
-/// Handles both online and offline flows consistently:
-/// - Online: completes instance, creates log, increments streak, invalidates cache
-/// - Offline: queues operations, updates local state optimistically
-///
-/// Returns a [CompletionResult] so the caller can decide what to do next
-/// (show reward sheet, navigate to capture, etc).
-class ActivityCompletionService extends GetxService {
-  ActivityCompletionService(this._activityRepo);
+abstract class HabitCompletionRepository {
+  Future<ActivityInstance> getOrCreateTodayInstance(
+    String activityId,
+    String ownerId,
+  );
 
-  final ActivityRepository _activityRepo;
+  Future<void> completeInstance(String instanceId, {String? momentId});
+
+  Future<void> createCompletionLog(CompletionLog log);
+
+  Future<void> incrementStreak(String activityId);
+}
+
+abstract class ConnectivityStatusReader {
+  bool get isOnlineNow;
+}
+
+abstract class HabitCompletionQueue {
+  Future<void> queueCompleteHabit({
+    required String activityId,
+    required String instanceId,
+    required String ownerId,
+    required String completionLogId,
+    required DateTime completedAt,
+  });
+}
+
+/// Single completion pipeline for DoneDrop's discipline loop.
+///
+/// Both "Complete now" and "Complete + proof" use this flow first.
+/// UI layers only decide what happens after a successful completion.
+class CompleteHabitUseCase {
+  CompleteHabitUseCase({
+    required HabitCompletionRepository activityRepository,
+    required ConnectivityStatusReader connectivity,
+    required HabitCompletionQueue offlineQueue,
+    required Future<void> Function() invalidateTodayInstances,
+    this.onCompletionHaptic = HapticFeedback.mediumImpact,
+  }) : _activityRepository = activityRepository,
+       _connectivity = connectivity,
+       _offlineQueue = offlineQueue,
+       _invalidateTodayInstances = invalidateTodayInstances;
+
+  final HabitCompletionRepository _activityRepository;
+  final ConnectivityStatusReader _connectivity;
+  final HabitCompletionQueue _offlineQueue;
+  final Future<void> Function() _invalidateTodayInstances;
+  final Future<void> Function() onCompletionHaptic;
 
   /// Reactive map of today's instances — shared with HomeController for
-  /// optimistic local updates even when offline.
+  /// optimistic local updates and immediate post-completion UI.
   RxMap<String, ActivityInstance>? _todayInstances;
 
   /// Reactive activity list — needed for streak milestone detection.
@@ -45,29 +71,24 @@ class ActivityCompletionService extends GetxService {
     _activities = activities;
   }
 
-  /// Complete an activity for today.
+  /// Completes a habit for the current day.
   ///
-  /// This is the ONLY entry point for marking an activity done.
-  /// Both "quick complete" and "complete + proof" call this first.
-  ///
-  /// Returns [CompletionResult] with log and metadata, or null if already completed.
-  Future<CompletionResult?> completeActivity({
+  /// Returns `null` when the instance was already completed.
+  Future<CompletionResult?> call({
     required String activityId,
     required String userId,
   }) async {
     try {
-      // 1. Get or create today's instance
-      final instance =
-          await _activityRepo.getOrCreateTodayInstance(activityId, userId);
+      final instance = await _activityRepository.getOrCreateTodayInstance(
+        activityId,
+        userId,
+      );
       if (instance.isCompleted) return null;
 
-      // 2. Find activity for streak context
-      final activity =
-          _activities?.firstWhereOrNull((a) => a.id == activityId);
+      final activity = _activities?.firstWhereOrNull((a) => a.id == activityId);
       final previousStreak = activity?.currentStreak ?? 0;
-
-      // 3. Create completion log
       final now = DateTime.now();
+
       final logId = 'log_${now.millisecondsSinceEpoch}';
       final log = CompletionLog(
         id: logId,
@@ -78,86 +99,72 @@ class ActivityCompletionService extends GetxService {
         createdAt: now,
       );
 
-      // 4. Check connectivity
-      final connectivity = Get.find<ConnectivityService>();
-      final isOnline = connectivity.isOnline.value;
+      final isOnline = _connectivity.isOnlineNow;
 
       if (!isOnline) {
-        // ── Offline path ──────────────────────────────────────────────
-        final queue = Get.find<OfflineQueueService>();
-        await queue.queueCompleteActivity(
+        await _offlineQueue.queueCompleteHabit(
           activityId: activityId,
           instanceId: instance.id,
           ownerId: userId,
           completionLogId: logId,
+          completedAt: now,
         );
-
-        // Optimistic local update so UI reacts immediately
-        _applyOptimisticUpdate(instance, activityId, previousStreak);
       } else {
-        // ── Online path ───────────────────────────────────────────────
-        await _activityRepo.completeInstance(instance.id);
-        await _activityRepo.createCompletionLog(log);
-        await _activityRepo.incrementStreak(activityId);
-        await LocalCacheService.instance.invalidateTodayInstances();
+        await _activityRepository.completeInstance(instance.id);
+        await _activityRepository.createCompletionLog(log);
+        await _activityRepository.incrementStreak(activityId);
+        await _invalidateTodayInstances();
       }
 
-      // 5. Haptic feedback
-      HapticFeedback.mediumImpact();
+      final updatedInstance = instance.copyWith(
+        status: AppConstants.instanceStatusCompleted,
+        completedAt: now,
+        updatedAt: now,
+      );
+      final updatedActivity = activity?.copyWith(
+        currentStreak: previousStreak + 1,
+        longestStreak: (previousStreak + 1) > activity.longestStreak
+            ? previousStreak + 1
+            : activity.longestStreak,
+        lastCompletedAt: now,
+        updatedAt: now,
+      );
 
-      // 6. Trigger milestone celebration (works for both online/offline)
-      _triggerMilestoneCelebration(activity, previousStreak, previousStreak + 1);
+      _applyOptimisticUpdate(
+        activityId: activityId,
+        updatedInstance: updatedInstance,
+        updatedActivity: updatedActivity,
+      );
+      await onCompletionHaptic();
 
       return CompletionResult(
         log: log,
+        instance: updatedInstance,
+        activity: updatedActivity,
         activityId: activityId,
         previousStreak: previousStreak,
         newStreak: previousStreak + 1,
         wasOffline: !isOnline,
       );
     } catch (e) {
-      // Surface the error to the caller so UI can present it.
-      Get.log('ActivityCompletionService.completeActivity failed: $e');
+      Get.log('CompleteHabitUseCase.call failed: $e');
       rethrow;
     }
   }
 
-  /// Apply optimistic update to the local reactive state so UI updates
-  /// immediately even when offline.
-  void _applyOptimisticUpdate(
-    ActivityInstance instance,
-    String activityId,
-    int previousStreak,
-  ) {
-    if (_todayInstances == null) return;
+  void _applyOptimisticUpdate({
+    required String activityId,
+    required ActivityInstance updatedInstance,
+    required Activity? updatedActivity,
+  }) {
+    _todayInstances?[activityId] = updatedInstance;
 
-    // Mark instance completed locally
-    final updatedInstance = ActivityInstance(
-      id: instance.id,
-      activityId: instance.activityId,
-      ownerId: instance.ownerId,
-      date: instance.date,
-      status: 'completed',
-      completedAt: DateTime.now(),
-      createdAt: instance.createdAt,
-      updatedAt: DateTime.now(),
+    if (_activities == null || updatedActivity == null) return;
+    final activityIndex = _activities!.indexWhere(
+      (activity) => activity.id == activityId,
     );
-    _todayInstances![activityId] = updatedInstance;
-  }
-
-  void _triggerMilestoneCelebration(
-    Activity? activity,
-    int before,
-    int after,
-  ) {
-    if (activity == null) return;
-    if (!Get.isRegistered<StreakController>()) return;
-    final streakCtrl = Get.find<StreakController>();
-    streakCtrl.onActivityCompleted(
-      activity: activity,
-      previousStreak: before,
-      newStreak: after,
-    );
+    if (activityIndex == -1) return;
+    _activities![activityIndex] = updatedActivity;
   }
 }
 
@@ -166,6 +173,8 @@ class ActivityCompletionService extends GetxService {
 class CompletionResult {
   const CompletionResult({
     required this.log,
+    required this.instance,
+    required this.activity,
     required this.activityId,
     required this.previousStreak,
     required this.newStreak,
@@ -173,8 +182,13 @@ class CompletionResult {
   });
 
   final CompletionLog log;
+  final ActivityInstance instance;
+  final Activity? activity;
   final String activityId;
   final int previousStreak;
   final int newStreak;
   final bool wasOffline;
 }
+
+@Deprecated('Use CompleteHabitUseCase instead.')
+typedef ActivityCompletionService = CompleteHabitUseCase;

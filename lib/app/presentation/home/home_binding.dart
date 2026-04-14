@@ -5,10 +5,15 @@ import 'home_controller.dart';
 import 'navigation_controller.dart';
 import '../feed/feed_controller.dart';
 import '../streak/streak_controller.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:done_drop/firebase/repositories/activity_repository.dart';
 import 'package:done_drop/firebase/repositories/friend_repository.dart';
+import 'package:done_drop/firebase/repositories/moment_repository.dart';
 import 'package:done_drop/core/services/activity_completion_service.dart';
+import 'package:done_drop/core/services/connectivity_service.dart';
+import 'package:done_drop/core/services/offline_queue_service.dart';
+import 'package:done_drop/core/services/local_cache_service.dart';
+import 'package:done_drop/app/presentation/memory_wall/memory_wall_controller.dart';
+import 'package:done_drop/app/presentation/settings/settings_controller.dart';
 
 /// Home screen dependency injection.
 class HomeBinding extends Bindings {
@@ -16,13 +21,18 @@ class HomeBinding extends Bindings {
   void dependencies() {
     Get.lazyPut<NavigationController>(() => NavigationController());
     Get.lazyPut<StreakController>(() => StreakController());
-    Get.lazyPut<ActivityRepository>(
-        () => ActivityRepository(FirebaseFirestore.instance));
 
-    // Register ActivityCompletionService — single source of truth for
+    // Register CompleteHabitUseCase — single source of truth for
     // marking activities done (both online and offline).
-    Get.lazyPut<ActivityCompletionService>(
-        () => ActivityCompletionService(Get.find<ActivityRepository>()));
+    Get.lazyPut<CompleteHabitUseCase>(
+      () => CompleteHabitUseCase(
+        activityRepository: Get.find<ActivityRepository>(),
+        connectivity: Get.find<ConnectivityService>(),
+        offlineQueue: Get.find<OfflineQueueService>(),
+        invalidateTodayInstances: () =>
+            LocalCacheService.instance.invalidateTodayInstances(),
+      ),
+    );
 
     Get.lazyPut<HomeController>(
       () => HomeController(
@@ -32,8 +42,12 @@ class HomeBinding extends Bindings {
         Get.find<FriendRepository>(),
       ),
     );
-    Get.lazyPut<FeedController>(() => FeedController());
-    // NOTE: MomentController is NOT pre-registered here.
-    // It is created when entering the capture flow and deleted after success.
+    Get.lazyPut<FeedController>(
+      () => FeedController(Get.find<ActivityRepository>()),
+    );
+    Get.lazyPut<MemoryWallController>(
+      () => MemoryWallController(Get.find<MomentRepository>()),
+    );
+    Get.lazyPut<SettingsController>(() => SettingsController());
   }
 }

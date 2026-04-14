@@ -12,10 +12,13 @@ import 'package:done_drop/app/routes/app_routes.dart';
 import 'package:done_drop/core/services/local_cache_service.dart';
 import 'package:done_drop/core/services/activity_completion_service.dart';
 import 'package:done_drop/core/theme/theme.dart';
+import 'package:done_drop/app/presentation/streak/streak_controller.dart';
+
+enum HabitActionState { none, quickComplete, completeWithProof }
 
 /// Home controller — provides data to HomeScreen tabs.
 ///
-/// Completion logic is delegated to [ActivityCompletionService] —
+/// Completion logic is delegated to [CompleteHabitUseCase] —
 /// there is exactly ONE code path for marking an activity done.
 class HomeController extends GetxController {
   HomeController(
@@ -39,6 +42,9 @@ class HomeController extends GetxController {
   /// Active activities
   final RxList<Activity> activities = <Activity>[].obs;
 
+  /// Archived activities shown in Me.
+  final RxList<Activity> archivedActivities = <Activity>[].obs;
+
   /// Today's instances mapped by activityId
   final RxMap<String, ActivityInstance> todayInstances =
       <String, ActivityInstance>{}.obs;
@@ -58,6 +64,10 @@ class HomeController extends GetxController {
   /// Loading state: false once cached data is loaded (never blocks UI after first paint).
   final RxBool isLoading = true.obs;
 
+  /// In-flight completion actions keyed by activity id.
+  final RxMap<String, HabitActionState> actionStates =
+      <String, HabitActionState>{}.obs;
+
   @override
   void onInit() {
     super.onInit();
@@ -68,8 +78,8 @@ class HomeController extends GetxController {
   /// Bind our reactive state to the completion service so it can do
   /// optimistic local updates when offline.
   void _bindCompletionService() {
-    if (Get.isRegistered<ActivityCompletionService>()) {
-      final service = Get.find<ActivityCompletionService>();
+    if (Get.isRegistered<CompleteHabitUseCase>()) {
+      final service = Get.find<CompleteHabitUseCase>();
       service.bindReactiveState(
         todayInstances: todayInstances,
         activities: activities,
@@ -85,8 +95,9 @@ class HomeController extends GetxController {
     final cachedInsts = cache.loadCachedTodayInstances();
 
     if (cachedActs.isNotEmpty) {
-      activities.value =
-          cachedActs.map((m) => Activity.fromFirestore(m)).toList();
+      activities.value = cachedActs
+          .map((m) => Activity.fromFirestore(m))
+          .toList();
     }
     if (cachedInsts.isNotEmpty) {
       todayInstances.clear();
@@ -153,6 +164,10 @@ class HomeController extends GetxController {
     _activityRepo.watchCompletionLogs(uid, limit: 100).listen((logs) {
       weekLogs.value = logs;
     });
+
+    _activityRepo.watchArchivedActivities(uid).listen((list) {
+      archivedActivities.value = list;
+    });
   }
 
   void _watchTodayInstances() {
@@ -174,16 +189,76 @@ class HomeController extends GetxController {
   void _recalcStats() {
     final instances = todayInstances.values.toList();
     completedToday.value = instances.where((i) => i.isCompleted).length;
-    pendingToday.value =
-        instances.where((i) => i.isPending && !i.isOverdue).length;
+    pendingToday.value = instances
+        .where((i) => i.isPending && !i.isOverdue)
+        .length;
     overdueToday.value = instances.where((i) => i.isOverdue).length;
 
     if (activities.isNotEmpty) {
       currentBestStreak.value = activities
           .map((a) => a.longestStreak)
           .reduce((a, b) => a > b ? a : b);
+    } else {
+      currentBestStreak.value = 0;
     }
   }
+
+  String get greetingName {
+    final displayName = profile.value?.displayName.trim();
+    if (displayName == null || displayName.isEmpty) {
+      return 'you';
+    }
+    return displayName.split(' ').first;
+  }
+
+  int get totalHabits => activities.length;
+
+  double get todayProgress =>
+      activities.isEmpty ? 0 : completedToday.value / activities.length;
+
+  List<Activity> get overdueActivities => activities
+      .where((activity) => isOverdue(activity.id))
+      .toList(growable: false);
+
+  List<Activity> get openHabits => activities
+      .where(
+        (activity) => !isOverdue(activity.id) && !isCompletedToday(activity.id),
+      )
+      .toList(growable: false);
+
+  Activity? get nextUpHabit => openHabits.firstOrNull;
+
+  List<Activity> get laterTodayHabits => nextUpHabit == null
+      ? const <Activity>[]
+      : openHabits.skip(1).toList(growable: false);
+
+  List<Activity> get completedHabits => activities
+      .where((activity) => isCompletedToday(activity.id))
+      .toList(growable: false);
+
+  List<Activity> get proofCapturedHabits => completedHabits
+      .where(
+        (activity) => (todayInstances[activity.id]?.momentId ?? '').isNotEmpty,
+      )
+      .toList(growable: false);
+
+  int get reminderCount =>
+      activities.where((activity) => activity.hasReminder).length;
+
+  int get weeklyCompletionCount {
+    final now = DateTime.now();
+    final weekStart = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).subtract(const Duration(days: 6));
+    return weekLogs.where((log) => !log.completedAt.isBefore(weekStart)).length;
+  }
+
+  bool isActionBusy(String activityId) => actionStates.containsKey(activityId);
+
+  HabitActionState actionStateFor(String activityId) =>
+      actionStates[activityId] ?? HabitActionState.none;
 
   /// Check if an activity is completed today.
   bool isCompletedToday(String activityId) =>
@@ -239,54 +314,33 @@ class HomeController extends GetxController {
   }
 
   /// Complete an activity for today.
-  /// Delegates to [ActivityCompletionService] for consistent online/offline handling.
+  /// Delegates to [CompleteHabitUseCase] for consistent online/offline handling.
   /// Returns the [CompletionResult] so UI can decide next steps.
   Future<CompletionResult?> completeActivity(String activityId) async {
-    final uid = _userId;
-    if (uid == null) return null;
-
-    try {
-      final service = Get.find<ActivityCompletionService>();
-      final result = await service.completeActivity(
-        activityId: activityId,
-        userId: uid,
-      );
-
-      if (result != null) {
-        // Recalc stats after completion (Firestore stream may not have
-        // fired yet, especially in offline mode).
-        _recalcStats();
-      }
-
-      return result;
-    } catch (e) {
-      Get.snackbar(
-        'Completion failed',
-        'Could not complete activity. Please try again.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppColors.error,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 3),
-      );
-      return null;
-    }
+    return _runCompletionAction(
+      activityId: activityId,
+      actionState: HabitActionState.quickComplete,
+      afterSuccess: (_) async {},
+    );
   }
 
   /// Complete an activity and immediately open camera to capture proof moment.
-  /// Uses the same [ActivityCompletionService] as quick-complete, then navigates.
+  /// Uses the same [CompleteHabitUseCase] as quick-complete, then navigates.
   Future<CompletionResult?> completeAndOpenCapture(String activityId) async {
-    final result = await completeActivity(activityId);
-    if (result == null) return null;
-
-    Get.toNamed(
-      AppRoutes.capture,
-      arguments: {
-        'activityId': activityId,
-        'completionLogId': result.log.id,
+    return _runCompletionAction(
+      activityId: activityId,
+      actionState: HabitActionState.completeWithProof,
+      afterSuccess: (result) async {
+        await Get.toNamed(
+          AppRoutes.capture,
+          arguments: {
+            'activityId': activityId,
+            'activityInstanceId': result.instance.id,
+            'completionLogId': result.log.id,
+          },
+        );
       },
     );
-
-    return result;
   }
 
   /// Archive an activity.
@@ -298,8 +352,10 @@ class HomeController extends GetxController {
   Future<void> missActivity(String activityId) async {
     final uid = _userId;
     if (uid == null) return;
-    final instance =
-        await _activityRepo.getOrCreateTodayInstance(activityId, uid);
+    final instance = await _activityRepo.getOrCreateTodayInstance(
+      activityId,
+      uid,
+    );
     if (!instance.isCompleted) {
       await _activityRepo.missInstance(instance.id);
       await _activityRepo.resetStreak(activityId);
@@ -310,5 +366,52 @@ class HomeController extends GetxController {
   Future<void> signOut() async {
     await LocalCacheService.instance.clearAll();
     await _authController.signOut();
+  }
+
+  Future<CompletionResult?> _runCompletionAction({
+    required String activityId,
+    required HabitActionState actionState,
+    required Future<void> Function(CompletionResult result) afterSuccess,
+  }) async {
+    final uid = _userId;
+    if (uid == null || isActionBusy(activityId)) return null;
+
+    actionStates[activityId] = actionState;
+
+    try {
+      final useCase = Get.find<CompleteHabitUseCase>();
+      final result = await useCase(activityId: activityId, userId: uid);
+
+      if (result != null) {
+        _recalcStats();
+        _notifyStreakMilestone(result);
+        await afterSuccess(result);
+      }
+
+      return result;
+    } catch (_) {
+      Get.snackbar(
+        'Completion failed',
+        'Could not complete habit. Please try again.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppColors.error,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 3),
+      );
+      return null;
+    } finally {
+      actionStates.remove(activityId);
+    }
+  }
+
+  void _notifyStreakMilestone(CompletionResult result) {
+    if (!Get.isRegistered<StreakController>()) return;
+    final activity = result.activity;
+    if (activity == null) return;
+    Get.find<StreakController>().onActivityCompleted(
+      activity: activity,
+      previousStreak: result.previousStreak,
+      newStreak: result.newStreak,
+    );
   }
 }

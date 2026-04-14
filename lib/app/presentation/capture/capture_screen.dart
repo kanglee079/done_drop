@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:image_picker/image_picker.dart' as img_picker;
-import '../../../core/theme/theme.dart';
-import '../../../core/services/analytics_service.dart';
-import '../../routes/app_routes.dart';
+import 'package:image_picker/image_picker.dart' as image_picker;
+import 'package:done_drop/app/presentation/capture/moment_controller.dart';
+import 'package:done_drop/app/routes/app_routes.dart';
+import 'package:done_drop/core/services/analytics_service.dart';
+import 'package:done_drop/core/theme/theme.dart';
 
-/// DoneDrop Capture Screen — Camera / gallery selection or immediate capture for proof moments.
-///
-/// Two modes:
-/// 1. Free capture — user opens screen, picks camera or gallery (default)
-/// 2. Proof moment — opened from activity completion, immediately opens camera
 class CaptureScreen extends StatefulWidget {
   const CaptureScreen({super.key});
 
@@ -18,25 +14,18 @@ class CaptureScreen extends StatefulWidget {
 }
 
 class _CaptureScreenState extends State<CaptureScreen> {
-  final _picker = img_picker.ImagePicker();
-  bool _isProofMoment = false;
-  String? _activityId;
-  String? _completionLogId;
+  final _picker = image_picker.ImagePicker();
+  final _controller = Get.find<MomentController>();
   bool _isLoading = false;
+
+  bool get _isProofMoment => _controller.isProofMoment;
 
   @override
   void initState() {
     super.initState();
-    _initProofContext();
-  }
+    _controller.startCaptureSession(Get.arguments as Map<String, dynamic>?);
 
-  void _initProofContext() {
-    final args = Get.arguments as Map<String, dynamic>?;
-    if (args != null && args['activityId'] != null) {
-      _isProofMoment = true;
-      _activityId = args['activityId'] as String?;
-      _completionLogId = args['completionLogId'] as String?;
-      // Immediately open camera for proof moment
+    if (_isProofMoment) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _pickFromCamera();
       });
@@ -44,60 +33,50 @@ class _CaptureScreenState extends State<CaptureScreen> {
   }
 
   Future<void> _pickFromCamera() async {
+    await _pickImage(image_picker.ImageSource.camera);
+  }
+
+  Future<void> _pickFromGallery() async {
+    await _pickImage(image_picker.ImageSource.gallery);
+  }
+
+  Future<void> _pickImage(image_picker.ImageSource source) async {
     if (_isLoading) return;
     setState(() => _isLoading = true);
 
     await AnalyticsService.instance.photoCaptureStarted();
     final image = await _picker.pickImage(
-      source: img_picker.ImageSource.camera,
+      source: source,
       imageQuality: 85,
       maxWidth: 1920,
     );
-    if (image != null) {
-      await AnalyticsService.instance.photoSelected('camera');
-      // Navigate to preview with image path AND proof moment context
-      Get.toNamed(
-        AppRoutes.preview,
-        arguments: {
-          'imagePath': image.path,
-          'activityId': _activityId,
-          'completionLogId': _completionLogId,
-        },
-      );
-    } else {
+
+    if (!mounted) return;
+
+    if (image == null) {
+      setState(() => _isLoading = false);
+      return;
+    }
+
+    await AnalyticsService.instance.photoSelected(
+      source == image_picker.ImageSource.camera ? 'camera' : 'gallery',
+    );
+    _controller.attachImage(image.path);
+
+    await Get.toNamed(AppRoutes.preview, arguments: {'imagePath': image.path});
+
+    if (mounted) {
       setState(() => _isLoading = false);
     }
   }
 
-  Future<void> _pickFromGallery() async {
-    if (_isLoading) return;
-    setState(() => _isLoading = true);
-
-    await AnalyticsService.instance.photoCaptureStarted();
-    final image = await _picker.pickImage(
-      source: img_picker.ImageSource.gallery,
-      imageQuality: 85,
-      maxWidth: 1920,
-    );
-    if (image != null) {
-      await AnalyticsService.instance.photoSelected('gallery');
-      // Navigate to preview with image path AND proof moment context (if any)
-      Get.toNamed(
-        AppRoutes.preview,
-        arguments: {
-          'imagePath': image.path,
-          'activityId': _activityId,
-          'completionLogId': _completionLogId,
-        },
-      );
-    } else {
-      setState(() => _isLoading = false);
-    }
+  Future<bool> _handlePop() async {
+    _controller.resetComposer();
+    return true;
   }
 
   @override
   Widget build(BuildContext context) {
-    // Show loading state when proof moment is auto-opening camera
     if (_isLoading && _isProofMoment) {
       return Scaffold(
         backgroundColor: AppColors.surface,
@@ -108,8 +87,10 @@ class _CaptureScreenState extends State<CaptureScreen> {
               const CircularProgressIndicator(color: AppColors.primary),
               const SizedBox(height: AppSizes.space16),
               Text(
-                'Opening camera...',
-                style: TextStyle(color: AppColors.onSurfaceVariant),
+                'Opening your proof camera…',
+                style: AppTypography.bodyMedium(
+                  color: AppColors.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -117,86 +98,136 @@ class _CaptureScreenState extends State<CaptureScreen> {
       );
     }
 
-    // Normal UI for free capture or when user wants to cancel proof
-    return Scaffold(
-      backgroundColor: AppColors.surface,
-      appBar: AppBar(
-        backgroundColor: AppColors.surface.withValues(alpha: 0.85),
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.close, color: AppColors.primary),
-          onPressed: () => Get.back(),
-        ),
-        title: Text(
-          'Capture',
-          style: TextStyle(
-            fontFamily: AppTypography.serifFamily,
-            fontSize: 20,
-            fontStyle: FontStyle.italic,
-            color: AppColors.primary,
+    return WillPopScope(
+      onWillPop: _handlePop,
+      child: Scaffold(
+        backgroundColor: AppColors.surface,
+        appBar: AppBar(
+          backgroundColor: AppColors.surface.withValues(alpha: 0.92),
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.close, color: AppColors.primary),
+            onPressed: () {
+              _controller.resetComposer();
+              Get.back();
+            },
+          ),
+          title: Text(
+            _isProofMoment ? 'Proof Capture' : 'Capture',
+            style: AppTypography.titleLarge(color: AppColors.onSurface),
           ),
         ),
-        centerTitle: true,
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSizes.space24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                _isProofMoment ? 'Capture Your Proof' : 'Capture a Moment',
-                style: TextStyle(
-                  fontFamily: AppTypography.serifFamily,
-                  fontSize: 32,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.onSurface,
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSizes.space24,
+              AppSizes.space8,
+              AppSizes.space24,
+              AppSizes.space24,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(AppSizes.space24),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [AppColors.primary, AppColors.primaryContainer],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: AppSizes.borderRadiusLg,
+                    boxShadow: AppColors.cardShadow,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSizes.space12,
+                          vertical: AppSizes.space8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.14),
+                          borderRadius: AppSizes.borderRadiusFull,
+                        ),
+                        child: Text(
+                          _isProofMoment
+                              ? 'Complete + proof'
+                              : 'Save or share later',
+                          style: AppTypography.labelMedium(
+                            color: AppColors.onPrimary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: AppSizes.space20),
+                      Text(
+                        _isProofMoment
+                            ? 'Capture the proof while the win is fresh.'
+                            : 'Add a photo when the moment matters.',
+                        style: AppTypography.headlineSmall(
+                          color: AppColors.onPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: AppSizes.space8),
+                      Text(
+                        _isProofMoment
+                            ? 'This keeps the habit completion linked to the exact instance you just finished.'
+                            : 'You can keep it private, attach it to a habit later, or share it with your buddy circle.',
+                        style: AppTypography.bodyMedium(
+                          color: AppColors.onPrimary.withValues(alpha: 0.84),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                _isProofMoment
-                    ? 'Complete it. Capture the proof.'
-                    : 'Complete it. Capture it. Share the moment.',
-                style: TextStyle(
-                  fontSize: 15,
-                  color: AppColors.onSurfaceVariant,
+                const SizedBox(height: AppSizes.space24),
+                Text(
+                  'Choose source',
+                  style: AppTypography.labelMedium(
+                    color: AppColors.onSurfaceVariant,
+                  ),
                 ),
-              ),
-              const Spacer(),
-              Row(
-                children: [
-                  Expanded(
-                    child: _CaptureOption(
-                      icon: Icons.camera_alt_outlined,
-                      title: 'Camera',
-                      desc: 'Take a photo now',
-                      onTap: _pickFromCamera,
+                const SizedBox(height: AppSizes.space12),
+                Expanded(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _CaptureOptionCard(
+                          icon: Icons.camera_alt_outlined,
+                          title: 'Camera',
+                          description: 'Take a proof photo right now.',
+                          onTap: _pickFromCamera,
+                        ),
+                      ),
+                      const SizedBox(width: AppSizes.space16),
+                      Expanded(
+                        child: _CaptureOptionCard(
+                          icon: Icons.photo_library_outlined,
+                          title: 'Gallery',
+                          description: 'Use a recent moment from your roll.',
+                          onTap: _pickFromGallery,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSizes.space24),
+                Center(
+                  child: TextButton(
+                    onPressed: () {
+                      _controller.resetComposer();
+                      Get.back();
+                    },
+                    child: Text(
+                      'Cancel',
+                      style: AppTypography.labelLarge(color: AppColors.outline),
                     ),
                   ),
-                  const SizedBox(width: AppSizes.space16),
-                  Expanded(
-                    child: _CaptureOption(
-                      icon: Icons.photo_library_outlined,
-                      title: 'Gallery',
-                      desc: 'Choose from library',
-                      onTap: _pickFromGallery,
-                    ),
-                  ),
-                ],
-              ),
-              const Spacer(),
-              Center(
-                child: TextButton(
-                  onPressed: () => Get.back(),
-                  child: const Text(
-                    'Cancel',
-                    style: TextStyle(color: AppColors.outline),
-                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -204,50 +235,60 @@ class _CaptureScreenState extends State<CaptureScreen> {
   }
 }
 
-class _CaptureOption extends StatelessWidget {
-  const _CaptureOption({
+class _CaptureOptionCard extends StatelessWidget {
+  const _CaptureOptionCard({
     required this.icon,
     required this.title,
-    required this.desc,
+    required this.description,
     required this.onTap,
   });
 
   final IconData icon;
   final String title;
-  final String desc;
+  final String description;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(AppSizes.space32),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLow,
-          borderRadius: AppSizes.borderRadiusLg,
-        ),
-        child: Column(
-          children: [
-            Icon(icon, size: 48, color: AppColors.primary),
-            const SizedBox(height: AppSizes.space16),
-            Text(
-              title,
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 16,
-                color: AppColors.onSurface,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: AppSizes.borderRadiusLg,
+        onTap: onTap,
+        child: Ink(
+          decoration: BoxDecoration(
+            color: AppColors.surfaceContainerLowest,
+            borderRadius: AppSizes.borderRadiusLg,
+            border: Border.all(color: AppColors.outlineVariant),
+            boxShadow: AppColors.cardShadow,
+          ),
+          padding: const EdgeInsets.all(AppSizes.space24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: AppColors.primaryFixed,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Icon(icon, color: AppColors.primary, size: 26),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              desc,
-              style: const TextStyle(
-                fontSize: 12,
-                color: AppColors.onSurfaceVariant,
+              const Spacer(),
+              Text(
+                title,
+                style: AppTypography.titleMedium(color: AppColors.onSurface),
               ),
-            ),
-          ],
+              const SizedBox(height: AppSizes.space8),
+              Text(
+                description,
+                style: AppTypography.bodySmall(
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

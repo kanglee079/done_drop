@@ -3,9 +3,10 @@ import 'package:done_drop/core/constants/app_constants.dart';
 import 'package:done_drop/core/models/activity.dart';
 import 'package:done_drop/core/models/activity_instance.dart';
 import 'package:done_drop/core/models/completion_log.dart';
+import 'package:done_drop/core/services/activity_completion_service.dart';
 
 /// Repository for discipline activities, instances, and completion logs.
-class ActivityRepository {
+class ActivityRepository implements HabitCompletionRepository {
   ActivityRepository(this._db);
   final FirebaseFirestore _db;
 
@@ -27,8 +28,10 @@ class ActivityRepository {
         .where('ownerId', isEqualTo: userId)
         .where('isArchived', isEqualTo: false)
         .snapshots()
-        .map((snap) =>
-            snap.docs.map((d) => Activity.fromFirestore(d.data())).toList());
+        .map(
+          (snap) =>
+              snap.docs.map((d) => Activity.fromFirestore(d.data())).toList(),
+        );
   }
 
   Stream<List<Activity>> watchArchivedActivities(String userId) {
@@ -36,8 +39,10 @@ class ActivityRepository {
         .where('ownerId', isEqualTo: userId)
         .where('isArchived', isEqualTo: true)
         .snapshots()
-        .map((snap) =>
-            snap.docs.map((d) => Activity.fromFirestore(d.data())).toList());
+        .map(
+          (snap) =>
+              snap.docs.map((d) => Activity.fromFirestore(d.data())).toList(),
+        );
   }
 
   Future<Activity?> getActivity(String activityId) async {
@@ -103,7 +108,11 @@ class ActivityRepository {
   // ══════════════════════════════════════════════════════════════════
 
   /// Get instance for a specific activity on a specific date.
-  Future<ActivityInstance?> getInstance(String activityId, String ownerId, DateTime date) async {
+  Future<ActivityInstance?> getInstance(
+    String activityId,
+    String ownerId,
+    DateTime date,
+  ) async {
     final dateStr = _dateToString(date);
     final snap = await _instanceCol
         .where('ownerId', isEqualTo: ownerId)
@@ -122,9 +131,11 @@ class ActivityRepository {
         .where('ownerId', isEqualTo: userId)
         .where('date', isEqualTo: today)
         .snapshots()
-        .map((snap) => snap.docs
-            .map((d) => ActivityInstance.fromFirestore(d.data()))
-            .toList());
+        .map(
+          (snap) => snap.docs
+              .map((d) => ActivityInstance.fromFirestore(d.data()))
+              .toList(),
+        );
   }
 
   /// Create or get today's instance for an activity.
@@ -161,10 +172,7 @@ class ActivityRepository {
   }
 
   /// Mark instance as completed with optional moment link.
-  Future<void> completeInstance(
-    String instanceId, {
-    String? momentId,
-  }) async {
+  Future<void> completeInstance(String instanceId, {String? momentId}) async {
     final now = DateTime.now();
     await _instanceCol.doc(instanceId).update({
       'status': AppConstants.instanceStatusCompleted,
@@ -193,7 +201,10 @@ class ActivityRepository {
   /// Ensure activity instances exist for today + next N days for all active activities.
   /// Called at app startup to pre-generate instances so pending/complete tracking
   /// is ready from day one.
-  Future<void> ensureUpcomingInstances(String userId, {int daysAhead = 7}) async {
+  Future<void> ensureUpcomingInstances(
+    String userId, {
+    int daysAhead = 7,
+  }) async {
     final snap = await _activityCol
         .where('ownerId', isEqualTo: userId)
         .where('isArchived', isEqualTo: false)
@@ -252,21 +263,28 @@ class ActivityRepository {
     await _logCol.doc(log.id).set(log.toFirestore());
   }
 
-  Stream<List<CompletionLog>> watchCompletionLogs(String userId, {int limit = 50}) {
+  Stream<List<CompletionLog>> watchCompletionLogs(
+    String userId, {
+    int limit = 50,
+  }) {
     return _logCol
         .where('ownerId', isEqualTo: userId)
         .orderBy('completedAt', descending: true)
         .limit(limit)
         .snapshots()
-        .map((snap) =>
-            snap.docs.map((d) => CompletionLog.fromFirestore(d.data())).toList());
+        .map(
+          (snap) => snap.docs
+              .map((d) => CompletionLog.fromFirestore(d.data()))
+              .toList(),
+        );
   }
 
   /// Update CompletionLog with the momentId after a proof moment is posted.
-  Future<void> updateCompletionLogMomentId(String completionLogId, String momentId) async {
-    await _logCol.doc(completionLogId).update({
-      'momentId': momentId,
-    });
+  Future<void> updateCompletionLogMomentId(
+    String completionLogId,
+    String momentId,
+  ) async {
+    await _logCol.doc(completionLogId).update({'momentId': momentId});
   }
 
   /// Count completions for an activity within a date range.
@@ -302,7 +320,11 @@ class ActivityRepository {
 
     for (final doc in snap.docs) {
       final log = CompletionLog.fromFirestore(doc.data());
-      final logDate = DateTime(log.completedAt.year, log.completedAt.month, log.completedAt.day);
+      final logDate = DateTime(
+        log.completedAt.year,
+        log.completedAt.month,
+        log.completedAt.day,
+      );
 
       if (prevDate == null) {
         streak = 1;

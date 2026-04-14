@@ -3,11 +3,13 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:done_drop/core/constants/app_constants.dart';
 import 'package:done_drop/core/models/models.dart';
 import 'package:done_drop/core/models/feed_delivery.dart';
+import 'package:done_drop/core/services/feed_delivery_planner.dart';
 
 /// DoneDrop Firestore Repository — Moment operations
 class MomentRepository {
   MomentRepository(this._db);
   final FirebaseFirestore _db;
+  final FeedDeliveryPlanner _deliveryPlanner = const FeedDeliveryPlanner();
 
   CollectionReference<Map<String, dynamic>> get _col =>
       _db.collection(AppConstants.colMoments);
@@ -68,11 +70,11 @@ class MomentRepository {
         .orderBy('createdAt', descending: true)
         .limit(limit)
         .snapshots()
-        .map((snap) =>
-            snap.docs.map((d) => Moment.fromFirestore(d.data())).toList());
+        .map(
+          (snap) =>
+              snap.docs.map((d) => Moment.fromFirestore(d.data())).toList(),
+        );
   }
-
-
 
   // ── Private Friend Feed ──────────────────────────────────────────────
 
@@ -84,37 +86,39 @@ class MomentRepository {
     required String visibility,
     required List<String> recipientIds,
   }) async {
-    if (recipientIds.isEmpty) return;
+    final deliveries = _deliveryPlanner.buildDeliveries(
+      momentId: momentId,
+      ownerId: ownerId,
+      visibility: visibility,
+      createdAt: DateTime.now(),
+      recipientIds: recipientIds,
+    );
+    if (deliveries.isEmpty) return;
 
     final batch = _db.batch();
-    final now = DateTime.now();
 
-    for (final recipientId in recipientIds) {
-      final docId = 'fd_${momentId}_$recipientId';
-      final delivery = FeedDelivery(
-        id: docId,
-        recipientId: recipientId,
-        momentId: momentId,
-        ownerId: ownerId,
-        visibility: visibility,
-        createdAt: now,
-      );
-      batch.set(_feedDeliveryCol.doc(docId), delivery.toFirestore());
+    for (final delivery in deliveries) {
+      batch.set(_feedDeliveryCol.doc(delivery.id), delivery.toFirestore());
     }
 
     await batch.commit();
   }
 
   /// Watch feed deliveries for a user (private friend feed).
-  Stream<List<FeedDelivery>> watchFeedDeliveries(String userId, {int limit = 50}) {
+  Stream<List<FeedDelivery>> watchFeedDeliveries(
+    String userId, {
+    int limit = 50,
+  }) {
     return _feedDeliveryCol
         .where('recipientId', isEqualTo: userId)
         .orderBy('createdAt', descending: true)
         .limit(limit)
         .snapshots()
-        .map((snap) => snap.docs
-            .map((d) => FeedDelivery.fromFirestore(d.data()))
-            .toList());
+        .map(
+          (snap) => snap.docs
+              .map((d) => FeedDelivery.fromFirestore(d.data()))
+              .toList(),
+        );
   }
 
   /// Mark a feed delivery as read.
@@ -144,7 +148,9 @@ class MomentRepository {
 
   /// Delete feed deliveries when a moment is deleted.
   Future<void> deleteFeedDeliveriesForMoment(String momentId) async {
-    final snap = await _feedDeliveryCol.where('momentId', isEqualTo: momentId).get();
+    final snap = await _feedDeliveryCol
+        .where('momentId', isEqualTo: momentId)
+        .get();
     final batch = _db.batch();
     for (final d in snap.docs) {
       batch.delete(d.reference);
@@ -171,8 +177,10 @@ class MomentRepository {
     return _reactionCol
         .where('momentId', isEqualTo: momentId)
         .snapshots()
-        .map((snap) =>
-            snap.docs.map((d) => Reaction.fromFirestore(d.data())).toList());
+        .map(
+          (snap) =>
+              snap.docs.map((d) => Reaction.fromFirestore(d.data())).toList(),
+        );
   }
 
   // ── Task Templates ────────────────────────────────────────────────────
