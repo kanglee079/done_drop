@@ -24,8 +24,34 @@ void main() {
     });
 
     test(
+      'already-completed instance returns null without side-effects',
+      () async {
+        repository.instance = repository.instance.copyWith(status: 'completed');
+
+        final useCase = CompleteHabitUseCase(
+          activityRepository: repository,
+          connectivity: connectivity,
+          offlineQueue: queue,
+          invalidateTodayInstances: () async => cacheInvalidated = true,
+          onCompletionHaptic: () async => hapticCount++,
+        );
+
+        final result = await useCase(activityId: 'habit-1', userId: 'user-1');
+
+        expect(result, isNull);
+        expect(repository.completedInstanceIds, isEmpty);
+        expect(repository.createdLogs, isEmpty);
+        expect(queue.calls, isEmpty);
+        expect(cacheInvalidated, isFalse);
+        expect(hapticCount, 0);
+      },
+    );
+
+    test(
       'completes online through a single pipeline and updates bound state',
       () async {
+        repository.instance = repository.instance.copyWith(status: 'pending');
+
         final useCase = CompleteHabitUseCase(
           activityRepository: repository,
           connectivity: connectivity,
@@ -67,6 +93,7 @@ void main() {
     );
 
     test('queues offline completion with exact instance context', () async {
+      repository.instance = repository.instance.copyWith(status: 'pending');
       connectivity = FakeConnectivity(false);
 
       final useCase = CompleteHabitUseCase(
@@ -114,7 +141,10 @@ void main() {
 }
 
 class FakeCompletionRepository implements HabitCompletionRepository {
-  final ActivityInstance instance = ActivityInstance(
+  ActivityInstance instance;
+  FakeCompletionRepository() : instance = _makePendingInstance();
+
+  static ActivityInstance _makePendingInstance() => ActivityInstance(
     id: 'inst-1',
     activityId: 'habit-1',
     ownerId: 'user-1',

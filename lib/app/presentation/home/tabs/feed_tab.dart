@@ -31,7 +31,7 @@ class _FeedTab extends StatelessWidget {
             activityTitle: controller.activityTitleFor(moment),
           );
         },
-        separatorBuilder: (_, __) => const SizedBox(height: AppSizes.space16),
+        separatorBuilder: (_, __) => const SizedBox(height: AppSizes.space20),
         itemCount: controller.moments.length,
       );
     });
@@ -135,6 +135,7 @@ class _BuddyMomentCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ── Header ──────────────────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSizes.space16,
@@ -180,10 +181,10 @@ class _BuddyMomentCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                _VisibilityChip(visibility: moment.visibility),
               ],
             ),
           ),
+          // ── Image ───────────────────────────────────────────────────────
           AspectRatio(
             aspectRatio: 4 / 5,
             child: CachedNetworkImage(
@@ -200,11 +201,13 @@ class _BuddyMomentCard extends StatelessWidget {
               ),
             ),
           ),
+          // ── Card Footer ─────────────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.all(AppSizes.space16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Category + activity chips
                 Wrap(
                   spacing: AppSizes.space8,
                   runSpacing: AppSizes.space8,
@@ -233,25 +236,24 @@ class _BuddyMomentCard extends StatelessWidget {
                   ),
                 ],
                 const SizedBox(height: AppSizes.space16),
+                // Visibility + reactions row
                 Row(
-                  children: reactionController.reactionTypes
-                      .map((reactionType) {
-                        return Padding(
-                          padding: const EdgeInsets.only(
-                            right: AppSizes.space8,
+                  children: [
+                    _VisibilityChip(visibility: moment.visibility),
+                    const Spacer(),
+                    ...reactionController.reactionTypes.map((reactionType) {
+                      return Padding(
+                        padding: const EdgeInsets.only(left: AppSizes.space8),
+                        child: _ReactionPill(
+                          label: reactionController.reactionIcon(reactionType),
+                          onTap: () => reactionController.toggleReaction(
+                            momentId: moment.id,
+                            reactionType: reactionType,
                           ),
-                          child: _ReactionPill(
-                            label: reactionController.reactionIcon(
-                              reactionType,
-                            ),
-                            onTap: () => reactionController.toggleReaction(
-                              momentId: moment.id,
-                              reactionType: reactionType,
-                            ),
-                          ),
-                        );
-                      })
-                      .toList(growable: false),
+                        ),
+                      );
+                    }),
+                  ],
                 ),
               ],
             ),
@@ -390,7 +392,7 @@ class _FeedLoadingState extends StatelessWidget {
           ),
         ),
       ),
-      separatorBuilder: (_, __) => const SizedBox(height: AppSizes.space16),
+      separatorBuilder: (_, __) => const SizedBox(height: AppSizes.space20),
       itemCount: 3,
     );
   }

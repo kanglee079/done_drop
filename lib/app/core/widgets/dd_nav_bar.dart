@@ -68,7 +68,7 @@ class DDBottomNavBar extends StatelessWidget {
                     onTap: () => onTap(item.index),
                   ),
                 ),
-              const SizedBox(width: 84),
+              const Spacer(),
               for (final item in _navItems.skip(2))
                 Expanded(
                   child: _NavBarButton(

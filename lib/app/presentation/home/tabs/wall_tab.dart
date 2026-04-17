@@ -57,16 +57,38 @@ class _WallMonthSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: AppTypography.titleLarge(color: AppColors.onSurface),
+        // ── Month label with divider ───────────────────────────────────────
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                title,
+                style: AppTypography.headlineSmall(color: AppColors.onSurface),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSizes.space10,
+                vertical: AppSizes.space6,
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceContainerLow,
+                borderRadius: AppSizes.borderRadiusFull,
+              ),
+              child: Text(
+                '${moments.length}',
+                style: AppTypography.labelMedium(color: AppColors.onSurfaceVariant),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: AppSizes.space4),
         Text(
-          '${moments.length} private moments',
+          'private moments',
           style: AppTypography.bodySmall(color: AppColors.onSurfaceVariant),
         ),
         const SizedBox(height: AppSizes.space16),
+        // ── Lead card ──────────────────────────────────────────────────────
         _WallLeadCard(moment: leadMoment),
         if (trailingMoments.isNotEmpty) ...[
           const SizedBox(height: AppSizes.space12),
@@ -77,7 +99,7 @@ class _WallMonthSection extends StatelessWidget {
               crossAxisCount: 2,
               mainAxisSpacing: AppSizes.space12,
               crossAxisSpacing: AppSizes.space12,
-              childAspectRatio: 0.88,
+              childAspectRatio: 1.05,
             ),
             itemCount: trailingMoments.length,
             itemBuilder: (context, index) => _WallTileCard(
@@ -250,13 +272,13 @@ class _EmptyWallState extends StatelessWidget {
               ),
               const SizedBox(height: AppSizes.space16),
               Text(
-                'Your wall starts with one kept promise.',
+                'Keep one promise.',
                 textAlign: TextAlign.center,
                 style: AppTypography.headlineSmall(color: AppColors.onSurface),
               ),
               const SizedBox(height: AppSizes.space8),
               Text(
-                'Capture a proof moment and it will land here as part of your private archive.',
+                'The wall grows from there, one kept standard at a time.',
                 textAlign: TextAlign.center,
                 style: AppTypography.bodyMedium(
                   color: AppColors.onSurfaceVariant,

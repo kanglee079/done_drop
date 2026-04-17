@@ -9,6 +9,7 @@ import 'package:done_drop/core/services/connectivity_service.dart';
 import 'package:done_drop/core/services/feed_delivery_planner.dart';
 import 'package:done_drop/core/services/media_service.dart';
 import 'package:done_drop/core/services/offline_queue_service.dart';
+import 'package:done_drop/core/theme/theme.dart';
 import 'package:done_drop/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:done_drop/firebase/repositories/activity_repository.dart';
 import 'package:done_drop/firebase/repositories/friend_repository.dart';
@@ -236,45 +237,36 @@ class MomentController extends GetxController {
     String uid,
     String postVisibility,
   ) async {
+    List<String> friendIds = [];
+
     if (postVisibility == AppConstants.visibilityAllFriends) {
       final friendships = await _friendRepo.getFriends(uid);
-      final friendIds = friendships
+      friendIds = friendships
           .map((friendship) => friendship.otherUserId(uid))
           .toList();
-      return _deliveryPlanner.resolveRecipientIds(
-        visibility: postVisibility,
-        allFriendIds: friendIds,
-        selectedFriendIds: selectedFriendIds,
-      );
     }
 
     return _deliveryPlanner.resolveRecipientIds(
       visibility: postVisibility,
-      allFriendIds: const <String>[],
+      allFriendIds: friendIds,
       selectedFriendIds: selectedFriendIds,
     );
   }
 
   Future<void> _linkProofMoment(String momentId) async {
-    if (_activityInstanceId != null && _completionLogId != null) {
-      await _activityRepo.linkMomentToInstance(_activityInstanceId!, momentId);
-      await _activityRepo.updateCompletionLogMomentId(
-        _completionLogId!,
-        momentId,
-      );
-      return;
-    }
+    String? instanceId = _activityInstanceId;
 
-    if (_activityId != null && _completionLogId != null && _userId != null) {
+    if (instanceId == null && _activityId != null && _userId != null) {
       final instance = await _activityRepo.getOrCreateTodayInstance(
         _activityId!,
         _userId!,
       );
-      await _activityRepo.linkMomentToInstance(instance.id, momentId);
-      await _activityRepo.updateCompletionLogMomentId(
-        _completionLogId!,
-        momentId,
-      );
+      instanceId = instance.id;
+    }
+
+    if (instanceId != null && _completionLogId != null) {
+      await _activityRepo.linkMomentToInstance(instanceId, momentId);
+      await _activityRepo.updateCompletionLogMomentId(_completionLogId!, momentId);
     }
   }
 
@@ -286,6 +278,16 @@ class MomentController extends GetxController {
       isProofMoment: isProofMoment,
       wasOfflineQueued: wasOfflineQueued,
     );
+    if (wasOfflineQueued) {
+      Get.snackbar(
+        'Saved for sync',
+        'Will upload when you are back online.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppColors.inverseSurface,
+        colorText: AppColors.inverseOnSurface,
+        duration: const Duration(seconds: 3),
+      );
+    }
     Get.offNamed(AppRoutes.success);
   }
 

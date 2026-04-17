@@ -35,7 +35,7 @@ class _SuccessScreenState extends State<SuccessScreen>
       curve: Curves.easeOut,
     );
     _scaleAnimation = Tween<double>(begin: 0.92, end: 1).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeOutBack),
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
     );
   }
 
@@ -107,39 +107,25 @@ class _SuccessScreenState extends State<SuccessScreen>
                   const SizedBox(height: AppSizes.space12),
                   Text(
                     isProofMoment
-                        ? 'Your habit completion is locked in and the proof is attached.'
-                        : 'Your private archive is growing one real moment at a time.',
+                        ? 'Habit completed. Proof captured.'
+                        : 'A quiet proof of your effort.',
                     textAlign: TextAlign.center,
                     style: AppTypography.bodyLarge(
                       color: AppColors.onSurfaceVariant,
                     ),
                   ),
-                  if (wasOfflineQueued) ...[
-                    const SizedBox(height: AppSizes.space20),
-                    Container(
-                      padding: const EdgeInsets.all(AppSizes.space16),
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryFixed,
-                        borderRadius: AppSizes.borderRadiusMd,
-                      ),
-                      child: Text(
-                        'You were offline when you posted. DoneDrop will upload the photo and deliver the private share when connection returns.',
-                        textAlign: TextAlign.center,
-                        style: AppTypography.bodySmall(
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ),
-                  ],
-                  const Spacer(),
+                  const SizedBox(height: AppSizes.space32),
                   FilledButton(
                     onPressed: _goHome,
                     child: const Text('Back to Today'),
                   ),
                   const SizedBox(height: AppSizes.space12),
-                  OutlinedButton(
+                  TextButton(
                     onPressed: _openBuddy,
-                    child: const Text('Open Buddy'),
+                    child: Text(
+                      'Open Buddy',
+                      style: AppTypography.labelLarge(color: AppColors.primary),
+                    ),
                   ),
                 ],
               ),
