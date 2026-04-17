@@ -14,16 +14,15 @@ MediaMetadata _makeMedia({
   int w = 100,
   int h = 100,
   int size = 1000,
-}) =>
-    MediaMetadata(
-      storagePath: path,
-      downloadUrl: url,
-      mimeType: 'image/jpeg',
-      width: w,
-      height: h,
-      bytesUploaded: size,
-      ownerId: 'user_1',
-    );
+}) => MediaMetadata(
+  storagePath: path,
+  downloadUrl: url,
+  mimeType: 'image/jpeg',
+  width: w,
+  height: h,
+  bytesUploaded: size,
+  ownerId: 'user_1',
+);
 
 void main() {
   group('Activity', () {
@@ -101,10 +100,7 @@ void main() {
         updatedAt: now,
       );
 
-      final updated = original.copyWith(
-        title: 'Updated',
-        currentStreak: 2,
-      );
+      final updated = original.copyWith(title: 'Updated', currentStreak: 2);
 
       expect(updated.title, 'Updated');
       expect(updated.currentStreak, 2);
@@ -130,10 +126,7 @@ void main() {
       expect(pending.isCompleted, false);
       expect(pending.isMissed, false);
 
-      final completed = pending.copyWith(
-        status: 'completed',
-        completedAt: now,
-      );
+      final completed = pending.copyWith(status: 'completed', completedAt: now);
 
       expect(completed.isPending, false);
       expect(completed.isCompleted, true);
@@ -192,7 +185,10 @@ void main() {
       expect(restored.id, moment.id);
       expect(restored.visibility, AppConstants.visibilityAllFriends);
       expect(restored.selectedFriendIds.length, 2);
-      expect(restored.media.thumbnail.downloadUrl, moment.media.thumbnail.downloadUrl);
+      expect(
+        restored.media.thumbnail.downloadUrl,
+        moment.media.thumbnail.downloadUrl,
+      );
       expect(restored.caption, 'My morning run!');
     });
 
@@ -270,7 +266,15 @@ void main() {
         recipientId: 'user_2',
         momentId: 'moment_1',
         ownerId: 'user_1',
+        ownerDisplayName: 'User One',
+        ownerAvatarUrl: 'https://example.com/avatar.jpg',
         visibility: 'all_friends',
+        caption: 'Locked in.',
+        category: 'Health',
+        activityTitle: 'Morning Run',
+        originalUrl: 'https://example.com/original.jpg',
+        thumbnailUrl: 'https://example.com/thumb.jpg',
+        completedAt: now,
         createdAt: now,
         isRead: false,
       );
@@ -281,7 +285,9 @@ void main() {
       expect(restored.id, delivery.id);
       expect(restored.recipientId, delivery.recipientId);
       expect(restored.momentId, delivery.momentId);
+      expect(restored.ownerDisplayName, 'User One');
       expect(restored.visibility, 'all_friends');
+      expect(restored.thumbnailUrl, 'https://example.com/thumb.jpg');
       expect(restored.isRead, false);
     });
   });

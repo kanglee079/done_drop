@@ -37,52 +37,72 @@ class FriendsScreen extends StatelessWidget {
               centerTitle: true,
               actions: [
                 IconButton(
-                  icon: const Icon(Icons.person_add_alt_1_outlined, color: AppColors.primary),
+                  icon: const Icon(
+                    Icons.person_add_alt_1_outlined,
+                    color: AppColors.primary,
+                  ),
                   onPressed: () => Get.toNamed(AppRoutes.addFriend),
                 ),
               ],
               bottom: TabBar(
+                isScrollable: true,
                 indicatorColor: AppColors.primary,
                 labelColor: AppColors.primary,
                 unselectedLabelColor: AppColors.onSurfaceVariant,
-                labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                labelStyle: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
                 tabs: [
-                  Obx(() => Tab(
-                    text: ctrl.isAtFriendCap
-                        ? 'Crew (${ctrl.friendCount.value}/${ctrl.maxFriends})'
-                        : 'Crew',
-                  )),
-                  Obx(() => Tab(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text('Requests'),
-                        if (ctrl.hasPendingRequests) ...[
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              '${ctrl.pendingRequestCount.value}',
-                              style: const TextStyle(
-                                  color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ],
-                      ],
+                  Obx(
+                    () => Tab(
+                      text: ctrl.isAtFriendCap
+                          ? 'Crew (${ctrl.friendCount.value}/${ctrl.maxFriends})'
+                          : 'Crew',
                     ),
-                  )),
+                  ),
+                  Obx(
+                    () => Tab(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text('Requests'),
+                          if (ctrl.hasPendingRequests) ...[
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                '${ctrl.pendingRequestCount.value}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
-            body: TabBarView(
-              children: [
-                Obx(() => _FriendsList(ctrl: ctrl)),
-                Obx(() => _RequestsList(ctrl: ctrl)),
-              ],
+            body: DDResponsiveCenter(
+              maxWidth: 760,
+              child: TabBarView(
+                children: [
+                  Obx(() => _FriendsList(ctrl: ctrl)),
+                  Obx(() => _RequestsList(ctrl: ctrl)),
+                ],
+              ),
             ),
           ),
         );
@@ -102,7 +122,11 @@ class _FriendsList extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.group_outlined, size: 56, color: AppColors.outlineVariant),
+            Icon(
+              Icons.group_outlined,
+              size: 56,
+              color: AppColors.outlineVariant,
+            ),
             const SizedBox(height: AppSizes.space16),
             Text(
               'No friends yet',
@@ -147,10 +171,16 @@ class _FriendsList extends StatelessWidget {
                 title: const Text('Remove Friend'),
                 content: const Text('Remove this friend?'),
                 actions: [
-                  TextButton(onPressed: () => Get.back(result: false), child: const Text('Cancel')),
+                  TextButton(
+                    onPressed: () => Get.back(result: false),
+                    child: const Text('Cancel'),
+                  ),
                   TextButton(
                     onPressed: () => Get.back(result: true),
-                    child: Text('Remove', style: TextStyle(color: AppColors.error)),
+                    child: Text(
+                      'Remove',
+                      style: TextStyle(color: AppColors.error),
+                    ),
                   ),
                 ],
               ),
@@ -177,7 +207,11 @@ class _RequestsList extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.inbox_outlined, size: 56, color: AppColors.outlineVariant),
+            Icon(
+              Icons.inbox_outlined,
+              size: 56,
+              color: AppColors.outlineVariant,
+            ),
             const SizedBox(height: AppSizes.space16),
             Text(
               'No pending requests',
@@ -203,23 +237,27 @@ class _RequestsList extends StatelessWidget {
       children: [
         if (hasIncoming) ...[
           _SectionLabel('INCOMING'),
-          ...ctrl.incomingRequests.map((req) => _RequestTile(
-            name: req.senderDisplayName ?? 'User',
-            avatarUrl: req.senderAvatarUrl,
-            isIncoming: true,
-            onAccept: () => ctrl.acceptRequest(req),
-            onDecline: () => ctrl.declineRequest(req),
-          )),
+          ...ctrl.incomingRequests.map(
+            (req) => _RequestTile(
+              name: req.senderDisplayName ?? 'User',
+              avatarUrl: req.senderAvatarUrl,
+              isIncoming: true,
+              onAccept: () => ctrl.acceptRequest(req),
+              onDecline: () => ctrl.declineRequest(req),
+            ),
+          ),
         ],
         if (hasOutgoing) ...[
           const SizedBox(height: AppSizes.space16),
           _SectionLabel('SENT'),
-          ...ctrl.outgoingRequests.map((req) => _RequestTile(
-            name: req.receiverId,
-            avatarUrl: null,
-            isIncoming: false,
-            onCancel: () => ctrl.cancelRequest(req),
-          )),
+          ...ctrl.outgoingRequests.map(
+            (req) => _RequestTile(
+              name: req.receiverId,
+              avatarUrl: null,
+              isIncoming: false,
+              onCancel: () => ctrl.cancelRequest(req),
+            ),
+          ),
         ],
       ],
     );
@@ -267,21 +305,34 @@ class _FriendTile extends StatelessWidget {
         return Container(
           margin: const EdgeInsets.only(bottom: AppSizes.space8),
           child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: AppSizes.space16, vertical: AppSizes.space4),
-            shape: RoundedRectangleBorder(borderRadius: AppSizes.borderRadiusMd),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: AppSizes.space16,
+              vertical: AppSizes.space4,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: AppSizes.borderRadiusMd,
+            ),
             tileColor: AppColors.surfaceContainerLow,
             leading: CircleAvatar(
               radius: 22,
               backgroundColor: AppColors.primaryFixed,
-              backgroundImage:
-                  avatarUrl != null ? NetworkImage(avatarUrl) : null,
+              backgroundImage: avatarUrl != null
+                  ? NetworkImage(avatarUrl)
+                  : null,
               child: avatarUrl == null
                   ? Icon(Icons.person, color: AppColors.primary, size: 20)
                   : null,
             ),
-            title: Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),
+            title: Text(
+              name,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
             trailing: IconButton(
-              icon: Icon(Icons.remove_circle_outline, color: AppColors.error, size: 20),
+              icon: Icon(
+                Icons.remove_circle_outline,
+                color: AppColors.error,
+                size: 20,
+              ),
               onPressed: onRemove,
             ),
           ),
@@ -322,7 +373,9 @@ class _RequestTile extends StatelessWidget {
           CircleAvatar(
             radius: 22,
             backgroundColor: AppColors.primaryFixed,
-            backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl!) : null,
+            backgroundImage: avatarUrl != null
+                ? NetworkImage(avatarUrl!)
+                : null,
             child: avatarUrl == null
                 ? Icon(Icons.person, color: AppColors.primary, size: 20)
                 : null,
@@ -334,17 +387,31 @@ class _RequestTile extends StatelessWidget {
               children: [
                 Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),
                 Text(
-                  isIncoming ? 'Wants to be your friend' : 'Friend request sent',
-                  style: TextStyle(fontSize: 12, color: AppColors.onSurfaceVariant),
+                  isIncoming
+                      ? 'Wants to be your friend'
+                      : 'Friend request sent',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
           ),
           if (isIncoming) ...[
-            IconButton(icon: Icon(Icons.check_circle, color: AppColors.primary), onPressed: onAccept),
-            IconButton(icon: Icon(Icons.cancel, color: AppColors.error), onPressed: onDecline),
+            IconButton(
+              icon: Icon(Icons.check_circle, color: AppColors.primary),
+              onPressed: onAccept,
+            ),
+            IconButton(
+              icon: Icon(Icons.cancel, color: AppColors.error),
+              onPressed: onDecline,
+            ),
           ] else
-            IconButton(icon: Icon(Icons.cancel_outlined, color: AppColors.outline), onPressed: onCancel),
+            IconButton(
+              icon: Icon(Icons.cancel_outlined, color: AppColors.outline),
+              onPressed: onCancel,
+            ),
         ],
       ),
     );

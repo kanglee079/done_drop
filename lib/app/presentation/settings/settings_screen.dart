@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:done_drop/core/theme/theme.dart';
 import 'package:done_drop/app/routes/app_routes.dart';
+import 'package:done_drop/app/core/widgets/widgets.dart';
 import 'package:done_drop/app/presentation/settings/settings_controller.dart';
 
 /// DoneDrop Settings Screen
@@ -13,6 +14,7 @@ class SettingsScreen extends StatelessWidget {
     return GetBuilder<SettingsController>(
       init: SettingsController(),
       builder: (ctrl) {
+        final spec = DDResponsiveSpec.of(context);
         return Scaffold(
           backgroundColor: AppColors.surface,
           appBar: AppBar(
@@ -34,8 +36,8 @@ class SettingsScreen extends StatelessWidget {
             ),
             centerTitle: true,
           ),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSizes.space24),
+          body: DDResponsiveScrollBody(
+            maxWidth: 640,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -43,7 +45,7 @@ class SettingsScreen extends StatelessWidget {
                   'Settings',
                   style: TextStyle(
                     fontFamily: AppTypography.serifFamily,
-                    fontSize: 32,
+                    fontSize: spec.width < 360 ? 28 : 32,
                     fontWeight: FontWeight.w600,
                     color: AppColors.onSurface,
                   ),
@@ -68,7 +70,11 @@ class SettingsScreen extends StatelessWidget {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.auto_awesome, color: Colors.white, size: 28),
+                        const Icon(
+                          Icons.auto_awesome,
+                          color: Colors.white,
+                          size: 28,
+                        ),
                         const SizedBox(width: AppSizes.space16),
                         Expanded(
                           child: Column(
@@ -111,20 +117,25 @@ class SettingsScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: AppSizes.space16),
-                Obx(() => _SettingsTile(
-                  title: 'Habit Reminders',
-                  desc: 'Daily gentle nudges to complete your habits',
-                  trailing: Switch(
-                    value: ctrl.momentReminders.value,
-                    onChanged: ctrl.toggleMomentReminders,
-                    activeTrackColor: AppColors.primary,
-                    thumbColor: WidgetStateProperty.all(Colors.white),
+                Obx(
+                  () => _SettingsTile(
+                    title: 'Habit Reminders',
+                    desc: 'Daily gentle nudges to complete your habits',
+                    trailing: Switch(
+                      value: ctrl.momentReminders.value,
+                      onChanged: ctrl.toggleMomentReminders,
+                      activeTrackColor: AppColors.primary,
+                      thumbColor: WidgetStateProperty.all(Colors.white),
+                    ),
                   ),
-                )),
+                ),
                 _SettingsTile(
                   title: 'Schedule & Preferences',
                   desc: 'Reminder time, recap day, and more',
-                  trailing: const Icon(Icons.chevron_right, color: AppColors.outline),
+                  trailing: const Icon(
+                    Icons.chevron_right,
+                    color: AppColors.outline,
+                  ),
                   onTap: () => Get.toNamed(AppRoutes.notificationSettings),
                 ),
                 const SizedBox(height: AppSizes.space24),
@@ -143,19 +154,28 @@ class SettingsScreen extends StatelessWidget {
                   desc: ctrl.userEmail.isNotEmpty
                       ? ctrl.userEmail
                       : 'Edit your name, avatar, and bio',
-                  trailing: const Icon(Icons.chevron_right, color: AppColors.outline),
+                  trailing: const Icon(
+                    Icons.chevron_right,
+                    color: AppColors.outline,
+                  ),
                   onTap: () => Get.toNamed(AppRoutes.profile),
                 ),
                 _SettingsTile(
                   title: 'Friends',
                   desc: 'Manage your accountability partners',
-                  trailing: const Icon(Icons.chevron_right, color: AppColors.outline),
+                  trailing: const Icon(
+                    Icons.chevron_right,
+                    color: AppColors.outline,
+                  ),
                   onTap: () => Get.toNamed(AppRoutes.friends),
                 ),
                 _SettingsTile(
                   title: 'Visibility',
                   desc: 'Current setting: Personal Only',
-                  trailing: const Icon(Icons.chevron_right, color: AppColors.outline),
+                  trailing: const Icon(
+                    Icons.chevron_right,
+                    color: AppColors.outline,
+                  ),
                   onTap: () {},
                 ),
                 _SettingsTile(
@@ -179,8 +199,10 @@ class SettingsScreen extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
         title: Text('Sign Out', style: TextStyle(color: AppColors.onSurface)),
-        content: Text('Are you sure you want to sign out?',
-            style: TextStyle(color: AppColors.onSurfaceVariant)),
+        content: Text(
+          'Are you sure you want to sign out?',
+          style: TextStyle(color: AppColors.onSurfaceVariant),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),

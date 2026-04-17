@@ -10,12 +10,6 @@ class DoneDropApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Lock to portrait mode
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-    ]);
-
     // System UI overlay style
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(

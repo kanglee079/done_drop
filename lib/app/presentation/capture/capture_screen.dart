@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart' as image_picker;
+import 'package:done_drop/app/core/widgets/widgets.dart';
 import 'package:done_drop/app/presentation/capture/moment_controller.dart';
 import 'package:done_drop/app/routes/app_routes.dart';
 import 'package:done_drop/core/services/analytics_service.dart';
@@ -77,6 +78,8 @@ class _CaptureScreenState extends State<CaptureScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final spec = DDResponsiveSpec.of(context);
+
     if (_isLoading && _isProofMoment) {
       return Scaffold(
         backgroundColor: AppColors.surface,
@@ -98,135 +101,171 @@ class _CaptureScreenState extends State<CaptureScreen> {
       );
     }
 
-    return WillPopScope(
-      onWillPop: _handlePop,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final shouldPop = await _handlePop();
+        if (shouldPop && mounted) {
+          Get.back();
+        }
+      },
       child: Scaffold(
         backgroundColor: AppColors.surface,
         appBar: AppBar(
           backgroundColor: AppColors.surface.withValues(alpha: 0.92),
           surfaceTintColor: Colors.transparent,
           elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.close, color: AppColors.primary),
-          onPressed: () {
-            _controller.resetComposer();
-            Get.back();
-          },
-        ),
-        title: Text(
-          _isProofMoment ? 'Capture proof' : 'Capture moment',
-          style: AppTypography.titleLarge(color: AppColors.onSurface),
-        ),
+          leading: IconButton(
+            icon: const Icon(Icons.close, color: AppColors.primary),
+            onPressed: () {
+              _controller.resetComposer();
+              Get.back();
+            },
+          ),
+          title: Text(
+            _isProofMoment ? 'Capture proof' : 'Capture moment',
+            style: AppTypography.titleLarge(color: AppColors.onSurface),
+          ),
         ),
         body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSizes.space24,
-              AppSizes.space8,
-              AppSizes.space24,
-              AppSizes.space24,
+          child: DDResponsiveScrollBody(
+            maxWidth: 920,
+            padding: spec.pagePadding(
+              top: AppSizes.space8,
+              bottom: AppSizes.space24,
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(AppSizes.space24),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [AppColors.primary, AppColors.primaryContainer],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final useTwoColumns = constraints.maxWidth >= 720;
+                final cardWidth = useTwoColumns
+                    ? ((constraints.maxWidth - AppSizes.space16) / 2)
+                          .clamp(260.0, 420.0)
+                          .toDouble()
+                    : constraints.maxWidth;
+
+                final optionCards = [
+                  SizedBox(
+                    width: cardWidth,
+                    child: _CaptureOptionCard(
+                      icon: Icons.camera_alt_outlined,
+                      title: 'Camera',
+                      description: 'Proof is freshest right now.',
+                      onTap: _pickFromCamera,
                     ),
-                    borderRadius: AppSizes.borderRadiusLg,
-                    boxShadow: AppColors.cardShadow,
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSizes.space12,
-                          vertical: AppSizes.space8,
+                  SizedBox(
+                    width: cardWidth,
+                    child: _CaptureOptionCard(
+                      icon: Icons.photo_library_outlined,
+                      title: 'Gallery',
+                      description: 'Your recent wins are still waiting.',
+                      onTap: _pickFromGallery,
+                    ),
+                  ),
+                ];
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(AppSizes.space24),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [
+                            AppColors.primary,
+                            AppColors.primaryContainer,
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.14),
-                          borderRadius: AppSizes.borderRadiusFull,
-                        ),
+                        borderRadius: AppSizes.borderRadiusLg,
+                        boxShadow: AppColors.cardShadow,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSizes.space12,
+                              vertical: AppSizes.space8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.14),
+                              borderRadius: AppSizes.borderRadiusFull,
+                            ),
+                            child: Text(
+                              _isProofMoment
+                                  ? 'Complete + proof'
+                                  : 'Save or share later',
+                              style: AppTypography.labelMedium(
+                                color: AppColors.onPrimary,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: AppSizes.space20),
+                          Text(
+                            _isProofMoment
+                                ? 'Capture the proof while the win is fresh.'
+                                : 'Add a photo when the moment matters.',
+                            style: AppTypography.headlineSmall(
+                              color: AppColors.onPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: AppSizes.space8),
+                          Text(
+                            _isProofMoment
+                                ? 'This keeps the habit completion linked to the exact instance you just finished.'
+                                : 'You can keep it private, attach it to a habit later, or share it with your buddy circle.',
+                            style: AppTypography.bodyMedium(
+                              color: AppColors.onPrimary.withValues(
+                                alpha: 0.84,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: AppSizes.space24),
+                    Text(
+                      'Choose source',
+                      style: AppTypography.labelMedium(
+                        color: AppColors.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: AppSizes.space12),
+                    if (useTwoColumns)
+                      Wrap(
+                        spacing: AppSizes.space16,
+                        runSpacing: AppSizes.space16,
+                        children: optionCards,
+                      )
+                    else
+                      Column(
+                        children: [
+                          optionCards[0],
+                          const SizedBox(height: AppSizes.space16),
+                          optionCards[1],
+                        ],
+                      ),
+                    const SizedBox(height: AppSizes.space24),
+                    Center(
+                      child: TextButton(
+                        onPressed: () {
+                          _controller.resetComposer();
+                          Get.back();
+                        },
                         child: Text(
-                          _isProofMoment
-                              ? 'Complete + proof'
-                              : 'Save or share later',
-                          style: AppTypography.labelMedium(
-                            color: AppColors.onPrimary,
+                          'Cancel',
+                          style: AppTypography.labelLarge(
+                            color: AppColors.outline,
                           ),
                         ),
                       ),
-                      const SizedBox(height: AppSizes.space20),
-                      Text(
-                        _isProofMoment
-                            ? 'Capture the proof while the win is fresh.'
-                            : 'Add a photo when the moment matters.',
-                        style: AppTypography.headlineSmall(
-                          color: AppColors.onPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: AppSizes.space8),
-                      Text(
-                        _isProofMoment
-                            ? 'This keeps the habit completion linked to the exact instance you just finished.'
-                            : 'You can keep it private, attach it to a habit later, or share it with your buddy circle.',
-                        style: AppTypography.bodyMedium(
-                          color: AppColors.onPrimary.withValues(alpha: 0.84),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: AppSizes.space24),
-                Text(
-                  'Choose source',
-                  style: AppTypography.labelMedium(
-                    color: AppColors.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: AppSizes.space12),
-                Expanded(
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _CaptureOptionCard(
-                          icon: Icons.camera_alt_outlined,
-                          title: 'Camera',
-                          description: 'Proof is freshest right now.',
-                          onTap: _pickFromCamera,
-                        ),
-                      ),
-                      const SizedBox(width: AppSizes.space16),
-                      Expanded(
-                        child: _CaptureOptionCard(
-                          icon: Icons.photo_library_outlined,
-                          title: 'Gallery',
-                          description: 'Your recent wins are still waiting.',
-                          onTap: _pickFromGallery,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: AppSizes.space24),
-                Center(
-                  child: TextButton(
-                    onPressed: () {
-                      _controller.resetComposer();
-                      Get.back();
-                    },
-                    child: Text(
-                      'Cancel',
-                      style: AppTypography.labelLarge(color: AppColors.outline),
                     ),
-                  ),
-                ),
-              ],
+                  ],
+                );
+              },
             ),
           ),
         ),

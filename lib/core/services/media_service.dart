@@ -5,7 +5,8 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart' show compute;
 import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
-import 'package:done_drop/core/models/moment.dart' show MediaMetadata, MomentMediaMetadata;
+import 'package:done_drop/core/models/moment.dart'
+    show MediaMetadata, MomentMediaMetadata;
 
 // ── Isolate Processing ──────────────────────────────────────────────────────
 // Must be top-level functions (not instance methods) for compute().
@@ -35,13 +36,51 @@ class _ImageProcessResult {
   final Uint8List thumbBytes;
   final int origWidth;
   final int origHeight;
+  final int thumbWidth;
+  final int thumbHeight;
 
   _ImageProcessResult({
     required this.originalBytes,
     required this.thumbBytes,
     required this.origWidth,
     required this.origHeight,
+    required this.thumbWidth,
+    required this.thumbHeight,
   });
+}
+
+enum MediaUploadStage { preparing, uploading, finalizing, complete }
+
+class MomentUploadProgress {
+  const MomentUploadProgress({
+    required this.stage,
+    required this.progress,
+    this.bytesTransferred = 0,
+    this.totalBytes = 0,
+  });
+
+  final MediaUploadStage stage;
+  final double progress;
+  final int bytesTransferred;
+  final int totalBytes;
+}
+
+class _PreparedMomentImages {
+  const _PreparedMomentImages({
+    required this.originalBytes,
+    required this.thumbBytes,
+    required this.originalWidth,
+    required this.originalHeight,
+    required this.thumbnailWidth,
+    required this.thumbnailHeight,
+  });
+
+  final Uint8List originalBytes;
+  final Uint8List thumbBytes;
+  final int originalWidth;
+  final int originalHeight;
+  final int thumbnailWidth;
+  final int thumbnailHeight;
 }
 
 /// Top-level function that runs in a separate isolate.
@@ -76,10 +115,16 @@ _ImageProcessResult _processImageInIsolate(_ImageProcessRequest req) {
   final thumbImage = img.copyResize(decoded, width: tw, height: th);
 
   return _ImageProcessResult(
-    originalBytes: Uint8List.fromList(img.encodeJpg(originalImage, quality: req.originalQuality)),
-    thumbBytes: Uint8List.fromList(img.encodeJpg(thumbImage, quality: req.thumbQuality)),
+    originalBytes: Uint8List.fromList(
+      img.encodeJpg(originalImage, quality: req.originalQuality),
+    ),
+    thumbBytes: Uint8List.fromList(
+      img.encodeJpg(thumbImage, quality: req.thumbQuality),
+    ),
     origWidth: originalImage.width,
     origHeight: originalImage.height,
+    thumbWidth: thumbImage.width,
+    thumbHeight: thumbImage.height,
   );
 }
 
@@ -98,10 +143,12 @@ class MediaService {
 
   final _storage = FirebaseStorage.instance;
 
-  static const int _maxOriginalWidth = 1080;  // 1080p is plenty for mobile social
+  static const int _maxOriginalWidth =
+      1080; // 1080p is plenty for mobile social
   static const int _maxOriginalHeight = 1080;
   static const int _thumbnailWidth = 400;
-  static const int _originalQuality = 80;  // 80% is visually indistinguishable, much smaller files
+  static const int _originalQuality =
+      80; // 80% is visually indistinguishable, much smaller files
   static const int _thumbQuality = 70;
   static const int _maxAvatarSizeBytes = 5 * 1024 * 1024; // 5MB
   static const int _maxMomentSizeBytes = 10 * 1024 * 1024; // 10MB
@@ -169,26 +216,6 @@ class MediaService {
     );
 
     return Uint8List.fromList(img.encodeJpg(resized, quality: quality));
-  }
-
-  /// Resize an already-decoded image in memory (avoids re-reading file + re-decoding).
-  img.Image _resizeFromImage(
-    img.Image image, {
-    required int maxWidth,
-    required int maxHeight,
-  }) {
-    int targetWidth = image.width;
-    int targetHeight = image.height;
-
-    if (targetWidth > maxWidth || targetHeight > maxHeight) {
-      final ratioW = maxWidth / targetWidth;
-      final ratioH = maxHeight / targetHeight;
-      final ratio = ratioW < ratioH ? ratioW : ratioH;
-      targetWidth = (targetWidth * ratio).round();
-      targetHeight = (targetHeight * ratio).round();
-    }
-
-    return img.copyResize(image, width: targetWidth, height: targetHeight);
   }
 
   // ── Upload Helpers ────────────────────────────────────────────────────────
@@ -269,65 +296,111 @@ class MediaService {
     required String userId,
     required String momentId,
     required String localFilePath,
+    void Function(MomentUploadProgress progress)? onProgress,
   }) async {
-    // 1. Read source file
-    final sourceBytes = await File(localFilePath).readAsBytes();
+    onProgress?.call(
+      const MomentUploadProgress(
+        stage: MediaUploadStage.preparing,
+        progress: 0,
+      ),
+    );
 
-    // 2. Process image in background isolate (decode + resize + encode)
-    //    This keeps the UI thread completely free during CPU-heavy work.
-    final processed = await compute(_processImageInIsolate, _ImageProcessRequest(
-      sourceBytes: sourceBytes,
-      maxOriginalWidth: _maxOriginalWidth,
-      maxOriginalHeight: _maxOriginalHeight,
-      thumbnailWidth: _thumbnailWidth,
-      originalQuality: _originalQuality,
-      thumbQuality: _thumbQuality,
-    ));
+    final prepared = await _prepareMomentImages(localFilePath);
 
-    if (processed.originalBytes.length > _maxMomentSizeBytes) {
+    if (prepared.originalBytes.length > _maxMomentSizeBytes) {
       throw MediaUploadException('Moment image exceeds maximum size of 10MB');
     }
 
-    // 3. Upload BOTH in parallel (network I/O — already async, doesn't block UI)
     final originalPath = 'moments/$userId/$momentId/original.jpg';
     final thumbPath = 'moments/$userId/$momentId/thumb.jpg';
+    final originalRef = _storage.ref().child(originalPath);
+    final thumbRef = _storage.ref().child(thumbPath);
+    final metadata = SettableMetadata(
+      contentType: 'image/jpeg',
+      cacheControl: 'private, max-age=31536000',
+    );
 
-    final results = await Future.wait([
-      _uploadBytes(originalPath, processed.originalBytes, mimeType: 'image/jpeg'),
-      _uploadBytes(thumbPath, processed.thumbBytes, mimeType: 'image/jpeg'),
-    ]);
+    final totalBytes =
+        prepared.originalBytes.length + prepared.thumbBytes.length;
+    var originalTransferred = 0;
+    var thumbTransferred = 0;
 
-    final originalResult = results[0];
-    final thumbResult = results[1];
+    void emitUploadProgress() {
+      final transferred = originalTransferred + thumbTransferred;
+      final progress = totalBytes == 0 ? 0.0 : transferred / totalBytes;
+      onProgress?.call(
+        MomentUploadProgress(
+          stage: MediaUploadStage.uploading,
+          progress: progress.clamp(0, 1),
+          bytesTransferred: transferred,
+          totalBytes: totalBytes,
+        ),
+      );
+    }
 
-    // 4. Cache BOTH in parallel (non-blocking fire-and-forget)
-    unawaited(Future.wait([
-      _cacheLocally(originalPath, processed.originalBytes),
-      _cacheLocally(thumbPath, processed.thumbBytes),
-    ]));
+    emitUploadProgress();
 
-    return MomentMediaMetadata(
+    final originalTask = originalRef.putData(prepared.originalBytes, metadata);
+    final thumbTask = thumbRef.putData(prepared.thumbBytes, metadata);
+
+    final originalProgressSub = originalTask.snapshotEvents.listen((snapshot) {
+      originalTransferred = snapshot.bytesTransferred;
+      emitUploadProgress();
+    });
+    final thumbProgressSub = thumbTask.snapshotEvents.listen((snapshot) {
+      thumbTransferred = snapshot.bytesTransferred;
+      emitUploadProgress();
+    });
+
+    final results = await Future.wait([originalTask, thumbTask]);
+    await originalProgressSub.cancel();
+    await thumbProgressSub.cancel();
+
+    final originalSnapshot = results[0];
+    final thumbSnapshot = results[1];
+    final originalDownloadUrl = await originalSnapshot.ref.getDownloadURL();
+    final thumbDownloadUrl = await thumbSnapshot.ref.getDownloadURL();
+    onProgress?.call(
+      const MomentUploadProgress(
+        stage: MediaUploadStage.finalizing,
+        progress: 1,
+      ),
+    );
+
+    unawaited(
+      Future.wait([
+        _cacheLocally(originalPath, prepared.originalBytes),
+        _cacheLocally(thumbPath, prepared.thumbBytes),
+      ]),
+    );
+
+    final media = MomentMediaMetadata(
       original: MediaMetadata(
-        storagePath: originalResult.storagePath,
-        downloadUrl: originalResult.downloadUrl,
+        storagePath: originalPath,
+        downloadUrl: originalDownloadUrl,
         mimeType: 'image/jpeg',
-        width: processed.origWidth,
-        height: processed.origHeight,
-        bytesUploaded: originalResult.bytesUploaded,
+        width: prepared.originalWidth,
+        height: prepared.originalHeight,
+        bytesUploaded: prepared.originalBytes.length,
         ownerId: userId,
         momentId: momentId,
       ),
       thumbnail: MediaMetadata(
-        storagePath: thumbResult.storagePath,
-        downloadUrl: thumbResult.downloadUrl,
+        storagePath: thumbPath,
+        downloadUrl: thumbDownloadUrl,
         mimeType: 'image/jpeg',
-        width: _thumbnailWidth,
-        height: (_thumbnailWidth * 1.5).round(),
-        bytesUploaded: thumbResult.bytesUploaded,
+        width: prepared.thumbnailWidth,
+        height: prepared.thumbnailHeight,
+        bytesUploaded: prepared.thumbBytes.length,
         ownerId: userId,
         momentId: momentId,
       ),
     );
+
+    onProgress?.call(
+      const MomentUploadProgress(stage: MediaUploadStage.complete, progress: 1),
+    );
+    return media;
   }
 
   /// Delete all images for a moment.
@@ -344,6 +417,32 @@ class MediaService {
           .child('moments/$userId/$momentId/thumb.jpg')
           .delete();
     } catch (_) {}
+  }
+
+  Future<_PreparedMomentImages> _prepareMomentImages(
+    String localFilePath,
+  ) async {
+    final sourceBytes = await File(localFilePath).readAsBytes();
+    final processed = await compute(
+      _processImageInIsolate,
+      _ImageProcessRequest(
+        sourceBytes: sourceBytes,
+        maxOriginalWidth: _maxOriginalWidth,
+        maxOriginalHeight: _maxOriginalHeight,
+        thumbnailWidth: _thumbnailWidth,
+        originalQuality: _originalQuality,
+        thumbQuality: _thumbQuality,
+      ),
+    );
+
+    return _PreparedMomentImages(
+      originalBytes: processed.originalBytes,
+      thumbBytes: processed.thumbBytes,
+      originalWidth: processed.origWidth,
+      originalHeight: processed.origHeight,
+      thumbnailWidth: processed.thumbWidth,
+      thumbnailHeight: processed.thumbHeight,
+    );
   }
 
   // ── Cache Management ─────────────────────────────────────────────────────

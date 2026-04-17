@@ -1,37 +1,38 @@
 import 'dart:async';
+
 import 'package:get/get.dart';
-import 'package:done_drop/firebase/repositories/moment_repository.dart';
-import 'package:done_drop/firebase/repositories/friend_repository.dart';
-import 'package:done_drop/firebase/repositories/activity_repository.dart';
-import 'package:done_drop/features/auth/presentation/controllers/auth_controller.dart';
-import 'package:done_drop/core/models/moment.dart';
+
 import 'package:done_drop/core/models/feed_delivery.dart';
-import 'package:done_drop/core/models/user_profile.dart';
+import 'package:done_drop/core/models/moment.dart';
 import 'package:done_drop/core/services/block_service.dart';
-import 'package:done_drop/features/auth/repositories/user_profile_repository.dart';
-import 'package:done_drop/app/presentation/feed/reaction_controller.dart';
+import 'package:done_drop/features/auth/presentation/controllers/auth_controller.dart';
+import 'package:done_drop/firebase/repositories/friend_repository.dart';
+import 'package:done_drop/firebase/repositories/moment_repository.dart';
 
 /// Controller for the private friend feed screen.
-/// Aggregates moments shared with the current user via feed deliveries.
+///
+/// The remote source is the denormalized `feed_deliveries` collection, while
+/// optimistic items are merged locally so the user sees their own shared proof
+/// immediately instead of waiting for upload + Firestore + feed fan-out.
 class FeedController extends GetxController {
-  FeedController(this._activityRepo);
+  FeedController();
 
   MomentRepository get _momentRepo => Get.find<MomentRepository>();
   FriendRepository get _friendRepo => Get.find<FriendRepository>();
-  UserProfileRepository get _userProfileRepo =>
-      Get.find<UserProfileRepository>();
   AuthController get _authController => Get.find<AuthController>();
-  final ActivityRepository _activityRepo;
   String? get _userId => _authController.firebaseUser?.uid;
 
   final isLoading = true.obs;
   final RxList<Moment> moments = <Moment>[].obs;
   final RxList<FeedDelivery> deliveries = <FeedDelivery>[].obs;
-  final RxMap<String, UserProfile> ownerProfiles = <String, UserProfile>{}.obs;
-  final RxMap<String, String> activityTitles = <String, String>{}.obs;
   final RxSet<String> blockedUserIds = <String>{}.obs;
   final RxInt unreadCount = 0.obs;
   final RxInt friendCount = 0.obs;
+
+  final List<Moment> _remoteMoments = <Moment>[];
+  final RxList<Moment> _optimisticMoments = <Moment>[].obs;
+
+  StreamSubscription<List<FeedDelivery>>? _feedSubscription;
 
   @override
   void onInit() {
@@ -42,26 +43,21 @@ class FeedController extends GetxController {
     _watchFriendCount();
   }
 
+  @override
+  void onClose() {
+    _feedSubscription?.cancel();
+    super.onClose();
+  }
+
   void _watchBlockedUsers() {
     final blockSvc = Get.find<BlockService>();
     blockSvc.watchBlockedUserIds().listen((ids) {
-      blockedUserIds.clear();
-      blockedUserIds.addAll(ids);
-      // Re-filter feed when blocked list changes (removes orphaned moments)
-      _reapplyBlockFilter();
+      blockedUserIds
+        ..clear()
+        ..addAll(ids);
+      _mergeMoments();
     });
   }
-
-  void _reapplyBlockFilter() {
-    // Re-run block filter on current moments without re-fetching Firestore
-    if (moments.isEmpty) return;
-    final filtered = moments
-        .where((m) => !blockedUserIds.contains(m.ownerId))
-        .toList();
-    moments.value = filtered;
-  }
-
-  StreamSubscription<List<FeedDelivery>>? _feedSubscription;
 
   void _watchFriendFeed() {
     final uid = _userId;
@@ -73,34 +69,16 @@ class FeedController extends GetxController {
     _feedSubscription?.cancel();
     _feedSubscription = _momentRepo.watchFeedDeliveries(uid).listen((
       deliveryList,
-    ) async {
+    ) {
       deliveries.value = deliveryList;
-
-      // Load moment details
-      final momentIds = deliveryList
-          .map((d) => d.momentId)
-          .whereType<String>()
-          .toList();
-      final momentList = await _momentRepo.getMomentsForFeed(momentIds);
-
-      // Filter out moments from blocked users (client-side safety net)
-      final visibleMoments = momentList
-          .where((m) => !blockedUserIds.contains(m.ownerId))
-          .toList();
-
-      // Sort by delivery order (most recent first), preserving delivery sequence
-      final momentMap = {for (final m in visibleMoments) m.id: m};
-      final visibleIds = momentIds
-          .where((id) => momentMap.containsKey(id))
-          .toList();
-      moments.value = visibleIds.map((id) => momentMap[id]!).toList();
-
-      // Load owner profiles for display — batch fetch in parallel
-      final ownerIds = visibleMoments.map((m) => m.ownerId).toSet().toList();
-      final profiles = await _userProfileRepo.getUserProfiles(ownerIds);
-      ownerProfiles.value = profiles;
-      await _loadActivityTitles(visibleMoments);
-
+      _remoteMoments
+        ..clear()
+        ..addAll(
+          deliveryList
+              .where((delivery) => !blockedUserIds.contains(delivery.ownerId))
+              .map(Moment.fromFeedDelivery),
+        );
+      _mergeMoments();
       isLoading.value = false;
     });
   }
@@ -121,19 +99,15 @@ class FeedController extends GetxController {
     });
   }
 
-  String getOwnerName(String ownerId) {
-    return ownerProfiles[ownerId]?.displayName ?? 'Friend';
+  String getOwnerName(Moment moment) {
+    return moment.ownerDisplayName ?? 'Friend';
   }
 
-  String? getOwnerAvatar(String ownerId) {
-    return ownerProfiles[ownerId]?.avatarUrl;
+  String? getOwnerAvatar(Moment moment) {
+    return moment.ownerAvatarUrl;
   }
 
-  String? activityTitleFor(Moment moment) {
-    final activityId = moment.activityId;
-    if (activityId == null) return null;
-    return activityTitles[activityId];
-  }
+  String? activityTitleFor(Moment moment) => moment.activityTitle;
 
   Future<void> markAllRead() async {
     for (final delivery in deliveries) {
@@ -143,26 +117,46 @@ class FeedController extends GetxController {
     }
   }
 
-  Future<void> _loadActivityTitles(List<Moment> moments) async {
-    final ids = moments
-        .map((moment) => moment.activityId)
-        .whereType<String>()
-        .toSet()
-        .toList(growable: false);
-    if (ids.isEmpty) {
-      activityTitles.clear();
-      return;
+  void upsertOptimisticMoment(Moment moment) {
+    final index = _optimisticMoments.indexWhere((item) => item.id == moment.id);
+    if (index == -1) {
+      _optimisticMoments.insert(0, moment);
+    } else {
+      _optimisticMoments[index] = moment;
     }
-
-    final resolvedTitles = <String, String>{};
-    for (final activityId in ids) {
-      final activity = await _activityRepo.getActivity(activityId);
-      if (activity != null) {
-        resolvedTitles[activityId] = activity.title;
-      }
-    }
-    activityTitles.value = resolvedTitles;
+    _mergeMoments();
   }
 
-  ReactionController get reactionCtrl => Get.find<ReactionController>();
+  void updateOptimisticMoment(
+    String momentId, {
+    MomentMedia? media,
+    MomentSyncStatus? syncStatus,
+    double? uploadProgress,
+  }) {
+    final index = _optimisticMoments.indexWhere((item) => item.id == momentId);
+    if (index == -1) return;
+    final current = _optimisticMoments[index];
+    _optimisticMoments[index] = current.copyWith(
+      media: media,
+      syncStatus: syncStatus,
+      uploadProgress: uploadProgress,
+    );
+    _mergeMoments();
+  }
+
+  void _mergeMoments() {
+    final blocked = blockedUserIds;
+    final remoteIds = _remoteMoments.map((moment) => moment.id).toSet();
+    final optimistic = _optimisticMoments
+        .where((moment) => !remoteIds.contains(moment.id))
+        .where((moment) => !blocked.contains(moment.ownerId))
+        .toList(growable: false);
+
+    final merged = <Moment>[
+      ...optimistic,
+      ..._remoteMoments.where((moment) => !blocked.contains(moment.ownerId)),
+    ]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+    moments.value = merged;
+  }
 }

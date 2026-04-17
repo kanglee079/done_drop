@@ -1,30 +1,29 @@
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+
+import 'package:done_drop/core/constants/app_constants.dart';
+import 'package:done_drop/core/models/moment.dart';
 import 'package:done_drop/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:done_drop/firebase/repositories/moment_repository.dart';
-import 'package:done_drop/core/models/moment.dart';
-import 'package:done_drop/core/constants/app_constants.dart';
 
-/// Controller for Memory Wall screen — personal moments grid.
+/// Controller for Memory Wall screen — owner archive moments grid.
 class MemoryWallController extends GetxController {
   MemoryWallController(this._momentRepo);
   final MomentRepository _momentRepo;
 
   String? get _userId => Get.find<AuthController>().firebaseUser?.uid;
 
-  /// Personal moments stream.
   final RxList<Moment> moments = <Moment>[].obs;
-
-  /// Loading state.
   final isLoading = true.obs;
-
-  /// Selected filter category.
   final selectedCategory = ''.obs;
 
-  /// Filtered moments (by category).
+  final List<Moment> _remoteMoments = <Moment>[];
+  final RxList<Moment> _optimisticMoments = <Moment>[].obs;
+
   List<Moment> get filteredMoments {
-    if (selectedCategory.value.isEmpty) return moments;
-    return moments.where((m) => m.category == selectedCategory.value).toList();
+    final source = moments;
+    if (selectedCategory.value.isEmpty) return source;
+    return source.where((m) => m.category == selectedCategory.value).toList();
   }
 
   Map<String, List<Moment>> get groupedMomentsByMonth {
@@ -36,11 +35,10 @@ class MemoryWallController extends GetxController {
     return grouped;
   }
 
-  /// Use AppConstants moment categories — discipline-first, no reflection/journal mindset.
   static List<String> get categories => [
-    'All Moments',
-    ...AppConstants.momentCategories,
-  ];
+        'All Moments',
+        ...AppConstants.momentCategories,
+      ];
 
   @override
   void onInit() {
@@ -54,24 +52,63 @@ class MemoryWallController extends GetxController {
       isLoading.value = false;
       return;
     }
-    moments.bindStream(_momentRepo.watchPersonalMoments(uid));
-    isLoading.value = false;
+    _momentRepo.watchOwnerArchiveMoments(uid).listen((remoteMoments) {
+      _remoteMoments
+        ..clear()
+        ..addAll(remoteMoments);
+      _mergeMoments();
+      isLoading.value = false;
+    });
   }
 
   void setFilter(String category) {
     selectedCategory.value = category == 'All Moments' ? '' : category;
   }
 
+  void upsertOptimisticMoment(Moment moment) {
+    final index = _optimisticMoments.indexWhere((item) => item.id == moment.id);
+    if (index == -1) {
+      _optimisticMoments.insert(0, moment);
+    } else {
+      _optimisticMoments[index] = moment;
+    }
+    _mergeMoments();
+  }
+
+  void updateOptimisticMoment(
+    String momentId, {
+    MomentMedia? media,
+    MomentSyncStatus? syncStatus,
+    double? uploadProgress,
+  }) {
+    final index = _optimisticMoments.indexWhere((item) => item.id == momentId);
+    if (index == -1) return;
+    final current = _optimisticMoments[index];
+    _optimisticMoments[index] = current.copyWith(
+      media: media,
+      syncStatus: syncStatus,
+      uploadProgress: uploadProgress,
+    );
+    _mergeMoments();
+  }
+
   void deleteMoment(String momentId) async {
-    // Get the moment to find associated media and feed deliveries
     final moment = await _momentRepo.getMoment(momentId);
     if (moment != null) {
-      // Delete from Storage first (covers both original + thumbnail)
       await _momentRepo.deleteMomentStorage(moment.ownerId, momentId);
-      // Delete feed deliveries for this moment
       await _momentRepo.deleteFeedDeliveriesForMoment(momentId);
     }
-    // Soft-delete the moment document
     await _momentRepo.deleteMoment(momentId);
+  }
+
+  void _mergeMoments() {
+    final remoteIds = _remoteMoments.map((moment) => moment.id).toSet();
+    final optimistic = _optimisticMoments
+        .where((moment) => !remoteIds.contains(moment.id))
+        .toList(growable: false);
+
+    final merged = <Moment>[...optimistic, ..._remoteMoments]
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    moments.value = merged;
   }
 }

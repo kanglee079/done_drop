@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:done_drop/core/theme/theme.dart';
+import 'package:done_drop/app/core/widgets/dd_responsive.dart';
 
 class DDBottomNavBar extends StatelessWidget {
   const DDBottomNavBar({
@@ -98,6 +99,10 @@ class _NavBarButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final spec = DDResponsiveSpec.of(context);
+    final textScaleFactor = MediaQuery.textScalerOf(context).scale(12) / 12;
+    final hideLabel = spec.width < 360 || textScaleFactor > 1.2;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -125,13 +130,17 @@ class _NavBarButton extends StatelessWidget {
                   size: 22,
                 ),
               ),
-              const SizedBox(height: AppSizes.space4),
-              Text(
-                item.label,
-                style: AppTypography.bodySmall(
-                  color: isActive ? AppColors.primary : AppColors.outline,
+              if (!hideLabel) ...[
+                const SizedBox(height: AppSizes.space4),
+                Text(
+                  item.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.bodySmall(
+                    color: isActive ? AppColors.primary : AppColors.outline,
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
         ),

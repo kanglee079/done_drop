@@ -33,11 +33,14 @@ class ReportScreen extends StatelessWidget {
           ),
           body: Obx(() {
             if (ctrl.hasSubmitted.value) {
-              return _SuccessState(onDone: () => Get.back());
+              return DDResponsiveScrollBody(
+                maxWidth: 520,
+                child: _SuccessState(onDone: () => Get.back()),
+              );
             }
 
-            return Padding(
-              padding: const EdgeInsets.all(AppSizes.space24),
+            return DDResponsiveScrollBody(
+              maxWidth: 560,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -59,14 +62,16 @@ class ReportScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: AppSizes.space32),
-                  ...ctrl.reasons.map((reason) => Padding(
-                    padding: const EdgeInsets.only(bottom: AppSizes.space8),
-                    child: _ReasonTile(
-                      label: reason,
-                      isSelected: ctrl.selectedReason.value == reason,
-                      onTap: () => ctrl.selectReason(reason),
+                  ...ctrl.reasons.map(
+                    (reason) => Padding(
+                      padding: const EdgeInsets.only(bottom: AppSizes.space8),
+                      child: _ReasonTile(
+                        label: reason,
+                        isSelected: ctrl.selectedReason.value == reason,
+                        onTap: () => ctrl.selectReason(reason),
+                      ),
                     ),
-                  )),
+                  ),
                   const SizedBox(height: AppSizes.space16),
                   TextField(
                     controller: ctrl.additionalDetails,
@@ -74,7 +79,9 @@ class ReportScreen extends StatelessWidget {
                     maxLength: 300,
                     decoration: InputDecoration(
                       hintText: 'Additional details (optional)',
-                      hintStyle: TextStyle(color: AppColors.outline.withValues(alpha: 0.5)),
+                      hintStyle: TextStyle(
+                        color: AppColors.outline.withValues(alpha: 0.5),
+                      ),
                       filled: true,
                       fillColor: AppColors.surfaceContainerHighest,
                       border: OutlineInputBorder(
@@ -84,11 +91,15 @@ class ReportScreen extends StatelessWidget {
                       contentPadding: const EdgeInsets.all(AppSizes.space16),
                     ),
                   ),
-                  const Spacer(),
+                  const SizedBox(height: AppSizes.space16),
                   SizedBox(
                     width: double.infinity,
                     child: ctrl.isSubmitting.value
-                        ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+                        ? const Center(
+                            child: CircularProgressIndicator(
+                              color: AppColors.primary,
+                            ),
+                          )
                         : DDPrimaryButton(
                             label: 'Submit Report',
                             onPressed: () => ctrl.submitReport(
@@ -127,7 +138,9 @@ class _ReasonTile extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.all(AppSizes.space16),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryContainer : AppColors.surfaceContainerLow,
+          color: isSelected
+              ? AppColors.primaryContainer
+              : AppColors.surfaceContainerLow,
           borderRadius: AppSizes.borderRadiusMd,
           border: Border.all(
             color: isSelected ? AppColors.primary : Colors.transparent,
@@ -165,7 +178,7 @@ class _SuccessState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(AppSizes.space24),
+        padding: const EdgeInsets.symmetric(vertical: AppSizes.space32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -191,10 +204,7 @@ class _SuccessState extends StatelessWidget {
             Text(
               'Thank you for helping keep DoneDrop safe. We will review your report shortly.',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.onSurfaceVariant,
-              ),
+              style: TextStyle(fontSize: 14, color: AppColors.onSurfaceVariant),
             ),
             const SizedBox(height: AppSizes.space32),
             DDPrimaryButton(label: 'Done', onPressed: onDone),

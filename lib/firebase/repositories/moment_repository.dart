@@ -61,7 +61,7 @@ class MomentRepository {
     } catch (_) {}
   }
 
-  /// Personal wall: all personal-only moments by user
+  /// Personal-only moments by user.
   Stream<List<Moment>> watchPersonalMoments(String userId, {int limit = 50}) {
     return _col
         .where('ownerId', isEqualTo: userId)
@@ -76,21 +76,29 @@ class MomentRepository {
         );
   }
 
+  /// Owner archive moments include all moments the user created, regardless of visibility.
+  Stream<List<Moment>> watchOwnerArchiveMoments(String userId, {int limit = 50}) {
+    return _col
+        .where('ownerId', isEqualTo: userId)
+        .where('isDeleted', isEqualTo: false)
+        .orderBy('createdAt', descending: true)
+        .limit(limit)
+        .snapshots(includeMetadataChanges: true)
+        .map(
+          (snap) => snap.docs.map((d) => Moment.fromFirestore(d.data())).toList(),
+        );
+  }
+
   // ── Private Friend Feed ──────────────────────────────────────────────
 
   /// Create feed delivery entries for each recipient of a moment.
   /// Called after a moment is saved with visibility all_friends or selected_friends.
   Future<void> createFeedDeliveries({
-    required String momentId,
-    required String ownerId,
-    required String visibility,
+    required Moment moment,
     required List<String> recipientIds,
   }) async {
     final deliveries = _deliveryPlanner.buildDeliveries(
-      momentId: momentId,
-      ownerId: ownerId,
-      visibility: visibility,
-      createdAt: DateTime.now(),
+      moment: moment,
       recipientIds: recipientIds,
     );
     if (deliveries.isEmpty) return;
@@ -113,7 +121,7 @@ class MomentRepository {
         .where('recipientId', isEqualTo: userId)
         .orderBy('createdAt', descending: true)
         .limit(limit)
-        .snapshots()
+        .snapshots(includeMetadataChanges: true)
         .map(
           (snap) => snap.docs
               .map((d) => FeedDelivery.fromFirestore(d.data()))
@@ -133,17 +141,6 @@ class MomentRepository {
         .where('isRead', isEqualTo: false)
         .snapshots()
         .map((snap) => snap.docs.length);
-  }
-
-  /// Fetch moments for feed deliveries.
-  Future<List<Moment>> getMomentsForFeed(List<String> momentIds) async {
-    if (momentIds.isEmpty) return [];
-    final List<Moment> moments = [];
-    for (final id in momentIds) {
-      final m = await getMoment(id);
-      if (m != null && !m.isDeleted) moments.add(m);
-    }
-    return moments;
   }
 
   /// Delete feed deliveries when a moment is deleted.

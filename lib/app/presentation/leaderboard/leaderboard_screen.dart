@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/theme/theme.dart';
+import '../../core/widgets/widgets.dart';
 import '../../../core/models/leaderboard_entry.dart';
 import 'leaderboard_controller.dart';
 
@@ -31,24 +32,28 @@ class LeaderboardScreen extends GetView<LeaderboardController> {
         ),
         centerTitle: true,
         actions: [
-          Obx(() => IconButton(
-            icon: Icon(
-              controller.isStale.value
-                  ? Icons.sync_problem
-                  : Icons.sync,
-              color: AppColors.primary,
+          Obx(
+            () => IconButton(
+              icon: Icon(
+                controller.isStale.value ? Icons.sync_problem : Icons.sync,
+                color: AppColors.primary,
+              ),
+              onPressed: () =>
+                  controller.setPeriod(controller.selectedPeriod.value),
             ),
-            onPressed: () => controller.setPeriod(controller.selectedPeriod.value),
-          )),
+          ),
         ],
       ),
-      body: Column(
-        children: [
-          // Period selector
-          _PeriodSelector(),
-          // Leaderboard list
-          Expanded(child: _LeaderboardList()),
-        ],
+      body: SafeArea(
+        child: DDResponsiveCenter(
+          maxWidth: 920,
+          child: Column(
+            children: [
+              _PeriodSelector(),
+              Expanded(child: _LeaderboardList()),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -57,41 +62,88 @@ class LeaderboardScreen extends GetView<LeaderboardController> {
 class _PeriodSelector extends GetView<LeaderboardController> {
   @override
   Widget build(BuildContext context) {
-    return Obx(() => Container(
-      margin: const EdgeInsets.all(AppSizes.space16),
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerHighest,
-        borderRadius: AppSizes.borderRadiusFull,
-      ),
-      child: Row(
-        children: LeaderboardPeriod.values.map((period) {
-          final isSelected = controller.selectedPeriod.value == period;
-          return Expanded(
-            child: GestureDetector(
-              onTap: () => controller.setPeriod(period),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                decoration: BoxDecoration(
-                  color: isSelected ? AppColors.primary : Colors.transparent,
-                  borderRadius: AppSizes.borderRadiusFull,
-                ),
-                child: Text(
-                  _periodLabel(period),
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: isSelected ? Colors.white : AppColors.onSurfaceVariant,
-                  ),
-                ),
+    return Obx(() {
+      final textScale = MediaQuery.textScalerOf(context).scale(1);
+      final useScrollable =
+          MediaQuery.sizeOf(context).width < 380 || textScale > 1.15;
+
+      final chips = LeaderboardPeriod.values.map((period) {
+        final isSelected = controller.selectedPeriod.value == period;
+        return GestureDetector(
+          onTap: () => controller.setPeriod(period),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            constraints: BoxConstraints(minWidth: useScrollable ? 92 : 0),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: isSelected ? AppColors.primary : Colors.transparent,
+              borderRadius: AppSizes.borderRadiusFull,
+            ),
+            child: Text(
+              _periodLabel(period),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isSelected ? Colors.white : AppColors.onSurfaceVariant,
               ),
             ),
-          );
-        }).toList(),
-      ),
-    ));
+          ),
+        );
+      }).toList();
+
+      return Container(
+        margin: const EdgeInsets.all(AppSizes.space16),
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceContainerHighest,
+          borderRadius: AppSizes.borderRadiusFull,
+        ),
+        child: useScrollable
+            ? SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    for (var i = 0; i < chips.length; i++) ...[
+                      if (i > 0) const SizedBox(width: 4),
+                      chips[i],
+                    ],
+                  ],
+                ),
+              )
+            : Row(
+                children: LeaderboardPeriod.values.map((period) {
+                  final isSelected = controller.selectedPeriod.value == period;
+                  return Expanded(
+                    child: GestureDetector(
+                      onTap: () => controller.setPeriod(period),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? AppColors.primary
+                              : Colors.transparent,
+                          borderRadius: AppSizes.borderRadiusFull,
+                        ),
+                        child: Text(
+                          _periodLabel(period),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: isSelected
+                                ? Colors.white
+                                : AppColors.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+      );
+    });
   }
 
   String _periodLabel(LeaderboardPeriod p) => switch (p) {
@@ -107,7 +159,9 @@ class _LeaderboardList extends GetView<LeaderboardController> {
   Widget build(BuildContext context) {
     return Obx(() {
       if (controller.isLoading.value) {
-        return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+        return const Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        );
       }
 
       if (controller.entries.isEmpty) {
@@ -121,7 +175,10 @@ class _LeaderboardList extends GetView<LeaderboardController> {
           if (i == 0) {
             // Top 3 podium
             final top3 = controller.entries.take(3).toList();
-            return _Top3Podium(entries: top3, currentUserId: controller.currentUserEntry?.userId);
+            return _Top3Podium(
+              entries: top3,
+              currentUserId: controller.currentUserEntry?.userId,
+            );
           }
           final entry = controller.entries[i - 1];
           return _LeaderboardRow(
@@ -141,19 +198,35 @@ class _Top3Podium extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final useWrap = MediaQuery.sizeOf(context).width < 400;
+
     return Container(
       margin: const EdgeInsets.only(bottom: AppSizes.space24),
       padding: const EdgeInsets.symmetric(vertical: AppSizes.space16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.end,
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        crossAxisAlignment: WrapCrossAlignment.end,
+        spacing: useWrap ? AppSizes.space12 : 0,
+        runSpacing: useWrap ? AppSizes.space12 : 0,
         children: [
           if (entries.length > 1)
-            _PodiumPlace(entry: entries[1], place: 2, isCurrentUser: entries[1].userId == currentUserId),
+            _PodiumPlace(
+              entry: entries[1],
+              place: 2,
+              isCurrentUser: entries[1].userId == currentUserId,
+            ),
           if (entries.isNotEmpty)
-            _PodiumPlace(entry: entries[0], place: 1, isCurrentUser: entries[0].userId == currentUserId),
+            _PodiumPlace(
+              entry: entries[0],
+              place: 1,
+              isCurrentUser: entries[0].userId == currentUserId,
+            ),
           if (entries.length > 2)
-            _PodiumPlace(entry: entries[2], place: 3, isCurrentUser: entries[2].userId == currentUserId),
+            _PodiumPlace(
+              entry: entries[2],
+              place: 3,
+              isCurrentUser: entries[2].userId == currentUserId,
+            ),
         ],
       ),
     );
@@ -161,13 +234,21 @@ class _Top3Podium extends StatelessWidget {
 }
 
 class _PodiumPlace extends StatelessWidget {
-  const _PodiumPlace({required this.entry, required this.place, required this.isCurrentUser});
+  const _PodiumPlace({
+    required this.entry,
+    required this.place,
+    required this.isCurrentUser,
+  });
   final LeaderboardEntry entry;
   final int place;
   final bool isCurrentUser;
 
   static const _heights = {1: 100.0, 2: 72.0, 3: 52.0};
-  static const _colors = {1: Color(0xFFFFD700), 2: Color(0xFFC0C0C0), 3: Color(0xFFCD7F32)};
+  static const _colors = {
+    1: Color(0xFFFFD700),
+    2: Color(0xFFC0C0C0),
+    3: Color(0xFFCD7F32),
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -184,11 +265,18 @@ class _PodiumPlace extends StatelessWidget {
             shape: BoxShape.circle,
             border: Border.all(color: color, width: 3),
             image: entry.avatarUrl != null
-                ? DecorationImage(image: CachedNetworkImageProvider(entry.avatarUrl!), fit: BoxFit.cover)
+                ? DecorationImage(
+                    image: CachedNetworkImageProvider(entry.avatarUrl!),
+                    fit: BoxFit.cover,
+                  )
                 : null,
           ),
           child: entry.avatarUrl == null
-              ? Icon(Icons.person, size: place == 1 ? 32 : 24, color: AppColors.primary)
+              ? Icon(
+                  Icons.person,
+                  size: place == 1 ? 32 : 24,
+                  color: AppColors.primary,
+                )
               : null,
         ),
         const SizedBox(height: 4),
@@ -238,7 +326,11 @@ class _PodiumPlace extends StatelessWidget {
                 Icon(Icons.local_fire_department, size: 14, color: color),
                 Text(
                   '${entry.currentStreak}',
-                  style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: color,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ],
@@ -264,7 +356,9 @@ class _LeaderboardRow extends StatelessWidget {
             ? AppColors.primary.withValues(alpha: 0.08)
             : AppColors.surfaceContainerLow,
         borderRadius: AppSizes.borderRadiusMd,
-        border: isCurrentUser ? Border.all(color: AppColors.primary.withValues(alpha: 0.3)) : null,
+        border: isCurrentUser
+            ? Border.all(color: AppColors.primary.withValues(alpha: 0.3))
+            : null,
       ),
       child: Row(
         children: [
@@ -277,7 +371,9 @@ class _LeaderboardRow extends StatelessWidget {
                 fontFamily: AppTypography.serifFamily,
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
-                color: isCurrentUser ? AppColors.primary : AppColors.onSurfaceVariant,
+                color: isCurrentUser
+                    ? AppColors.primary
+                    : AppColors.onSurfaceVariant,
               ),
             ),
           ),
@@ -287,9 +383,14 @@ class _LeaderboardRow extends StatelessWidget {
             height: 40,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: AppColors.outline.withValues(alpha: 0.3)),
+              border: Border.all(
+                color: AppColors.outline.withValues(alpha: 0.3),
+              ),
               image: entry.avatarUrl != null
-                  ? DecorationImage(image: CachedNetworkImageProvider(entry.avatarUrl!), fit: BoxFit.cover)
+                  ? DecorationImage(
+                      image: CachedNetworkImageProvider(entry.avatarUrl!),
+                      fit: BoxFit.cover,
+                    )
                   : null,
             ),
             child: entry.avatarUrl == null
@@ -307,17 +408,26 @@ class _LeaderboardRow extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: isCurrentUser ? AppColors.primary : AppColors.onSurface,
+                    color: isCurrentUser
+                        ? AppColors.primary
+                        : AppColors.onSurface,
                   ),
                 ),
                 if (entry.currentStreak > 0)
                   Row(
                     children: [
-                      const Icon(Icons.local_fire_department, size: 12, color: Colors.orange),
+                      const Icon(
+                        Icons.local_fire_department,
+                        size: 12,
+                        color: Colors.orange,
+                      ),
                       const SizedBox(width: 2),
                       Text(
                         '${entry.currentStreak} day streak',
-                        style: const TextStyle(fontSize: 11, color: Colors.orange),
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Colors.orange,
+                        ),
                       ),
                     ],
                   ),
@@ -334,7 +444,9 @@ class _LeaderboardRow extends StatelessWidget {
                   fontFamily: AppTypography.serifFamily,
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
-                  color: isCurrentUser ? AppColors.primary : AppColors.onSurface,
+                  color: isCurrentUser
+                      ? AppColors.primary
+                      : AppColors.onSurface,
                 ),
               ),
               const Text(
@@ -357,7 +469,11 @@ class _EmptyLeaderboard extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.leaderboard_outlined, size: 72, color: AppColors.outlineVariant),
+          const Icon(
+            Icons.leaderboard_outlined,
+            size: 72,
+            color: AppColors.outlineVariant,
+          ),
           const SizedBox(height: AppSizes.space16),
           const Text(
             'No friends yet',

@@ -1,5 +1,6 @@
 import 'package:done_drop/core/constants/app_constants.dart';
 import 'package:done_drop/core/models/feed_delivery.dart';
+import 'package:done_drop/core/models/moment.dart';
 
 class FeedDeliveryPlanner {
   const FeedDeliveryPlanner();
@@ -20,21 +21,27 @@ class FeedDeliveryPlanner {
   }
 
   List<FeedDelivery> buildDeliveries({
-    required String momentId,
-    required String ownerId,
-    required String visibility,
-    required DateTime createdAt,
+    required Moment moment,
     required List<String> recipientIds,
   }) {
     return _dedupe(recipientIds)
         .map(
           (recipientId) => FeedDelivery(
-            id: deliveryIdForMoment(momentId, recipientId),
+            id: deliveryIdForMoment(moment.id, recipientId),
             recipientId: recipientId,
-            momentId: momentId,
-            ownerId: ownerId,
-            visibility: visibility,
-            createdAt: createdAt,
+            momentId: moment.id,
+            ownerId: moment.ownerId,
+            ownerDisplayName: moment.ownerDisplayName ?? 'Friend',
+            ownerAvatarUrl: moment.ownerAvatarUrl,
+            visibility: moment.visibility,
+            caption: moment.caption,
+            category: moment.category,
+            activityTitle: moment.activityTitle,
+            originalUrl: moment.media.original.downloadUrl,
+            thumbnailUrl: moment.media.thumbnail.downloadUrl,
+            completedAt: moment.completedAt,
+            createdAt: moment.createdAt,
+            isRead: recipientId == moment.ownerId,
           ),
         )
         .toList(growable: false);

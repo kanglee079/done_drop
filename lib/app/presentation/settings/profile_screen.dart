@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:done_drop/core/theme/theme.dart';
+import 'package:done_drop/app/core/widgets/widgets.dart';
 import 'package:done_drop/app/presentation/settings/profile_controller.dart';
 
 /// DoneDrop Profile Screen — view and edit profile.
@@ -26,17 +27,31 @@ class ProfileScreen extends StatelessWidget {
             title: const Text('Profile'),
             centerTitle: true,
             actions: [
-              Obx(() => TextButton(
-                onPressed: ctrl.isSaving.value ? null : ctrl.saveProfile,
-                child: ctrl.isSaving.value
-                    ? const SizedBox(width: 16, height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary))
-                    : Text('Save', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700)),
-              )),
+              Obx(
+                () => TextButton(
+                  onPressed: ctrl.isSaving.value ? null : ctrl.saveProfile,
+                  child: ctrl.isSaving.value
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.primary,
+                          ),
+                        )
+                      : Text(
+                          'Save',
+                          style: TextStyle(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                ),
+              ),
             ],
           ),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSizes.space24),
+          body: DDResponsiveScrollBody(
+            maxWidth: 560,
             child: Column(
               children: [
                 // Avatar
@@ -53,7 +68,11 @@ class ProfileScreen extends StatelessWidget {
                               ? CachedNetworkImageProvider(avatarUrl)
                               : null,
                           child: avatarUrl == null
-                              ? const Icon(Icons.person, color: AppColors.primary, size: 48)
+                              ? const Icon(
+                                  Icons.person,
+                                  color: AppColors.primary,
+                                  size: 48,
+                                )
                               : null,
                         ),
                         if (ctrl.isUploadingAvatar.value)
@@ -61,23 +80,33 @@ class ProfileScreen extends StatelessWidget {
                             child: CircleAvatar(
                               backgroundColor: Colors.black38,
                               child: const SizedBox(
-                                width: 20, height: 20,
+                                width: 20,
+                                height: 20,
                                 child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.white),
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
                           ),
                         Positioned(
-                          bottom: 0, right: 0,
+                          bottom: 0,
+                          right: 0,
                           child: Container(
                             padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
                               color: AppColors.primary,
                               shape: BoxShape.circle,
-                              border: Border.all(color: AppColors.surface, width: 2),
+                              border: Border.all(
+                                color: AppColors.surface,
+                                width: 2,
+                              ),
                             ),
-                            child: const Icon(Icons.camera_alt,
-                                size: 14, color: Colors.white),
+                            child: const Icon(
+                              Icons.camera_alt,
+                              size: 14,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ],
@@ -88,9 +117,14 @@ class ProfileScreen extends StatelessWidget {
                 Obx(() {
                   final msg = ctrl.successMessage.value;
                   if (msg == null) return const SizedBox.shrink();
-                  return Text(msg, style: TextStyle(
-                    color: AppColors.primary, fontSize: 12,
-                    fontWeight: FontWeight.w600));
+                  return Text(
+                    msg,
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  );
                 }),
                 const SizedBox(height: AppSizes.space24),
 
@@ -100,7 +134,10 @@ class ProfileScreen extends StatelessWidget {
                   child: TextField(
                     controller: ctrl.nameController,
                     decoration: _inputDecoration('Your name'),
-                    style: const TextStyle(fontSize: 15, color: AppColors.onSurface),
+                    style: const TextStyle(
+                      fontSize: 15,
+                      color: AppColors.onSurface,
+                    ),
                   ),
                 ),
                 const SizedBox(height: AppSizes.space20),
@@ -112,8 +149,13 @@ class ProfileScreen extends StatelessWidget {
                     controller: ctrl.bioController,
                     maxLines: 3,
                     maxLength: 150,
-                    decoration: _inputDecoration('Tell your friends a little about yourself'),
-                    style: const TextStyle(fontSize: 14, color: AppColors.onSurface),
+                    decoration: _inputDecoration(
+                      'Tell your friends a little about yourself',
+                    ),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: AppColors.onSurface,
+                    ),
                   ),
                 ),
 
@@ -123,7 +165,10 @@ class ProfileScreen extends StatelessWidget {
                   if (msg == null) return const SizedBox.shrink();
                   return Padding(
                     padding: const EdgeInsets.only(top: AppSizes.space12),
-                    child: Text(msg, style: TextStyle(color: AppColors.error, fontSize: 12)),
+                    child: Text(
+                      msg,
+                      style: TextStyle(color: AppColors.error, fontSize: 12),
+                    ),
                   );
                 }),
 
@@ -140,10 +185,15 @@ class ProfileScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('DANGER ZONE',
+                      Text(
+                        'DANGER ZONE',
                         style: TextStyle(
-                          fontSize: 11, fontWeight: FontWeight.w700,
-                          color: AppColors.error, letterSpacing: 1.5)),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.error,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
                       const SizedBox(height: AppSizes.space12),
                       SizedBox(
                         width: double.infinity,
@@ -190,10 +240,15 @@ class _FieldSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
+        Text(
+          label,
           style: TextStyle(
-            fontSize: 11, fontWeight: FontWeight.w700,
-            color: AppColors.outline, letterSpacing: 1.5)),
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: AppColors.outline,
+            letterSpacing: 1.5,
+          ),
+        ),
         const SizedBox(height: AppSizes.space8),
         child,
       ],

@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+
+import 'package:done_drop/app/presentation/feed/feed_controller.dart';
+import 'package:done_drop/app/presentation/home/home_controller.dart';
+import 'package:done_drop/app/presentation/memory_wall/memory_wall_controller.dart';
 import 'package:done_drop/app/routes/app_routes.dart';
 import 'package:done_drop/core/constants/app_constants.dart';
 import 'package:done_drop/core/models/moment.dart';
@@ -44,6 +48,8 @@ class MomentController extends GetxController {
   final RxList<String> selectedFriendIds = <String>[].obs;
   final Rx<String> selectedCategory = ''.obs;
   final isPosting = false.obs;
+  final uploadProgress = 0.0.obs;
+  final uploadStage = MediaUploadStage.complete.obs;
   final RxnString errorMessage = RxnString();
   final Rxn<MomentSubmissionResult> lastSubmission =
       Rxn<MomentSubmissionResult>();
@@ -62,6 +68,14 @@ class MomentController extends GetxController {
   String? get completionLogId => _completionLogId;
   bool get isProofMoment => _activityId != null;
 
+  String get uploadStatusLabel => switch (uploadStage.value) {
+        MediaUploadStage.preparing => 'Preparing image…',
+        MediaUploadStage.uploading =>
+          'Uploading ${(uploadProgress.value * 100).round()}%',
+        MediaUploadStage.finalizing => 'Finalizing moment…',
+        MediaUploadStage.complete => 'Ready',
+      };
+
   void startCaptureSession(Map<String, dynamic>? args) {
     if (_sessionInitialized && !_isSameContext(args)) {
       resetComposer();
@@ -72,6 +86,8 @@ class MomentController extends GetxController {
     _activityInstanceId = args?['activityInstanceId'] as String?;
     _completionLogId = args?['completionLogId'] as String?;
     _imagePath = null;
+    uploadProgress.value = 0;
+    uploadStage.value = MediaUploadStage.complete;
     errorMessage.value = null;
     lastSubmission.value = null;
   }
@@ -101,7 +117,15 @@ class MomentController extends GetxController {
       return;
     }
 
+    if (visibility.value == AppConstants.visibilitySelectedFriends &&
+        selectedFriendIds.isEmpty) {
+      errorMessage.value = 'Pick at least one buddy before sharing.';
+      return;
+    }
+
     isPosting.value = true;
+    uploadProgress.value = 0;
+    uploadStage.value = MediaUploadStage.preparing;
     errorMessage.value = null;
 
     final momentId = 'moment_${DateTime.now().millisecondsSinceEpoch}';
@@ -111,9 +135,15 @@ class MomentController extends GetxController {
     final category = selectedCategory.value.isEmpty
         ? null
         : selectedCategory.value;
+    final activityTitle = await _resolveActivityTitle();
+    final ownerDisplayName = _resolveOwnerDisplayName();
+    final ownerAvatarUrl = _resolveOwnerAvatarUrl();
     final recipientIds = await _resolveRecipientIds(uid, postVisibility);
 
     final momentData = {
+      'ownerDisplayName': ownerDisplayName,
+      'ownerAvatarUrl': ownerAvatarUrl,
+      'activityTitle': activityTitle,
       'visibility': postVisibility,
       'selectedFriendIds': selectedFriendIds.toList(),
       'caption': caption,
@@ -123,9 +153,37 @@ class MomentController extends GetxController {
       'updatedAt': now.toIso8601String(),
     };
 
+    final optimisticMoment = Moment(
+      id: momentId,
+      ownerId: uid,
+      ownerDisplayName: ownerDisplayName,
+      ownerAvatarUrl: ownerAvatarUrl,
+      activityId: _activityId,
+      activityInstanceId: _activityInstanceId,
+      completionLogId: _completionLogId,
+      activityTitle: activityTitle,
+      visibility: postVisibility,
+      selectedFriendIds: selectedFriendIds.toList(),
+      media: MomentMedia.empty(),
+      caption: caption,
+      category: category,
+      completedAt: now,
+      createdAt: now,
+      updatedAt: now,
+      localPreviewPath: _imagePath,
+      uploadProgress: 0,
+      syncStatus: MomentSyncStatus.processing,
+    );
+    _upsertOptimisticMoment(optimisticMoment);
+
     try {
       final connectivity = Get.find<ConnectivityService>();
       if (!connectivity.isOnlineNow) {
+        _updateOptimisticMoment(
+          momentId,
+          syncStatus: MomentSyncStatus.queued,
+          uploadProgress: 0,
+        );
         await _queueMomentForSync(
           momentId: momentId,
           ownerId: uid,
@@ -140,43 +198,55 @@ class MomentController extends GetxController {
         userId: uid,
         momentId: momentId,
         localFilePath: _imagePath!,
+        onProgress: (progress) {
+          uploadProgress.value = progress.progress;
+          uploadStage.value = progress.stage;
+          _updateOptimisticMoment(
+            momentId,
+            syncStatus: _syncStatusForStage(progress.stage),
+            uploadProgress: progress.progress,
+          );
+        },
       );
 
-      final moment = Moment(
-        id: momentId,
-        ownerId: uid,
-        activityId: _activityId,
-        activityInstanceId: _activityInstanceId,
-        completionLogId: _completionLogId,
-        visibility: postVisibility,
-        selectedFriendIds: selectedFriendIds.toList(),
+      final moment = optimisticMoment.copyWith(
         media: media,
-        caption: caption,
-        category: category,
-        completedAt: now,
-        createdAt: now,
-        updatedAt: now,
-        reactionCounts: const {},
-        isDeleted: false,
-        moderationStatus: 'approved',
+        uploadProgress: 1,
+        syncStatus: MomentSyncStatus.finalizing,
+      );
+      _updateOptimisticMoment(
+        momentId,
+        media: media,
+        syncStatus: MomentSyncStatus.finalizing,
+        uploadProgress: 1,
       );
 
       await _momentRepo.createMoment(moment);
       await _linkProofMoment(momentId);
       await _momentRepo.createFeedDeliveries(
-        momentId: momentId,
-        ownerId: uid,
-        visibility: postVisibility,
+        moment: moment,
         recipientIds: recipientIds,
       );
 
-      AnalyticsService.instance.momentPosted(
+      _updateOptimisticMoment(
+        momentId,
+        media: media,
+        syncStatus: MomentSyncStatus.synced,
+        uploadProgress: 1,
+      );
+
+      await AnalyticsService.instance.momentPosted(
         visibility: postVisibility,
         category: category,
       );
       await _finishSubmission(wasOfflineQueued: false);
     } catch (error) {
       isPosting.value = false;
+      uploadStage.value = MediaUploadStage.complete;
+      _updateOptimisticMoment(
+        momentId,
+        syncStatus: MomentSyncStatus.failed,
+      );
       errorMessage.value = 'Failed to post moment: $error';
     }
   }
@@ -207,6 +277,8 @@ class MomentController extends GetxController {
     selectedCategory.value = '';
     errorMessage.value = null;
     isPosting.value = false;
+    uploadProgress.value = 0;
+    uploadStage.value = MediaUploadStage.complete;
     lastSubmission.value = null;
     _imagePath = null;
     _activityId = null;
@@ -246,11 +318,16 @@ class MomentController extends GetxController {
           .toList();
     }
 
-    return _deliveryPlanner.resolveRecipientIds(
+    final recipientIds = _deliveryPlanner.resolveRecipientIds(
       visibility: postVisibility,
       allFriendIds: friendIds,
       selectedFriendIds: selectedFriendIds,
     );
+    if (postVisibility != AppConstants.visibilityPersonalOnly &&
+        !recipientIds.contains(uid)) {
+      recipientIds.add(uid);
+    }
+    return recipientIds;
   }
 
   Future<void> _linkProofMoment(String momentId) async {
@@ -266,13 +343,18 @@ class MomentController extends GetxController {
 
     if (instanceId != null && _completionLogId != null) {
       await _activityRepo.linkMomentToInstance(instanceId, momentId);
-      await _activityRepo.updateCompletionLogMomentId(_completionLogId!, momentId);
+      await _activityRepo.updateCompletionLogMomentId(
+        _completionLogId!,
+        momentId,
+      );
     }
   }
 
   Future<void> _finishSubmission({required bool wasOfflineQueued}) async {
     await HapticFeedback.mediumImpact();
     isPosting.value = false;
+    uploadProgress.value = wasOfflineQueued ? 0 : 1;
+    uploadStage.value = MediaUploadStage.complete;
     errorMessage.value = null;
     lastSubmission.value = MomentSubmissionResult(
       isProofMoment: isProofMoment,
@@ -295,6 +377,76 @@ class MomentController extends GetxController {
     return _activityId == args?['activityId'] &&
         _activityInstanceId == args?['activityInstanceId'] &&
         _completionLogId == args?['completionLogId'];
+  }
+
+  String _resolveOwnerDisplayName() {
+    if (Get.isRegistered<HomeController>()) {
+      final displayName = Get.find<HomeController>().profile.value?.displayName;
+      if (displayName != null && displayName.isNotEmpty) return displayName;
+    }
+    return _authController.firebaseUser?.displayName ?? 'DoneDrop member';
+  }
+
+  String? _resolveOwnerAvatarUrl() {
+    if (Get.isRegistered<HomeController>()) {
+      final avatarUrl = Get.find<HomeController>().profile.value?.avatarUrl;
+      if (avatarUrl != null && avatarUrl.isNotEmpty) return avatarUrl;
+    }
+    return _authController.firebaseUser?.photoURL;
+  }
+
+  Future<String?> _resolveActivityTitle() async {
+    final activityId = _activityId;
+    if (activityId == null) return null;
+    final activity = await _activityRepo.getActivity(activityId);
+    return activity?.title;
+  }
+
+  void _upsertOptimisticMoment(Moment moment) {
+    if (Get.isRegistered<MemoryWallController>()) {
+      Get.find<MemoryWallController>().upsertOptimisticMoment(moment);
+    }
+    if (moment.visibility != AppConstants.visibilityPersonalOnly &&
+        Get.isRegistered<FeedController>()) {
+      Get.find<FeedController>().upsertOptimisticMoment(moment);
+    }
+  }
+
+  void _updateOptimisticMoment(
+    String momentId, {
+    MomentMedia? media,
+    MomentSyncStatus? syncStatus,
+    double? uploadProgress,
+  }) {
+    if (Get.isRegistered<MemoryWallController>()) {
+      Get.find<MemoryWallController>().updateOptimisticMoment(
+        momentId,
+        media: media,
+        syncStatus: syncStatus,
+        uploadProgress: uploadProgress,
+      );
+    }
+    if (Get.isRegistered<FeedController>()) {
+      Get.find<FeedController>().updateOptimisticMoment(
+        momentId,
+        media: media,
+        syncStatus: syncStatus,
+        uploadProgress: uploadProgress,
+      );
+    }
+  }
+
+  MomentSyncStatus _syncStatusForStage(MediaUploadStage stage) {
+    switch (stage) {
+      case MediaUploadStage.preparing:
+        return MomentSyncStatus.processing;
+      case MediaUploadStage.uploading:
+        return MomentSyncStatus.uploading;
+      case MediaUploadStage.finalizing:
+        return MomentSyncStatus.finalizing;
+      case MediaUploadStage.complete:
+        return MomentSyncStatus.synced;
+    }
   }
 
   @override

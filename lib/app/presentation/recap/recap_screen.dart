@@ -16,6 +16,8 @@ class RecapScreen extends StatelessWidget {
     return GetBuilder<RecapController>(
       init: RecapController(),
       builder: (ctrl) {
+        final spec = DDResponsiveSpec.of(context);
+
         return Scaffold(
           backgroundColor: AppColors.surface,
           body: SafeArea(
@@ -26,15 +28,22 @@ class RecapScreen extends StatelessWidget {
                 );
               }
 
-              return SingleChildScrollView(
-                padding: const EdgeInsets.all(AppSizes.space24),
+              return DDResponsiveScrollBody(
+                maxWidth: 820,
+                padding: spec.pagePadding(
+                  top: AppSizes.space24,
+                  bottom: AppSizes.space24,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.arrow_back, color: AppColors.primary),
+                          icon: const Icon(
+                            Icons.arrow_back,
+                            color: AppColors.primary,
+                          ),
                           onPressed: () => Get.back(),
                         ),
                         const Spacer(),
@@ -160,8 +169,11 @@ class RecapScreen extends StatelessWidget {
                           padding: const EdgeInsets.all(AppSizes.space32),
                           child: Column(
                             children: [
-                              Icon(Icons.photo_camera_outlined,
-                                  size: 48, color: AppColors.outline),
+                              Icon(
+                                Icons.photo_camera_outlined,
+                                size: 48,
+                                color: AppColors.outline,
+                              ),
                               const SizedBox(height: AppSizes.space16),
                               Text(
                                 'No moments this week yet.',
@@ -180,11 +192,15 @@ class RecapScreen extends StatelessWidget {
                     const SizedBox(height: AppSizes.space48),
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: AppSizes.space20),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppSizes.space20,
+                      ),
                       decoration: BoxDecoration(
                         border: Border(
                           top: BorderSide(
-                            color: AppColors.outlineVariant.withValues(alpha: 0.15),
+                            color: AppColors.outlineVariant.withValues(
+                              alpha: 0.15,
+                            ),
                           ),
                         ),
                       ),
@@ -262,7 +278,10 @@ class _DisciplineRecap extends StatelessWidget {
               runSpacing: 8,
               children: activities.take(5).map((activity) {
                 return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: activity.currentStreak > 0
                         ? AppColors.primary.withValues(alpha: 0.1)
@@ -273,17 +292,29 @@ class _DisciplineRecap extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       if (activity.currentStreak > 0) ...[
-                        Icon(Icons.local_fire_department, size: 14, color: AppColors.primary),
+                        Icon(
+                          Icons.local_fire_department,
+                          size: 14,
+                          color: AppColors.primary,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           '${activity.currentStreak}',
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary,
+                          ),
                         ),
                         const SizedBox(width: 4),
                       ],
                       Text(
                         activity.title,
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.onSurface),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.onSurface,
+                        ),
                       ),
                     ],
                   ),
@@ -308,9 +339,21 @@ class _DaySection extends StatelessWidget {
     final dayDate = DateTime(day.date.year, day.date.month, day.date.day);
     if (dayDate == today) return 'Today';
     if (dayDate == yesterday) return 'Yesterday';
-    const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-    const months = ['Jan','Feb','Mar','Apr','May','Jun',
-                    'Jul','Aug','Sep','Oct','Nov','Dec'];
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     return '${days[dayDate.weekday - 1]}, ${months[dayDate.month - 1]} ${dayDate.day}';
   }
 
@@ -334,8 +377,11 @@ class _DaySection extends StatelessWidget {
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
+            gridDelegate: ddAdaptiveGridDelegate(
+              context,
+              compactExtent: 96,
+              mediumExtent: 120,
+              expandedExtent: 140,
               crossAxisSpacing: 4,
               mainAxisSpacing: 4,
             ),
@@ -347,10 +393,9 @@ class _DaySection extends StatelessWidget {
                 child: CachedNetworkImage(
                   imageUrl: m.media.thumbnail.downloadUrl,
                   fit: BoxFit.cover,
-                  placeholder: (_, __) => Container(
-                    color: AppColors.surfaceContainerHighest,
-                  ),
-                  errorWidget: (_, __, ___) => Container(
+                  placeholder: (context, url) =>
+                      Container(color: AppColors.surfaceContainerHighest),
+                  errorWidget: (context, url, error) => Container(
                     color: AppColors.surfaceContainerHighest,
                     child: const Icon(Icons.broken_image, size: 20),
                   ),

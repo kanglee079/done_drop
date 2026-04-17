@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -6,7 +8,7 @@ import 'package:done_drop/app/core/widgets/widgets.dart';
 import 'package:done_drop/app/presentation/feed/feed_controller.dart';
 import 'package:done_drop/app/presentation/feed/reaction_controller.dart';
 import 'package:done_drop/app/routes/app_routes.dart';
-import 'package:done_drop/firebase/repositories/activity_repository.dart';
+import 'package:done_drop/core/models/moment.dart';
 
 /// DoneDrop Feed Screen — Private friend feed view
 class FeedScreen extends StatelessWidget {
@@ -15,7 +17,7 @@ class FeedScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetBuilder<FeedController>(
-      init: FeedController(Get.find<ActivityRepository>()),
+      init: FeedController(),
       builder: (ctrl) {
         return Scaffold(
           backgroundColor: AppColors.surface,
@@ -106,8 +108,8 @@ class FeedScreen extends StatelessWidget {
               itemCount: ctrl.moments.length,
               itemBuilder: (ctx, i) {
                 final moment = ctrl.moments[i];
-                final ownerName = ctrl.getOwnerName(moment.ownerId);
-                final ownerAvatar = ctrl.getOwnerAvatar(moment.ownerId);
+                final ownerName = ctrl.getOwnerName(moment);
+                final ownerAvatar = ctrl.getOwnerAvatar(moment);
                 return _MomentTile(
                   moment: moment,
                   ownerName: ownerName,
@@ -129,7 +131,7 @@ class _MomentTile extends StatelessWidget {
     required this.ownerAvatar,
   });
 
-  final dynamic moment;
+  final Moment moment;
   final String ownerName;
   final String? ownerAvatar;
 
@@ -197,15 +199,46 @@ class _MomentTile extends StatelessWidget {
           // Image
           AspectRatio(
             aspectRatio: 1,
-            child: CachedNetworkImage(
-              imageUrl: moment.media.thumbnail.downloadUrl,
-              fit: BoxFit.cover,
-              placeholder: (_, __) =>
-                  Container(color: AppColors.surfaceContainerHighest),
-              errorWidget: (_, __, ___) => Container(
-                color: AppColors.surfaceContainerHighest,
-                child: const Icon(Icons.broken_image, color: AppColors.outline),
-              ),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                if (moment.localPreviewPath != null &&
+                    moment.localPreviewPath!.isNotEmpty)
+                  Image.file(File(moment.localPreviewPath!), fit: BoxFit.cover)
+                else
+                  CachedNetworkImage(
+                    imageUrl: moment.media.thumbnail.downloadUrl,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) =>
+                        Container(color: AppColors.surfaceContainerHighest),
+                    errorWidget: (context, url, error) => Container(
+                      color: AppColors.surfaceContainerHighest,
+                      child: const Icon(
+                        Icons.broken_image,
+                        color: AppColors.outline,
+                      ),
+                    ),
+                  ),
+                if (moment.isPendingSync)
+                  Positioned(
+                    left: 12,
+                    right: 12,
+                    bottom: 12,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(999),
+                      child: LinearProgressIndicator(
+                        value: moment.syncStatus == MomentSyncStatus.queued
+                            ? null
+                            : moment.uploadProgress.clamp(0, 1),
+                        minHeight: 6,
+                        backgroundColor: Colors.white.withValues(alpha: 0.28),
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          AppColors.onPrimary,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
 
@@ -221,6 +254,35 @@ class _MomentTile extends StatelessWidget {
                       fontSize: 14,
                       color: AppColors.onSurface,
                       height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: AppSizes.space12),
+                ],
+                if (moment.isPendingSync) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      switch (moment.syncStatus) {
+                        MomentSyncStatus.queued => 'Queued',
+                        MomentSyncStatus.processing => 'Preparing',
+                        MomentSyncStatus.uploading =>
+                          'Uploading ${(moment.uploadProgress * 100).round()}%',
+                        MomentSyncStatus.finalizing => 'Syncing',
+                        MomentSyncStatus.failed => 'Failed',
+                        MomentSyncStatus.synced => 'Posted',
+                      },
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.onSurface,
+                      ),
                     ),
                   ),
                   const SizedBox(height: AppSizes.space12),

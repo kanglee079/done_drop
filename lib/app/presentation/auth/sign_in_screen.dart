@@ -11,23 +11,28 @@ class SignInScreen extends GetView<SignInController> {
   @override
   Widget build(BuildContext context) {
     final showGoogleSignIn = !GetPlatform.isIOS;
+    final spec = DDResponsiveSpec.of(context);
 
     return Scaffold(
       backgroundColor: AppColors.surface,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: AppSizes.space24),
+        child: DDResponsiveScrollBody(
+          maxWidth: 520,
+          padding: spec.pagePadding(
+            top: spec.isShort ? AppSizes.space24 : AppSizes.space40,
+            bottom: AppSizes.space24,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: AppSizes.space64),
+              SizedBox(height: spec.isShort ? 0 : AppSizes.space24),
               // Logo & tagline
               Center(
                 child: Text(
                   'DoneDrop',
                   style: TextStyle(
                     fontFamily: AppTypography.serifFamily,
-                    fontSize: 48,
+                    fontSize: spec.isCompact ? 44 : 48,
                     fontWeight: FontWeight.w700,
                     fontStyle: FontStyle.italic,
                     color: AppColors.primary,
@@ -46,7 +51,9 @@ class SignInScreen extends GetView<SignInController> {
                   ),
                 ),
               ),
-              const SizedBox(height: AppSizes.space48),
+              SizedBox(
+                height: spec.isShort ? AppSizes.space32 : AppSizes.space48,
+              ),
 
               // Form
               Form(

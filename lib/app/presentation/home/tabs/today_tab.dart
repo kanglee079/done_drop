@@ -23,16 +23,15 @@ class _TodayContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final nextHabit = controller.nextUpHabit;
+    final spec = DDResponsiveSpec.of(context);
 
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
       slivers: [
         SliverPadding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSizes.space24,
-            AppSizes.space12,
-            AppSizes.space24,
-            AppSizes.space32,
+          padding: spec.pagePadding(
+            top: AppSizes.space12,
+            bottom: AppSizes.space32,
           ),
           sliver: SliverList.list(
             children: [
@@ -392,7 +391,7 @@ class _CapturedTodayStrip extends StatelessWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: captured.length,
-        separatorBuilder: (_, __) => const SizedBox(width: AppSizes.space12),
+        separatorBuilder: (_, index) => const SizedBox(width: AppSizes.space12),
         itemBuilder: (context, index) {
           final activity = captured[index];
           final instance = controller.getInstance(activity.id);

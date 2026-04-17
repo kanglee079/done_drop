@@ -5,6 +5,8 @@ class _FeedTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final spec = DDResponsiveSpec.of(context);
+
     return Obx(() {
       final controller = Get.find<FeedController>();
       if (controller.isLoading.value) {
@@ -15,23 +17,19 @@ class _FeedTab extends StatelessWidget {
       }
 
       return ListView.separated(
-        padding: const EdgeInsets.fromLTRB(
-          AppSizes.space24,
-          AppSizes.space12,
-          AppSizes.space24,
-          120,
-        ),
+        padding: spec.pagePadding(top: AppSizes.space12, bottom: 120),
         itemBuilder: (context, index) {
           final moment = controller.moments[index];
           return _BuddyMomentCard(
             key: ValueKey('buddy-${moment.id}'),
             moment: moment,
-            ownerName: controller.getOwnerName(moment.ownerId),
-            ownerAvatar: controller.getOwnerAvatar(moment.ownerId),
+            ownerName: controller.getOwnerName(moment),
+            ownerAvatar: controller.getOwnerAvatar(moment),
             activityTitle: controller.activityTitleFor(moment),
           );
         },
-        separatorBuilder: (_, __) => const SizedBox(height: AppSizes.space20),
+        separatorBuilder: (context, index) =>
+            const SizedBox(height: AppSizes.space20),
         itemCount: controller.moments.length,
       );
     });
@@ -178,6 +176,10 @@ class _BuddyMomentCard extends StatelessWidget {
                           color: AppColors.onSurfaceVariant,
                         ),
                       ),
+                      if (moment.isPendingSync) ...[
+                        const SizedBox(height: AppSizes.space4),
+                        _MomentSyncPill(moment: moment),
+                      ],
                     ],
                   ),
                 ),
@@ -187,19 +189,7 @@ class _BuddyMomentCard extends StatelessWidget {
           // ── Image ───────────────────────────────────────────────────────
           AspectRatio(
             aspectRatio: 4 / 5,
-            child: CachedNetworkImage(
-              imageUrl: moment.media.thumbnail.downloadUrl,
-              fit: BoxFit.cover,
-              placeholder: (_, __) =>
-                  Container(color: AppColors.surfaceContainerHigh),
-              errorWidget: (_, __, ___) => Container(
-                color: AppColors.surfaceContainerHigh,
-                child: const Icon(
-                  Icons.broken_image_outlined,
-                  color: AppColors.outline,
-                ),
-              ),
-            ),
+            child: _MomentImage(moment: moment),
           ),
           // ── Card Footer ─────────────────────────────────────────────────
           Padding(
@@ -212,6 +202,13 @@ class _BuddyMomentCard extends StatelessWidget {
                   spacing: AppSizes.space8,
                   runSpacing: AppSizes.space8,
                   children: [
+                    if (moment.isPendingSync)
+                      _MetaChip(
+                        icon: Icons.sync_outlined,
+                        label: _syncLabel(moment),
+                        color: AppColors.onSurface,
+                        background: AppColors.surfaceContainerHigh,
+                      ),
                     if (activityTitle != null)
                       _MetaChip(
                         icon: Icons.check_circle_outline,
@@ -269,6 +266,99 @@ class _BuddyMomentCard extends StatelessWidget {
     if (difference.inHours < 1) return '${difference.inMinutes}m ago';
     if (difference.inDays < 1) return '${difference.inHours}h ago';
     return DateFormat('MMM d').format(createdAt);
+  }
+}
+
+class _MomentImage extends StatelessWidget {
+  const _MomentImage({required this.moment});
+
+  final Moment moment;
+
+  @override
+  Widget build(BuildContext context) {
+    final localPreviewPath = moment.localPreviewPath;
+    if (localPreviewPath != null && localPreviewPath.isNotEmpty) {
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.file(File(localPreviewPath), fit: BoxFit.cover),
+          if (moment.isPendingSync)
+            Positioned(
+              left: AppSizes.space12,
+              right: AppSizes.space12,
+              bottom: AppSizes.space12,
+              child: ClipRRect(
+                borderRadius: AppSizes.borderRadiusFull,
+                child: LinearProgressIndicator(
+                  value: moment.syncStatus == MomentSyncStatus.queued
+                      ? null
+                      : moment.uploadProgress.clamp(0, 1),
+                  minHeight: 6,
+                  backgroundColor: Colors.white.withValues(alpha: 0.28),
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    AppColors.onPrimary,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      );
+    }
+
+    return CachedNetworkImage(
+      imageUrl: moment.media.thumbnail.downloadUrl,
+      fit: BoxFit.cover,
+      placeholder: (context, url) =>
+          Container(color: AppColors.surfaceContainerHigh),
+      errorWidget: (context, url, error) => Container(
+        color: AppColors.surfaceContainerHigh,
+        child: const Icon(
+          Icons.broken_image_outlined,
+          color: AppColors.outline,
+        ),
+      ),
+    );
+  }
+}
+
+class _MomentSyncPill extends StatelessWidget {
+  const _MomentSyncPill({required this.moment});
+
+  final Moment moment;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSizes.space10,
+        vertical: AppSizes.space6,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerHigh,
+        borderRadius: AppSizes.borderRadiusFull,
+      ),
+      child: Text(
+        _syncLabel(moment),
+        style: AppTypography.bodySmall(color: AppColors.onSurface),
+      ),
+    );
+  }
+}
+
+String _syncLabel(Moment moment) {
+  switch (moment.syncStatus) {
+    case MomentSyncStatus.queued:
+      return 'Queued';
+    case MomentSyncStatus.processing:
+      return 'Preparing';
+    case MomentSyncStatus.uploading:
+      return 'Uploading ${(moment.uploadProgress * 100).round()}%';
+    case MomentSyncStatus.finalizing:
+      return 'Syncing';
+    case MomentSyncStatus.failed:
+      return 'Failed';
+    case MomentSyncStatus.synced:
+      return 'Posted';
   }
 }
 
@@ -381,7 +471,7 @@ class _FeedLoadingState extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView.separated(
       padding: const EdgeInsets.all(AppSizes.space24),
-      itemBuilder: (_, __) => Shimmer.fromColors(
+      itemBuilder: (context, index) => Shimmer.fromColors(
         baseColor: AppColors.surfaceContainerHigh,
         highlightColor: AppColors.surfaceContainerLowest,
         child: Container(
@@ -392,7 +482,8 @@ class _FeedLoadingState extends StatelessWidget {
           ),
         ),
       ),
-      separatorBuilder: (_, __) => const SizedBox(height: AppSizes.space20),
+      separatorBuilder: (context, index) =>
+          const SizedBox(height: AppSizes.space20),
       itemCount: 3,
     );
   }

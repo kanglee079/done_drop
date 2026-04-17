@@ -146,16 +146,20 @@ class _HeroHabitCard extends StatelessWidget {
           const SizedBox(height: AppSizes.space24),
           Row(
             children: [
-              _HeroMetaChip(
-                icon: hasProof ? Icons.verified_outlined : Icons.lock_outline,
-                label: hasProof ? 'Proof attached' : 'Private by default',
-                inverted: !isCompleted,
+              Expanded(
+                child: _HeroMetaChip(
+                  icon: hasProof ? Icons.verified_outlined : Icons.lock_outline,
+                  label: hasProof ? 'Proof attached' : 'Private by default',
+                  inverted: !isCompleted,
+                ),
               ),
               const SizedBox(width: AppSizes.space8),
-              _HeroMetaChip(
-                icon: isOverdue ? Icons.schedule_outlined : Icons.bolt_outlined,
-                label: isOverdue ? 'Needs recovery' : 'One tap to finish',
-                inverted: !isCompleted,
+              Expanded(
+                child: _HeroMetaChip(
+                  icon: isOverdue ? Icons.schedule_outlined : Icons.bolt_outlined,
+                  label: isOverdue ? 'Needs recovery' : 'One tap to finish',
+                  inverted: !isCompleted,
+                ),
               ),
             ],
           ),

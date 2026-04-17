@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:done_drop/app/core/widgets/widgets.dart';
 import 'package:done_drop/core/theme/theme.dart';
 import 'package:done_drop/app/presentation/premium/premium_controller.dart';
 
@@ -12,11 +13,17 @@ class PremiumScreen extends StatelessWidget {
     return GetBuilder<PremiumController>(
       init: PremiumController(),
       builder: (ctrl) {
+        final spec = DDResponsiveSpec.of(context);
+
         return Scaffold(
           backgroundColor: AppColors.surface,
           body: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(AppSizes.space24),
+            child: DDResponsiveScrollBody(
+              maxWidth: 720,
+              padding: spec.pagePadding(
+                top: AppSizes.space24,
+                bottom: AppSizes.space24,
+              ),
               child: Column(
                 children: [
                   // Top bar
@@ -53,7 +60,7 @@ class PremiumScreen extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontFamily: AppTypography.serifFamily,
-                      fontSize: 36,
+                      fontSize: spec.isCompact ? 32 : 36,
                       fontWeight: FontWeight.w700,
                       color: AppColors.primary,
                     ),

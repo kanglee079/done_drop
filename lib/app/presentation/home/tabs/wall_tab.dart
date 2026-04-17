@@ -5,6 +5,8 @@ class _WallTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final spec = DDResponsiveSpec.of(context);
+
     return Obx(() {
       final controller = Get.find<MemoryWallController>();
       if (controller.isLoading.value) {
@@ -18,14 +20,10 @@ class _WallTab extends StatelessWidget {
 
       final sections = groupedMoments.entries.toList(growable: false);
       return ListView.separated(
-        padding: const EdgeInsets.fromLTRB(
-          AppSizes.space24,
-          AppSizes.space12,
-          AppSizes.space24,
-          120,
-        ),
+        padding: spec.pagePadding(top: AppSizes.space12, bottom: 120),
         itemCount: sections.length,
-        separatorBuilder: (_, __) => const SizedBox(height: AppSizes.space24),
+        separatorBuilder: (context, index) =>
+            const SizedBox(height: AppSizes.space24),
         itemBuilder: (context, index) {
           final section = sections[index];
           return _WallMonthSection(
@@ -57,7 +55,6 @@ class _WallMonthSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── Month label with divider ───────────────────────────────────────
         Row(
           children: [
             Expanded(
@@ -77,26 +74,30 @@ class _WallMonthSection extends StatelessWidget {
               ),
               child: Text(
                 '${moments.length}',
-                style: AppTypography.labelMedium(color: AppColors.onSurfaceVariant),
+                style: AppTypography.labelMedium(
+                  color: AppColors.onSurfaceVariant,
+                ),
               ),
             ),
           ],
         ),
         const SizedBox(height: AppSizes.space4),
         Text(
-          'private moments',
+          'Every proof you kept, including the ones you shared.',
           style: AppTypography.bodySmall(color: AppColors.onSurfaceVariant),
         ),
         const SizedBox(height: AppSizes.space16),
-        // ── Lead card ──────────────────────────────────────────────────────
         _WallLeadCard(moment: leadMoment),
         if (trailingMoments.isNotEmpty) ...[
           const SizedBox(height: AppSizes.space12),
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
+            gridDelegate: ddAdaptiveGridDelegate(
+              context,
+              compactExtent: 160,
+              mediumExtent: 190,
+              expandedExtent: 220,
               mainAxisSpacing: AppSizes.space12,
               crossAxisSpacing: AppSizes.space12,
               childAspectRatio: 1.05,
@@ -120,6 +121,10 @@ class _WallLeadCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final imageUrl = moment.media.original.downloadUrl.isEmpty
+        ? moment.media.thumbnail.downloadUrl
+        : moment.media.original.downloadUrl;
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLowest,
@@ -132,17 +137,30 @@ class _WallLeadCard extends StatelessWidget {
         children: [
           AspectRatio(
             aspectRatio: 16 / 9,
-            child: CachedNetworkImage(
-              imageUrl: moment.media.original.downloadUrl.isEmpty
-                  ? moment.media.thumbnail.downloadUrl
-                  : moment.media.original.downloadUrl,
-              fit: BoxFit.cover,
-              placeholder: (_, __) =>
-                  Container(color: AppColors.surfaceContainerHigh),
-              errorWidget: (_, __, ___) => Container(
-                color: AppColors.surfaceContainerHigh,
-                child: const Icon(Icons.broken_image_outlined),
-              ),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                _WallMomentImage(moment: moment, imageUrl: imageUrl),
+                if (moment.isPendingSync)
+                  Positioned(
+                    left: AppSizes.space12,
+                    right: AppSizes.space12,
+                    bottom: AppSizes.space12,
+                    child: ClipRRect(
+                      borderRadius: AppSizes.borderRadiusFull,
+                      child: LinearProgressIndicator(
+                        value: moment.syncStatus == MomentSyncStatus.queued
+                            ? null
+                            : moment.uploadProgress.clamp(0, 1),
+                        minHeight: 6,
+                        backgroundColor: Colors.white.withValues(alpha: 0.28),
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          AppColors.onPrimary,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
           Padding(
@@ -150,6 +168,10 @@ class _WallLeadCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (moment.isPendingSync) ...[
+                  _MomentSyncPill(moment: moment),
+                  const SizedBox(height: AppSizes.space12),
+                ],
                 if ((moment.category ?? '').isNotEmpty)
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -169,7 +191,7 @@ class _WallLeadCard extends StatelessWidget {
                   const SizedBox(height: AppSizes.space12),
                 Text(
                   moment.caption.isEmpty
-                      ? 'A private proof from ${DateFormat('MMM d').format(moment.createdAt)}'
+                      ? 'A kept promise from ${DateFormat('MMM d').format(moment.createdAt)}'
                       : moment.caption,
                   style: AppTypography.bodyLarge(color: AppColors.onSurface),
                 ),
@@ -200,16 +222,33 @@ class _WallTileCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            child: CachedNetworkImage(
-              imageUrl: moment.media.thumbnail.downloadUrl,
-              width: double.infinity,
-              fit: BoxFit.cover,
-              placeholder: (_, __) =>
-                  Container(color: AppColors.surfaceContainerHigh),
-              errorWidget: (_, __, ___) => Container(
-                color: AppColors.surfaceContainerHigh,
-                child: const Icon(Icons.broken_image_outlined),
-              ),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                _WallMomentImage(
+                  moment: moment,
+                  imageUrl: moment.media.thumbnail.downloadUrl,
+                ),
+                if (moment.isPendingSync)
+                  Positioned(
+                    left: AppSizes.space10,
+                    right: AppSizes.space10,
+                    bottom: AppSizes.space10,
+                    child: ClipRRect(
+                      borderRadius: AppSizes.borderRadiusFull,
+                      child: LinearProgressIndicator(
+                        value: moment.syncStatus == MomentSyncStatus.queued
+                            ? null
+                            : moment.uploadProgress.clamp(0, 1),
+                        minHeight: 6,
+                        backgroundColor: Colors.white.withValues(alpha: 0.28),
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          AppColors.onPrimary,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
           Padding(
@@ -223,9 +262,15 @@ class _WallTileCard extends StatelessWidget {
                     color: AppColors.onSurfaceVariant,
                   ),
                 ),
+                if (moment.isPendingSync) ...[
+                  const SizedBox(height: AppSizes.space6),
+                  _MomentSyncPill(moment: moment),
+                ],
                 const SizedBox(height: AppSizes.space4),
                 Text(
-                  moment.caption.isEmpty ? 'Saved privately' : moment.caption,
+                  moment.caption.isEmpty
+                      ? 'Saved to your archive'
+                      : moment.caption,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.labelMedium(color: AppColors.onSurface),
@@ -234,6 +279,33 @@ class _WallTileCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _WallMomentImage extends StatelessWidget {
+  const _WallMomentImage({required this.moment, required this.imageUrl});
+
+  final Moment moment;
+  final String imageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final localPreviewPath = moment.localPreviewPath;
+    if (localPreviewPath != null && localPreviewPath.isNotEmpty) {
+      return Image.file(File(localPreviewPath), fit: BoxFit.cover);
+    }
+
+    return CachedNetworkImage(
+      imageUrl: imageUrl,
+      width: double.infinity,
+      fit: BoxFit.cover,
+      placeholder: (context, url) =>
+          Container(color: AppColors.surfaceContainerHigh),
+      errorWidget: (context, url, error) => Container(
+        color: AppColors.surfaceContainerHigh,
+        child: const Icon(Icons.broken_image_outlined),
       ),
     );
   }
@@ -299,7 +371,7 @@ class _WallLoadingState extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView.separated(
       padding: const EdgeInsets.all(AppSizes.space24),
-      itemBuilder: (_, __) => Shimmer.fromColors(
+      itemBuilder: (context, index) => Shimmer.fromColors(
         baseColor: AppColors.surfaceContainerHigh,
         highlightColor: AppColors.surfaceContainerLowest,
         child: Container(
@@ -310,7 +382,8 @@ class _WallLoadingState extends StatelessWidget {
           ),
         ),
       ),
-      separatorBuilder: (_, __) => const SizedBox(height: AppSizes.space20),
+      separatorBuilder: (context, index) =>
+          const SizedBox(height: AppSizes.space20),
       itemCount: 3,
     );
   }

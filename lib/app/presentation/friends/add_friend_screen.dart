@@ -13,6 +13,7 @@ class AddFriendScreen extends StatelessWidget {
     return GetBuilder<AddFriendController>(
       init: AddFriendController(Get.find<FriendRepository>()),
       builder: (ctrl) {
+        final spec = DDResponsiveSpec.of(context);
         return Scaffold(
           backgroundColor: AppColors.surface,
           appBar: AppBar(
@@ -26,21 +27,23 @@ class AddFriendScreen extends StatelessWidget {
             title: const Text('Add Buddy'),
             centerTitle: true,
           ),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSizes.space24),
+          body: DDResponsiveScrollBody(
+            maxWidth: 560,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Friend cap indicator
-                Obx(() => ctrl.isAtCap.value
-                    ? _FriendCapBanner(limit: ctrl.maxFriends)
-                    : const SizedBox.shrink()),
+                Obx(
+                  () => ctrl.isAtCap.value
+                      ? _FriendCapBanner(limit: ctrl.maxFriends)
+                      : const SizedBox.shrink(),
+                ),
 
                 Text(
                   'Find by Username',
                   style: TextStyle(
                     fontFamily: AppTypography.serifFamily,
-                    fontSize: 28,
+                    fontSize: spec.width < 360 ? 24 : 28,
                     fontWeight: FontWeight.w700,
                     color: AppColors.onSurface,
                   ),
@@ -48,34 +51,64 @@ class AddFriendScreen extends StatelessWidget {
                 const SizedBox(height: AppSizes.space8),
                 Text(
                   'Enter their username to send a buddy request.',
-                  style: TextStyle(fontSize: 14, color: AppColors.onSurfaceVariant),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.onSurfaceVariant,
+                  ),
                 ),
                 const SizedBox(height: AppSizes.space32),
 
                 // Search field
-                Row(
-                  children: [
-                    Expanded(
-                      child: Obx(() => DDTextField(
-                            controller: ctrl.searchController,
-                            label: 'Username',
-                            hint: 'johndoe',
-                            prefixIcon: Icons.alternate_email,
-                            keyboardType: TextInputType.text,
-                            textInputAction: TextInputAction.search,
-                            onFieldSubmitted: (_) => ctrl.searchByUsername(),
-                            enabled: !ctrl.isSearching.value && !ctrl.isAtCap.value,
-                          )),
-                    ),
-                    const SizedBox(width: AppSizes.space12),
-                    Obx(() => DDPrimaryButton(
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final useStackedSearch = constraints.maxWidth < 440;
+                    final searchField = Expanded(
+                      child: Obx(
+                        () => DDTextField(
+                          controller: ctrl.searchController,
+                          label: 'Username',
+                          hint: 'johndoe',
+                          prefixIcon: Icons.alternate_email,
+                          keyboardType: TextInputType.text,
+                          textInputAction: TextInputAction.search,
+                          onFieldSubmitted: (_) => ctrl.searchByUsername(),
+                          enabled:
+                              !ctrl.isSearching.value && !ctrl.isAtCap.value,
+                        ),
+                      ),
+                    );
+                    final searchButton = Obx(
+                      () => SizedBox(
+                        width: useStackedSearch ? double.infinity : 132,
+                        child: DDPrimaryButton(
                           label: 'Search',
                           isLoading: ctrl.isSearching.value,
-                          onPressed: (ctrl.isSearching.value || ctrl.isAtCap.value)
+                          onPressed:
+                              (ctrl.isSearching.value || ctrl.isAtCap.value)
                               ? null
                               : ctrl.searchByUsername,
-                        )),
-                  ],
+                        ),
+                      ),
+                    );
+
+                    if (useStackedSearch) {
+                      return Column(
+                        children: [
+                          Row(children: [searchField]),
+                          const SizedBox(height: AppSizes.space12),
+                          searchButton,
+                        ],
+                      );
+                    }
+
+                    return Row(
+                      children: [
+                        searchField,
+                        const SizedBox(width: AppSizes.space12),
+                        searchButton,
+                      ],
+                    );
+                  },
                 ),
 
                 // Error
@@ -92,11 +125,20 @@ class AddFriendScreen extends StatelessWidget {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.error_outline, color: AppColors.error, size: 18),
+                          Icon(
+                            Icons.error_outline,
+                            color: AppColors.error,
+                            size: 18,
+                          ),
                           const SizedBox(width: AppSizes.space8),
                           Expanded(
-                            child: Text(msg,
-                                style: TextStyle(color: AppColors.onErrorContainer, fontSize: 13)),
+                            child: Text(
+                              msg,
+                              style: TextStyle(
+                                color: AppColors.onErrorContainer,
+                                fontSize: 13,
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -164,7 +206,10 @@ class _FriendCapBanner extends StatelessWidget {
                 ),
                 Text(
                   'Free plan allows up to $limit buddies. Upgrade for more.',
-                  style: TextStyle(fontSize: 12, color: AppColors.onSurfaceVariant),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -201,8 +246,9 @@ class _FoundUserCard extends StatelessWidget {
           CircleAvatar(
             radius: 36,
             backgroundColor: AppColors.primaryFixed,
-            backgroundImage:
-                avatarUrl != null ? NetworkImage(avatarUrl!) : null,
+            backgroundImage: avatarUrl != null
+                ? NetworkImage(avatarUrl!)
+                : null,
             child: avatarUrl == null
                 ? Icon(Icons.person, color: AppColors.primary, size: 32)
                 : null,

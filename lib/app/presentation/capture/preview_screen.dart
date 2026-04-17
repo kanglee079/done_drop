@@ -5,6 +5,7 @@ import 'package:done_drop/app/presentation/capture/moment_controller.dart';
 import 'package:done_drop/core/constants/app_constants.dart';
 import 'package:done_drop/core/models/friendship.dart';
 import 'package:done_drop/core/models/user_profile.dart';
+import 'package:done_drop/core/services/media_service.dart';
 import 'package:done_drop/core/theme/theme.dart';
 import 'package:done_drop/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:done_drop/features/auth/repositories/user_profile_repository.dart';
@@ -39,6 +40,55 @@ class _PreviewScreenState extends State<PreviewScreen> {
           child: Column(
             children: [
               _PreviewTopBar(controller: _controller),
+              Obx(() {
+                if (!_controller.isPosting.value) {
+                  return const SizedBox.shrink();
+                }
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSizes.space24,
+                    0,
+                    AppSizes.space24,
+                    AppSizes.space8,
+                  ),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(AppSizes.space16),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceContainerLowest,
+                      borderRadius: AppSizes.borderRadiusMd,
+                      border: Border.all(color: AppColors.outlineVariant),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _controller.uploadStatusLabel,
+                          style: AppTypography.labelLarge(
+                            color: AppColors.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: AppSizes.space10),
+                        ClipRRect(
+                          borderRadius: AppSizes.borderRadiusFull,
+                          child: LinearProgressIndicator(
+                            value:
+                                _controller.uploadStage.value ==
+                                    MediaUploadStage.finalizing
+                                ? null
+                                : _controller.uploadProgress.value.clamp(0, 1),
+                            minHeight: 8,
+                            backgroundColor: AppColors.surfaceContainerHigh,
+                            valueColor: const AlwaysStoppedAnimation<Color>(
+                              AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(
@@ -212,6 +262,7 @@ class _CaptionField extends StatelessWidget {
           controller: controller.captionController,
           maxLength: AppConstants.maxCaptionLength,
           maxLines: 4,
+          readOnly: controller.isPosting.value,
           style: AppTypography.bodyLarge(color: AppColors.onSurface),
           decoration: InputDecoration(
             hintText: hintText,
@@ -351,7 +402,8 @@ class _AudienceSection extends StatelessWidget {
                 icon: Icons.lock_outline,
                 label: 'Only me',
                 isSelected:
-                    controller.visibility.value == AppConstants.visibilityPersonalOnly,
+                    controller.visibility.value ==
+                    AppConstants.visibilityPersonalOnly,
                 onTap: () => controller.setVisibility(
                   AppConstants.visibilityPersonalOnly,
                 ),
@@ -360,7 +412,8 @@ class _AudienceSection extends StatelessWidget {
                 icon: Icons.person_outline,
                 label: 'Share privately',
                 isSelected:
-                    controller.visibility.value == AppConstants.visibilitySelectedFriends,
+                    controller.visibility.value ==
+                    AppConstants.visibilitySelectedFriends,
                 onTap: () => controller.setVisibility(
                   AppConstants.visibilitySelectedFriends,
                 ),
@@ -369,7 +422,8 @@ class _AudienceSection extends StatelessWidget {
                 icon: Icons.groups_outlined,
                 label: 'Close crew',
                 isSelected:
-                    controller.visibility.value == AppConstants.visibilityAllFriends,
+                    controller.visibility.value ==
+                    AppConstants.visibilityAllFriends,
                 onTap: () =>
                     controller.setVisibility(AppConstants.visibilityAllFriends),
               ),
@@ -427,13 +481,17 @@ class _AudiencePill extends StatelessWidget {
               Icon(
                 icon,
                 size: 16,
-                color: isSelected ? AppColors.primary : AppColors.onSurfaceVariant,
+                color: isSelected
+                    ? AppColors.primary
+                    : AppColors.onSurfaceVariant,
               ),
               const SizedBox(width: AppSizes.space6),
               Text(
                 label,
                 style: AppTypography.labelMedium(
-                  color: isSelected ? AppColors.primary : AppColors.onSurfaceVariant,
+                  color: isSelected
+                      ? AppColors.primary
+                      : AppColors.onSurfaceVariant,
                 ),
               ),
             ],

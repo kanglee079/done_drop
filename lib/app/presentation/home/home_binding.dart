@@ -43,7 +43,7 @@ class HomeBinding extends Bindings {
       ),
     );
     Get.lazyPut<FeedController>(
-      () => FeedController(Get.find<ActivityRepository>()),
+      () => FeedController(),
     );
     Get.lazyPut<MemoryWallController>(
       () => MemoryWallController(Get.find<MomentRepository>()),

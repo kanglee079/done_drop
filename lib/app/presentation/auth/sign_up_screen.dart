@@ -10,6 +10,8 @@ class SignUpScreen extends GetView<SignUpController> {
 
   @override
   Widget build(BuildContext context) {
+    final spec = DDResponsiveSpec.of(context);
+
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: AppBar(
@@ -22,8 +24,12 @@ class SignUpScreen extends GetView<SignUpController> {
         ),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: AppSizes.space24),
+        child: DDResponsiveScrollBody(
+          maxWidth: 520,
+          padding: spec.pagePadding(
+            top: AppSizes.space8,
+            bottom: AppSizes.space24,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -32,7 +38,7 @@ class SignUpScreen extends GetView<SignUpController> {
                 'Create Account',
                 style: TextStyle(
                   fontFamily: AppTypography.serifFamily,
-                  fontSize: 36,
+                  fontSize: spec.isCompact ? 34 : 36,
                   fontWeight: FontWeight.w700,
                   color: AppColors.onSurface,
                 ),

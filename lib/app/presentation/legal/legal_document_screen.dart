@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'package:done_drop/app/core/widgets/widgets.dart';
 import 'package:done_drop/core/constants/app_constants.dart';
 import 'package:done_drop/core/constants/app_links.dart';
 import 'package:done_drop/core/theme/theme.dart';
@@ -15,6 +16,7 @@ class LegalDocumentScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final content = _contentFor(documentType);
+    final spec = DDResponsiveSpec.of(context);
 
     return Scaffold(
       backgroundColor: AppColors.surface,
@@ -28,60 +30,61 @@ class LegalDocumentScreen extends StatelessWidget {
         ),
         title: Text(content.title),
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AppSizes.space24,
-          AppSizes.space12,
-          AppSizes.space24,
-          AppSizes.space40,
-        ),
-        children: [
-          Container(
-            padding: const EdgeInsets.all(AppSizes.space20),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceContainerLowest,
-              borderRadius: AppSizes.borderRadiusLg,
-              border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.12),
+      body: DDResponsiveCenter(
+        maxWidth: 760,
+        child: ListView(
+          padding: spec.pagePadding(
+            top: AppSizes.space12,
+            bottom: AppSizes.space40,
+          ),
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppSizes.space20),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceContainerLowest,
+                borderRadius: AppSizes.borderRadiusLg,
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.12),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    content.title,
+                    style: AppTypography.headlineSmall(
+                      color: AppColors.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: AppSizes.space8),
+                  Text(
+                    content.lastUpdated,
+                    style: AppTypography.bodySmall(
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: AppSizes.space12),
+                  Text(
+                    content.intro,
+                    style: AppTypography.bodyMedium(color: AppColors.onSurface),
+                  ),
+                  const SizedBox(height: AppSizes.space16),
+                  Text(
+                    content.publicUrlNote,
+                    style: AppTypography.bodySmall(
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  content.title,
-                  style: AppTypography.headlineSmall(
-                    color: AppColors.onSurface,
-                  ),
-                ),
-                const SizedBox(height: AppSizes.space8),
-                Text(
-                  content.lastUpdated,
-                  style: AppTypography.bodySmall(
-                    color: AppColors.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: AppSizes.space12),
-                Text(
-                  content.intro,
-                  style: AppTypography.bodyMedium(color: AppColors.onSurface),
-                ),
-                const SizedBox(height: AppSizes.space16),
-                Text(
-                  content.publicUrlNote,
-                  style: AppTypography.bodySmall(
-                    color: AppColors.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSizes.space20),
-          for (final section in content.sections) ...[
-            _LegalSection(heading: section.heading, body: section.body),
-            const SizedBox(height: AppSizes.space16),
+            const SizedBox(height: AppSizes.space20),
+            for (final section in content.sections) ...[
+              _LegalSection(heading: section.heading, body: section.body),
+              const SizedBox(height: AppSizes.space16),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
