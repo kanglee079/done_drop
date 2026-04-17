@@ -27,9 +27,10 @@ class LocalDatabaseService {
 
     // Compute the next available ID from existing items
     if (_box!.isNotEmpty) {
-      final maxKey = _box!.keys
-          .whereType<int>()
-          .fold<int>(0, (max, k) => k > max ? k : max);
+      final maxKey = _box!.keys.whereType<int>().fold<int>(
+        0,
+        (max, k) => k > max ? k : max,
+      );
       _nextId = maxKey + 1;
     }
   }
@@ -43,7 +44,8 @@ class LocalDatabaseService {
   Box<PendingSyncItem> get _syncBox {
     if (_box == null) {
       throw StateError(
-          'LocalDatabaseService not initialized. Call init() first.');
+        'LocalDatabaseService not initialized. Call init() first.',
+      );
     }
     return _box!;
   }
@@ -89,15 +91,12 @@ class LocalDatabaseService {
 
   /// Clear all items that have exceeded retry limit (stale failures).
   Future<void> clearStaleFailures({int maxRetries = 3}) async {
-    final staleKeys = _syncBox.keys
-        .whereType<int>()
-        .where((k) {
-          final item = _syncBox.get(k);
-          return item != null &&
-              item.status == 'failed' &&
-              item.retryCount >= maxRetries;
-        })
-        .toList();
+    final staleKeys = _syncBox.keys.whereType<int>().where((k) {
+      final item = _syncBox.get(k);
+      return item != null &&
+          item.status == 'failed' &&
+          item.retryCount >= maxRetries;
+    }).toList();
     for (final key in staleKeys) {
       await _syncBox.delete(key);
     }
@@ -114,18 +113,24 @@ class LocalDatabaseService {
     }
   }
 
+  /// Clear the full offline queue, e.g. when the active account changes.
+  Future<void> clearAll() async {
+    await _syncBox.clear();
+    _nextId = 1;
+  }
+
   /// Watch pending count as a stream. Emits current count immediately, then on changes.
   Stream<int> watchPendingCount() {
     final controller = StreamController<int>.broadcast();
     // Emit current count immediately
-    controller.add(_syncBox.values
-        .where((item) => item.status == 'pending')
-        .length);
+    controller.add(
+      _syncBox.values.where((item) => item.status == 'pending').length,
+    );
     // Then emit on changes
     _syncBox.watch().listen((_) {
-      controller.add(_syncBox.values
-          .where((item) => item.status == 'pending')
-          .length);
+      controller.add(
+        _syncBox.values.where((item) => item.status == 'pending').length,
+      );
     });
     return controller.stream;
   }

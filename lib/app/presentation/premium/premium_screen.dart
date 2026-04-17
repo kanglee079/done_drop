@@ -36,28 +36,20 @@ class PremiumScreen extends StatelessWidget {
                           color: AppColors.tertiaryFixed,
                           borderRadius: AppSizes.borderRadiusFull,
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.star, size: 14,
-                                color: AppColors.onTertiaryFixed),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Premium',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.onTertiaryFixed,
-                              ),
-                            ),
-                          ],
+                        child: Text(
+                          ctrl.statusLabel,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.onTertiaryFixed,
+                          ),
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: AppSizes.space16),
                   Text(
-                    'Preserve More Memories',
+                    'Premium stays off until billing is real',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontFamily: AppTypography.serifFamily,
@@ -68,7 +60,7 @@ class PremiumScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSizes.space12),
                   Text(
-                    'Upgrade your digital heirloom with tools designed for deeper reflection and permanent preservation.',
+                    'This build removes fake purchase flows. When StoreKit and Play Billing are wired, pricing, restore, renewal, and cancellation details will appear here.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 15,
@@ -77,30 +69,35 @@ class PremiumScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: AppSizes.space40),
-                  // Toggle plan
-                  Obx(() => Container(
-                    padding: const EdgeInsets.all(4),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(AppSizes.space20),
                     decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerHigh,
-                      borderRadius: AppSizes.borderRadiusFull,
+                      color: AppColors.surfaceContainerLowest,
+                      borderRadius: AppSizes.borderRadiusLg,
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.12),
+                      ),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _ToggleOption(
-                          label: 'Monthly',
-                          isSelected: ctrl.isMonthly.value,
-                          onTap: () { if (!ctrl.isMonthly.value) ctrl.togglePlan(); },
+                        Text(
+                          'What will unlock later',
+                          style: AppTypography.titleMedium(
+                            color: AppColors.onSurface,
+                          ),
                         ),
-                        _ToggleOption(
-                          label: 'Annual',
-                          isSelected: !ctrl.isMonthly.value,
-                          onTap: () { if (ctrl.isMonthly.value) ctrl.togglePlan(); },
-                          badge: '-20%',
+                        const SizedBox(height: AppSizes.space8),
+                        Text(
+                          'Pricing, trial terms, restore, auto-renew disclosure, and manage subscription links will only ship together with native billing.',
+                          style: AppTypography.bodyMedium(
+                            color: AppColors.onSurfaceVariant,
+                          ),
                         ),
                       ],
                     ),
-                  )),
+                  ),
                   const SizedBox(height: AppSizes.space32),
                   // Benefits
                   Column(
@@ -120,7 +117,8 @@ class PremiumScreen extends StatelessWidget {
                       _BenefitItem(
                         icon: Icons.auto_awesome,
                         title: 'Custom Recap Themes',
-                        desc: 'Exclusive editorial layouts for your memory books.',
+                        desc:
+                            'Exclusive editorial layouts for your memory books.',
                       ),
                       SizedBox(height: AppSizes.space16),
                       _BenefitItem(
@@ -131,9 +129,8 @@ class PremiumScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: AppSizes.space40),
-                  // CTA
-                  Obx(() => GestureDetector(
-                    onTap: ctrl.isPurchasing.value ? null : ctrl.purchase,
+                  GestureDetector(
+                    onTap: ctrl.showUnavailableMessage,
                     child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 18),
@@ -148,120 +145,30 @@ class PremiumScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      child: Center(
-                        child: ctrl.isPurchasing.value
-                            ? const SizedBox(
-                                width: 20, height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Text(
-                                'Start 7-Day Free Trial',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
+                      child: const Center(
+                        child: Text(
+                          'Premium unavailable in this build',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ),
                     ),
-                  )),
+                  ),
                   const SizedBox(height: AppSizes.space12),
-                  Obx(() => Text(
-                    'Then ${ctrl.currentPrice}${ctrl.periodLabel}. Cancel anytime.',
+                  Text(
+                    'Premium is intentionally hidden until store-compliant billing is implemented end to end.',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 11, color: AppColors.outline),
-                  )),
-                  const SizedBox(height: AppSizes.space16),
-                  Obx(() => TextButton(
-                    onPressed: ctrl.isRestoring.value ? null : ctrl.restorePurchases,
-                    child: ctrl.isRestoring.value
-                        ? const SizedBox(
-                            width: 16, height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2,
-                                color: AppColors.primary),
-                          )
-                        : Text(
-                            'Restore Purchases',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: AppColors.outline,
-                            ),
-                          ),
-                  )),
+                  ),
                 ],
               ),
             ),
           ),
         );
       },
-    );
-  }
-}
-
-class _ToggleOption extends StatelessWidget {
-  const _ToggleOption({
-    required this.label,
-    required this.isSelected,
-    required this.onTap,
-    this.badge,
-  });
-
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-  final String? badge;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.space20,
-          vertical: AppSizes.space8,
-        ),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.surfaceContainerLowest
-              : Colors.transparent,
-          borderRadius: AppSizes.borderRadiusFull,
-          boxShadow: isSelected
-              ? [BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.06),
-                  blurRadius: 8,
-                )]
-              : null,
-        ),
-        child: Row(
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: isSelected
-                    ? AppColors.onSurface
-                    : AppColors.onSurfaceVariant,
-              ),
-            ),
-            if (badge != null) ...[
-              const SizedBox(width: 4),
-              Text(
-                badge!,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.primary,
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
     );
   }
 }

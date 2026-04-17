@@ -17,6 +17,8 @@ abstract class AppRoutes {
   static const notificationSettings = '/settings/notifications';
   static const profile = '/profile';
   static const premium = '/premium';
+  static const privacyPolicy = '/legal/privacy';
+  static const termsOfService = '/legal/terms';
   static const report = '/report/:targetType/:targetId';
   static const blocked = '/blocked';
   static const friends = '/friends';

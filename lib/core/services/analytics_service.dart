@@ -40,21 +40,22 @@ class AnalyticsService {
   }
 
   Future<void> signInFailed(String reason) async {
-    await _a?.logEvent(
-      name: 'sign_in_failed',
-      parameters: {'reason': reason},
-    );
+    await _a?.logEvent(name: 'sign_in_failed', parameters: {'reason': reason});
   }
 
   Future<void> logLogin(String method) async {
-    await _a?.logEvent(
-      name: 'login',
-      parameters: {'method': method},
-    );
+    await _a?.logEvent(name: 'login', parameters: {'method': method});
   }
 
   Future<void> signOut() async {
     await _a?.logEvent(name: 'user_signed_out');
+  }
+
+  Future<void> accountDeletionRequested(String method) async {
+    await _a?.logEvent(
+      name: 'account_deletion_requested',
+      parameters: {'method': method},
+    );
   }
 
   Future<void> passwordResetRequested() async {
@@ -135,10 +136,7 @@ class AnalyticsService {
   Future<void> reactionSent(String momentId, String reactionType) async {
     await _a?.logEvent(
       name: 'reaction_sent',
-      parameters: {
-        'moment_id': momentId,
-        'reaction_type': reactionType,
-      },
+      parameters: {'moment_id': momentId, 'reaction_type': reactionType},
     );
   }
 
@@ -151,10 +149,7 @@ class AnalyticsService {
 
   // ── Recap ────────────────────────────────────────────────────────────────
   Future<void> recapViewed(String weekKey) async {
-    await _a?.logEvent(
-      name: 'recap_viewed',
-      parameters: {'week_key': weekKey},
-    );
+    await _a?.logEvent(name: 'recap_viewed', parameters: {'week_key': weekKey});
   }
 
   Future<void> recapShared() async {
@@ -178,10 +173,7 @@ class AnalyticsService {
   }
 
   Future<void> purchaseFailed(String reason) async {
-    await _a?.logEvent(
-      name: 'purchase_failed',
-      parameters: {'reason': reason},
-    );
+    await _a?.logEvent(name: 'purchase_failed', parameters: {'reason': reason});
   }
 
   Future<void> restoreCompleted(bool success) async {

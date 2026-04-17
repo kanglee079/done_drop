@@ -3,18 +3,19 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:done_drop/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:done_drop/features/auth/repositories/user_profile_repository.dart';
+import 'package:done_drop/app/presentation/settings/settings_controller.dart';
 import 'package:done_drop/core/models/user_profile.dart';
-import 'package:done_drop/core/theme/theme.dart';
+import 'package:done_drop/core/errors/result.dart';
 import 'package:done_drop/core/services/media_service.dart';
 import 'package:done_drop/core/services/analytics_service.dart';
-import 'package:done_drop/core/errors/result.dart';
 
 /// Controller for the profile screen.
 class ProfileController extends GetxController {
   ProfileController();
 
   AuthController get _authController => Get.find<AuthController>();
-  UserProfileRepository get _userProfileRepo => Get.find<UserProfileRepository>();
+  UserProfileRepository get _userProfileRepo =>
+      Get.find<UserProfileRepository>();
   MediaService get _mediaService => MediaService.instance;
 
   String? get _userId => _authController.firebaseUser?.uid;
@@ -124,26 +125,10 @@ class ProfileController extends GetxController {
   }
 
   Future<void> deleteAccount() async {
-    final confirmed = await Get.dialog<bool>(
-      AlertDialog(
-        title: const Text('Delete Account'),
-        content: const Text(
-          'This will permanently delete your account and all your data. This action cannot be undone.',
-        ),
-        actions: [
-          TextButton(onPressed: () => Get.back(result: false), child: const Text('Cancel')),
-          TextButton(
-            onPressed: () => Get.back(result: true),
-            child: Text('Delete', style: TextStyle(color: AppColors.error)),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-
-    isLoading.value = true;
-    await _authController.signOut();
-    isLoading.value = false;
+    if (!Get.isRegistered<SettingsController>()) {
+      Get.put(SettingsController());
+    }
+    await Get.find<SettingsController>().deleteAccount();
   }
 
   @override

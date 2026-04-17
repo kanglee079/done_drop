@@ -1,11 +1,11 @@
 {
-    "name": "done_drop",
-    "short_name": "done_drop",
+    "name": "DoneDrop",
+    "short_name": "DoneDrop",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Track habits, capture proof, and share private progress with trusted buddies.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

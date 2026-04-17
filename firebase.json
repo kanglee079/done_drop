@@ -6,5 +6,19 @@
   "storage": {
     "rules": "storage.rules",
     "bucket": "donedrop-1d764.firebasestorage.app"
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
   }
 }

@@ -6,14 +6,26 @@ class AuthRepository {
   AuthRepository(this._provider);
   final AuthProvider _provider;
 
-  Future<Result<UserCredential>> signInWithEmail(String email, String password) =>
-      _provider.signInWithEmail(email, password);
+  Future<Result<UserCredential>> signInWithEmail(
+    String email,
+    String password,
+  ) => _provider.signInWithEmail(email, password);
 
-  Future<Result<UserCredential>> signUpWithEmail(String email, String password) =>
-      _provider.signUpWithEmail(email, password);
+  Future<Result<UserCredential>> signUpWithEmail(
+    String email,
+    String password,
+  ) => _provider.signUpWithEmail(email, password);
 
   Future<Result<UserCredential>> signInWithGoogle() =>
       _provider.signInWithGoogle();
+
+  Future<Result<void>> reauthenticateWithPassword({
+    required String email,
+    required String password,
+  }) => _provider.reauthenticateWithPassword(email: email, password: password);
+
+  Future<Result<void>> reauthenticateWithGoogle() =>
+      _provider.reauthenticateWithGoogle();
 
   Future<Result<void>> signOut() => _provider.signOut();
 

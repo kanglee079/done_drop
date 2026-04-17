@@ -14,6 +14,7 @@ import 'core/services/local_database_service.dart';
 import 'core/services/connectivity_service.dart';
 import 'core/services/offline_queue_service.dart';
 import 'core/services/local_cache_service.dart';
+import 'core/services/account_deletion_service.dart';
 import 'features/auth/data/onboarding_service.dart';
 import 'features/auth/data/firebase_auth_provider.dart';
 import 'features/auth/data/firestore_user_profile_provider.dart';
@@ -65,6 +66,7 @@ void main() async {
 
   // Offline queue service — queues operations when offline, syncs when online
   Get.put<OfflineQueueService>(OfflineQueueService(), permanent: true);
+  Get.put<AccountDeletionService>(AccountDeletionService(), permanent: true);
 
   // Register global auth dependencies
   _registerAuthDependencies();
@@ -82,7 +84,10 @@ void _registerAuthDependencies() {
   Get.put<FirebaseAuthProvider>(FirebaseAuthProvider(), permanent: true);
 
   // Firestore User Profile Provider
-  Get.put<FirestoreUserProfileProvider>(FirestoreUserProfileProvider(), permanent: true);
+  Get.put<FirestoreUserProfileProvider>(
+    FirestoreUserProfileProvider(),
+    permanent: true,
+  );
 
   // Auth Repository
   Get.put<AuthRepository>(
@@ -98,17 +103,23 @@ void _registerAuthDependencies() {
 
   // Auth Controller
   Get.put<AuthController>(
-    AuthController(
-      Get.find<AuthRepository>(),
-      Get.find<OnboardingService>(),
-    ),
+    AuthController(Get.find<AuthRepository>(), Get.find<OnboardingService>()),
     permanent: true,
   );
 
   // Data Repositories (used across authenticated screens)
-  Get.put<ActivityRepository>(ActivityRepository(FirebaseFirestore.instance), permanent: true);
-  Get.put<MomentRepository>(MomentRepository(FirebaseFirestore.instance), permanent: true);
-  Get.put<FriendRepository>(FriendRepository(FirebaseFirestore.instance), permanent: true);
+  Get.put<ActivityRepository>(
+    ActivityRepository(FirebaseFirestore.instance),
+    permanent: true,
+  );
+  Get.put<MomentRepository>(
+    MomentRepository(FirebaseFirestore.instance),
+    permanent: true,
+  );
+  Get.put<FriendRepository>(
+    FriendRepository(FirebaseFirestore.instance),
+    permanent: true,
+  );
   Get.put<ReportRepository>(ReportRepository(), permanent: true);
   Get.put<BlockService>(BlockService(), permanent: true);
   Get.put<StreakService>(StreakService(), permanent: true);
