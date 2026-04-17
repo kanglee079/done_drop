@@ -192,6 +192,7 @@ class _HeroHabitCard extends StatelessWidget {
                     icon: Icons.check_rounded,
                     isPrimary: false,
                     isLoading: actionState == HabitActionState.quickComplete,
+                    showLoading: actionState == HabitActionState.quickComplete,
                     onTap: _isBusy ? null : onCompleteNow,
                   ),
                 ),
@@ -202,8 +203,8 @@ class _HeroHabitCard extends StatelessWidget {
                     label: 'Complete + proof',
                     icon: Icons.camera_alt_outlined,
                     isPrimary: true,
-                    isLoading:
-                        actionState == HabitActionState.completeWithProof,
+                    isLoading: actionState == HabitActionState.completeWithProof,
+                    showLoading: actionState == HabitActionState.completeWithProof,
                     onTap: _isBusy ? null : onCompleteWithProof,
                   ),
                 ),
@@ -435,6 +436,7 @@ class _ActionButton extends StatelessWidget {
     required this.icon,
     required this.isPrimary,
     required this.isLoading,
+    required this.showLoading,
     required this.onTap,
   });
 
@@ -442,56 +444,64 @@ class _ActionButton extends StatelessWidget {
   final IconData icon;
   final bool isPrimary;
   final bool isLoading;
+  final bool showLoading;
   final Future<void> Function()? onTap;
 
   @override
   Widget build(BuildContext context) {
+    final isDisabled = onTap == null || (isLoading && !showLoading);
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
         key: key,
         borderRadius: AppSizes.borderRadiusMd,
-        onTap: onTap == null ? null : () => onTap!.call(),
-        child: Ink(
-          padding: const EdgeInsets.symmetric(vertical: AppSizes.space16),
-          decoration: BoxDecoration(
-            color: isPrimary
-                ? AppColors.surfaceContainerLowest
-                : Colors.white.withValues(alpha: 0.14),
-            borderRadius: AppSizes.borderRadiusMd,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (isLoading)
-                SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
+        onTap: isDisabled ? null : () => onTap?.call(),
+        child: Opacity(
+          opacity: isDisabled ? 0.5 : 1.0,
+          child: Ink(
+            padding: const EdgeInsets.symmetric(vertical: AppSizes.space16),
+            decoration: BoxDecoration(
+              color: isPrimary
+                  ? AppColors.surfaceContainerLowest
+                  : Colors.white.withValues(alpha: 0.14),
+              borderRadius: AppSizes.borderRadiusMd,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (showLoading)
+                  SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        isPrimary ? AppColors.primary : AppColors.onPrimary,
+                      ),
+                    ),
+                  )
+                else ...[
+                  Icon(
+                    icon,
+                    size: 16,
                     color: isPrimary ? AppColors.primary : AppColors.onPrimary,
                   ),
-                )
-              else ...[
-                Icon(
-                  icon,
-                  size: 16,
-                  color: isPrimary ? AppColors.primary : AppColors.onPrimary,
-                ),
-                const SizedBox(width: AppSizes.space8),
-                Flexible(
-                  child: Text(
-                    label,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTypography.labelLarge(
-                      color: isPrimary
-                          ? AppColors.primary
-                          : AppColors.onPrimary,
+                  const SizedBox(width: AppSizes.space8),
+                  Flexible(
+                    child: Text(
+                      label,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.labelLarge(
+                        color: isPrimary
+                            ? AppColors.primary
+                            : AppColors.onPrimary,
+                      ),
                     ),
                   ),
-                ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
