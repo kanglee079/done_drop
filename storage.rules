@@ -29,9 +29,10 @@ service firebase.storage {
 
     match /avatars/{userId}/{fileName} {
       allow read: if isAuthenticated();
-      allow write: if isOwner(userId)
+      allow create, update: if isOwner(userId)
         && isImage()
         && isUnderSize(5 * 1024 * 1024);
+      allow delete: if isOwner(userId);
     }
 
     // ── MOMENT IMAGES ────────────────────────────────────────────────────────
@@ -39,9 +40,10 @@ service firebase.storage {
 
     match /moments/{userId}/{momentId}/{fileName} {
       allow read: if isOwner(userId);
-      allow write: if isOwner(userId)
+      allow create, update: if isOwner(userId)
         && isImage()
         && isUnderSize(10 * 1024 * 1024);
+      allow delete: if isOwner(userId);
     }
 
     // ── LEGACY: CIRCLE COVER PHOTOS (V1 — dormant, read-only) ───────────────

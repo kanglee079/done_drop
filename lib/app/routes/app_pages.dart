@@ -12,19 +12,14 @@ import '../presentation/capture/capture_binding.dart';
 import '../presentation/capture/capture_screen.dart';
 import '../presentation/capture/preview_screen.dart';
 import '../presentation/capture/success_screen.dart';
-import '../presentation/feed/feed_screen.dart';
-import '../presentation/feed/feed_binding.dart';
-import '../presentation/memory_wall/memory_wall_screen.dart';
-import '../presentation/memory_wall/memory_wall_binding.dart';
 import '../presentation/recap/recap_screen.dart';
 import '../presentation/recap/recap_binding.dart';
-import '../presentation/settings/settings_screen.dart';
-import '../presentation/settings/settings_binding.dart';
 import '../presentation/settings/profile_screen.dart';
 import '../presentation/settings/profile_binding.dart';
 import '../presentation/settings/notification_settings_screen.dart';
 import '../presentation/premium/premium_screen.dart';
 import '../presentation/premium/premium_binding.dart';
+import '../presentation/legal/legal_document_screen.dart';
 import '../presentation/report/report_screen.dart';
 import '../presentation/report/report_binding.dart';
 import '../presentation/friends/friends_screen.dart';
@@ -133,6 +128,20 @@ class AppPages {
       binding: PremiumBinding(),
       middlewares: [AuthGuard()],
       transition: Transition.downToUp,
+    ),
+    GetPage(
+      name: AppRoutes.privacyPolicy,
+      page: () => const LegalDocumentScreen(
+        documentType: LegalDocumentType.privacyPolicy,
+      ),
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: AppRoutes.termsOfService,
+      page: () => const LegalDocumentScreen(
+        documentType: LegalDocumentType.termsOfService,
+      ),
+      transition: Transition.rightToLeft,
     ),
     GetPage(
       name: AppRoutes.profile,

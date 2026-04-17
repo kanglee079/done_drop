@@ -23,10 +23,14 @@ class FirebaseAuthProvider implements AuthProvider {
   );
 
   bool get _isGoogleSignInConfigured =>
-      _googleWebClientId.isNotEmpty && _googleWebClientId != 'REPLACE_WITH_YOUR_GOOGLE_WEB_CLIENT_ID';
+      _googleWebClientId.isNotEmpty &&
+      _googleWebClientId != 'REPLACE_WITH_YOUR_GOOGLE_WEB_CLIENT_ID';
 
   @override
-  Future<Result<UserCredential>> signInWithEmail(String email, String password) async {
+  Future<Result<UserCredential>> signInWithEmail(
+    String email,
+    String password,
+  ) async {
     try {
       final credential = await _auth.signInWithEmailAndPassword(
         email: email,
@@ -41,7 +45,10 @@ class FirebaseAuthProvider implements AuthProvider {
   }
 
   @override
-  Future<Result<UserCredential>> signUpWithEmail(String email, String password) async {
+  Future<Result<UserCredential>> signUpWithEmail(
+    String email,
+    String password,
+  ) async {
     try {
       final credential = await _auth.createUserWithEmailAndPassword(
         email: email,
@@ -70,7 +77,9 @@ class FirebaseAuthProvider implements AuthProvider {
     try {
       final googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
-        return Result.failure(AppFailure.cancelled('Google sign-in was cancelled'));
+        return Result.failure(
+          AppFailure.cancelled('Google sign-in was cancelled'),
+        );
       }
 
       final googleAuth = await googleUser.authentication;
@@ -89,12 +98,69 @@ class FirebaseAuthProvider implements AuthProvider {
   }
 
   @override
+  Future<Result<void>> reauthenticateWithPassword({
+    required String email,
+    required String password,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      return Result.failure(AppFailure.unauthorized('No authenticated user.'));
+    }
+
+    try {
+      final credential = EmailAuthProvider.credential(
+        email: email,
+        password: password,
+      );
+      await user.reauthenticateWithCredential(credential);
+      return Result.success(null);
+    } on FirebaseAuthException catch (e) {
+      return Result.failure(_mapAuthError(e.code));
+    } catch (e) {
+      return Result.failure(AppFailure.unexpected(e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<void>> reauthenticateWithGoogle() async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      return Result.failure(AppFailure.unauthorized('No authenticated user.'));
+    }
+
+    if (!_isGoogleSignInConfigured) {
+      return Result.failure(
+        AppFailure.unexpected('Google Sign-In is not configured.'),
+      );
+    }
+
+    try {
+      final googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        return Result.failure(
+          AppFailure.cancelled('Google re-authentication was cancelled'),
+        );
+      }
+
+      final googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      await user.reauthenticateWithCredential(credential);
+      return Result.success(null);
+    } on FirebaseAuthException catch (e) {
+      return Result.failure(_mapAuthError(e.code));
+    } catch (e) {
+      return Result.failure(AppFailure.unexpected(e.toString()));
+    }
+  }
+
+  @override
   Future<Result<void>> signOut() async {
     try {
-      await Future.wait([
-        _auth.signOut(),
-        _googleSignIn.signOut(),
-      ]);
+      await Future.wait([_auth.signOut(), _googleSignIn.signOut()]);
       return Result.success(null);
     } catch (e) {
       return Result.failure(AppFailure.unexpected(e.toString()));
@@ -142,15 +208,23 @@ class FirebaseAuthProvider implements AuthProvider {
       case 'invalid-email':
         return AppFailure.invalidInput('Invalid email address');
       case 'weak-password':
-        return AppFailure.invalidInput('Password is too weak (min 6 characters)');
+        return AppFailure.invalidInput(
+          'Password is too weak (min 6 characters)',
+        );
       case 'user-disabled':
         return AppFailure.forbidden('This account has been disabled');
       case 'too-many-requests':
-        return AppFailure.rateLimited('Too many attempts. Please try again later');
+        return AppFailure.rateLimited(
+          'Too many attempts. Please try again later',
+        );
       case 'network-request-failed':
         return AppFailure.network('Network error. Check your connection');
       case 'invalid-credential':
         return AppFailure.unauthorized('Invalid credentials');
+      case 'requires-recent-login':
+        return AppFailure.unauthorized(
+          'Please verify your identity again before deleting this account.',
+        );
       default:
         return AppFailure.unexpected('Authentication error: $code');
     }

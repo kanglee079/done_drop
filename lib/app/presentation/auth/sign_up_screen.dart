@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:done_drop/core/theme/theme.dart';
 import 'package:done_drop/app/core/widgets/widgets.dart';
 import 'package:done_drop/features/auth/presentation/controllers/sign_up_controller.dart';
+import 'package:done_drop/core/services/legal_service.dart';
 
 class SignUpScreen extends GetView<SignUpController> {
   const SignUpScreen({super.key});
@@ -52,69 +53,77 @@ class SignUpScreen extends GetView<SignUpController> {
                 key: controller.formKey,
                 child: Column(
                   children: [
-                    Obx(() => DDTextField(
-                          controller: controller.nameController,
-                          label: 'Full Name',
-                          hint: 'Your name',
-                          prefixIcon: Icons.person_outline,
-                          validator: controller.validateName,
-                          textInputAction: TextInputAction.next,
-                          enabled: !controller.isLoading.value,
-                        )),
+                    Obx(
+                      () => DDTextField(
+                        controller: controller.nameController,
+                        label: 'Full Name',
+                        hint: 'Your name',
+                        prefixIcon: Icons.person_outline,
+                        validator: controller.validateName,
+                        textInputAction: TextInputAction.next,
+                        enabled: !controller.isLoading.value,
+                      ),
+                    ),
                     const SizedBox(height: AppSizes.space16),
-                    Obx(() => DDTextField(
-                          controller: controller.emailController,
-                          label: 'Email',
-                          hint: 'you@example.com',
-                          keyboardType: TextInputType.emailAddress,
-                          prefixIcon: Icons.email_outlined,
-                          validator: controller.validateEmail,
-                          textInputAction: TextInputAction.next,
-                          enabled: !controller.isLoading.value,
-                        )),
+                    Obx(
+                      () => DDTextField(
+                        controller: controller.emailController,
+                        label: 'Email',
+                        hint: 'you@example.com',
+                        keyboardType: TextInputType.emailAddress,
+                        prefixIcon: Icons.email_outlined,
+                        validator: controller.validateEmail,
+                        textInputAction: TextInputAction.next,
+                        enabled: !controller.isLoading.value,
+                      ),
+                    ),
                     const SizedBox(height: AppSizes.space16),
-                    Obx(() => DDTextField(
-                          controller: controller.passwordController,
-                          label: 'Password',
-                          hint: 'Min 6 characters',
-                          prefixIcon: Icons.lock_outlined,
-                          obscureText: !controller.isPasswordVisible.value,
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              controller.isPasswordVisible.value
-                                  ? Icons.visibility_off_outlined
-                                  : Icons.visibility_outlined,
-                              color: AppColors.onSurfaceVariant,
-                              size: 20,
-                            ),
-                            onPressed: controller.togglePasswordVisibility,
+                    Obx(
+                      () => DDTextField(
+                        controller: controller.passwordController,
+                        label: 'Password',
+                        hint: 'Min 6 characters',
+                        prefixIcon: Icons.lock_outlined,
+                        obscureText: !controller.isPasswordVisible.value,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            controller.isPasswordVisible.value
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                            color: AppColors.onSurfaceVariant,
+                            size: 20,
                           ),
-                          validator: controller.validatePassword,
-                          textInputAction: TextInputAction.next,
-                          enabled: !controller.isLoading.value,
-                        )),
+                          onPressed: controller.togglePasswordVisibility,
+                        ),
+                        validator: controller.validatePassword,
+                        textInputAction: TextInputAction.next,
+                        enabled: !controller.isLoading.value,
+                      ),
+                    ),
                     const SizedBox(height: AppSizes.space16),
-                    Obx(() => DDTextField(
-                          controller: controller.confirmPasswordController,
-                          label: 'Confirm Password',
-                          hint: 'Repeat your password',
-                          prefixIcon: Icons.lock_outlined,
-                          obscureText: !controller.isConfirmPasswordVisible.value,
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              controller.isConfirmPasswordVisible.value
-                                  ? Icons.visibility_off_outlined
-                                  : Icons.visibility_outlined,
-                              color: AppColors.onSurfaceVariant,
-                              size: 20,
-                            ),
-                            onPressed: controller.toggleConfirmPasswordVisibility,
+                    Obx(
+                      () => DDTextField(
+                        controller: controller.confirmPasswordController,
+                        label: 'Confirm Password',
+                        hint: 'Repeat your password',
+                        prefixIcon: Icons.lock_outlined,
+                        obscureText: !controller.isConfirmPasswordVisible.value,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            controller.isConfirmPasswordVisible.value
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                            color: AppColors.onSurfaceVariant,
+                            size: 20,
                           ),
-                          validator: controller.validateConfirmPassword,
-                          textInputAction: TextInputAction.done,
-                          onFieldSubmitted: (_) => controller.signUp(),
-                          enabled: !controller.isLoading.value,
-                        )),
+                          onPressed: controller.toggleConfirmPasswordVisibility,
+                        ),
+                        validator: controller.validateConfirmPassword,
+                        textInputAction: TextInputAction.done,
+                        onFieldSubmitted: (_) => controller.signUp(),
+                        enabled: !controller.isLoading.value,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -133,7 +142,11 @@ class SignUpScreen extends GetView<SignUpController> {
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.error_outline, color: AppColors.error, size: 18),
+                        Icon(
+                          Icons.error_outline,
+                          color: AppColors.error,
+                          size: 18,
+                        ),
                         const SizedBox(width: AppSizes.space8),
                         Expanded(
                           child: Text(
@@ -153,11 +166,15 @@ class SignUpScreen extends GetView<SignUpController> {
               const SizedBox(height: AppSizes.space32),
 
               // Sign up button
-              Obx(() => DDPrimaryButton(
-                    label: 'Create Account',
-                    onPressed: controller.isLoading.value ? null : controller.signUp,
-                    isLoading: controller.isLoading.value,
-                  )),
+              Obx(
+                () => DDPrimaryButton(
+                  label: 'Create Account',
+                  onPressed: controller.isLoading.value
+                      ? null
+                      : controller.signUp,
+                  isLoading: controller.isLoading.value,
+                ),
+              ),
 
               const SizedBox(height: AppSizes.space24),
 
@@ -167,7 +184,10 @@ class SignUpScreen extends GetView<SignUpController> {
                 children: [
                   Text(
                     'Already have an account? ',
-                    style: TextStyle(color: AppColors.onSurfaceVariant, fontSize: 13),
+                    style: TextStyle(
+                      color: AppColors.onSurfaceVariant,
+                      fontSize: 13,
+                    ),
                   ),
                   GestureDetector(
                     onTap: controller.goToSignIn,
@@ -186,13 +206,41 @@ class SignUpScreen extends GetView<SignUpController> {
               const SizedBox(height: AppSizes.space16),
 
               // Terms
-              Text(
-                'By creating an account, you agree to our Terms of Service and Privacy Policy.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: AppColors.outline,
-                ),
+              Wrap(
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text(
+                    'By creating an account, you agree to our ',
+                    style: TextStyle(fontSize: 11, color: AppColors.outline),
+                  ),
+                  TextButton(
+                    onPressed: LegalService.instance.openTermsOfService,
+                    style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      minimumSize: Size.zero,
+                      padding: EdgeInsets.zero,
+                    ),
+                    child: const Text('Terms of Service'),
+                  ),
+                  Text(
+                    ' and ',
+                    style: TextStyle(fontSize: 11, color: AppColors.outline),
+                  ),
+                  TextButton(
+                    onPressed: LegalService.instance.openPrivacyPolicy,
+                    style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      minimumSize: Size.zero,
+                      padding: EdgeInsets.zero,
+                    ),
+                    child: const Text('Privacy Policy'),
+                  ),
+                  Text(
+                    '.',
+                    style: TextStyle(fontSize: 11, color: AppColors.outline),
+                  ),
+                ],
               ),
 
               const SizedBox(height: AppSizes.space32),

@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:done_drop/features/auth/repositories/auth_repository.dart';
 import 'package:done_drop/features/auth/data/onboarding_service.dart';
 import 'package:done_drop/app/routes/app_routes.dart';
+import 'package:done_drop/core/errors/result.dart';
 
 class AuthController extends GetxController {
   AuthController(this._authRepo, this._onboardingService);
@@ -53,6 +54,16 @@ class AuthController extends GetxController {
     await _authRepo.signOut();
     Get.offAllNamed(AppRoutes.signIn);
   }
+
+  Future<Result<void>> deleteAccount() => _authRepo.deleteAccount();
+
+  Future<Result<void>> reauthenticateWithPassword({
+    required String email,
+    required String password,
+  }) => _authRepo.reauthenticateWithPassword(email: email, password: password);
+
+  Future<Result<void>> reauthenticateWithGoogle() =>
+      _authRepo.reauthenticateWithGoogle();
 
   bool get hasCompletedOnboarding => _onboardingService.hasCompletedOnboarding;
 }

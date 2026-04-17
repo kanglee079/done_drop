@@ -5,6 +5,11 @@ abstract class AuthProvider {
   Future<Result<UserCredential>> signInWithEmail(String email, String password);
   Future<Result<UserCredential>> signUpWithEmail(String email, String password);
   Future<Result<UserCredential>> signInWithGoogle();
+  Future<Result<void>> reauthenticateWithPassword({
+    required String email,
+    required String password,
+  });
+  Future<Result<void>> reauthenticateWithGoogle();
   Future<Result<void>> signOut();
   Future<Result<void>> sendPasswordReset(String email);
   Stream<User?> authStateChanges();

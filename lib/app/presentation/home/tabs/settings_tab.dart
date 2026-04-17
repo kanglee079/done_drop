@@ -88,10 +88,13 @@ class _SettingsTab extends StatelessWidget {
                       title: activity.title,
                       subtitle: activity.category ?? 'Archived habit',
                       trailing: TextButton(
-                        onPressed: () => homeController.restoreActivity(activity.id),
+                        onPressed: () =>
+                            homeController.restoreActivity(activity.id),
                         child: Text(
                           'Restore',
-                          style: AppTypography.labelMedium(color: AppColors.primary),
+                          style: AppTypography.labelMedium(
+                            color: AppColors.primary,
+                          ),
                         ),
                       ),
                     ),
@@ -129,28 +132,66 @@ class _SettingsTab extends StatelessWidget {
           ),
           const SizedBox(height: AppSizes.space20),
           const _MeSection(
-            title: 'Account actions',
-            subtitle: 'Only the essentials.',
+            title: 'Privacy & support',
+            subtitle: 'Policies, help, and release details.',
           ),
           const SizedBox(height: AppSizes.space12),
           _MeLinkTile(
-            icon: Icons.flag_outlined,
-            title: 'Report issue',
-            subtitle: 'Flag a problem with content or behavior',
-            onTap: () => Get.toNamed(
-              AppRoutes.report
-                  .replaceFirst(':targetType', 'app')
-                  .replaceFirst(':targetId', 'support'),
+            icon: Icons.privacy_tip_outlined,
+            title: 'Privacy policy',
+            subtitle: 'Read how DoneDrop handles your account and moment data',
+            onTap: settingsController.openPrivacyPolicy,
+          ),
+          const SizedBox(height: AppSizes.space12),
+          _MeLinkTile(
+            icon: Icons.description_outlined,
+            title: 'Terms of service',
+            subtitle: 'The rules for using DoneDrop and private buddy features',
+            onTap: settingsController.openTermsOfService,
+          ),
+          const SizedBox(height: AppSizes.space12),
+          _MeLinkTile(
+            icon: Icons.support_agent_outlined,
+            title: 'Support',
+            subtitle: 'Report an issue or get help from inside the app',
+            onTap: settingsController.openSupport,
+          ),
+          const SizedBox(height: AppSizes.space12),
+          _MeInfoTile(
+            icon: Icons.info_outline_rounded,
+            title: 'App version',
+            subtitle: settingsController.buildLabel,
+          ),
+          const SizedBox(height: AppSizes.space20),
+          const _MeSection(
+            title: 'Account actions',
+            subtitle: 'Sign out, or permanently remove this account.',
+          ),
+          const SizedBox(height: AppSizes.space12),
+          Obx(
+            () => _MeDangerTile(
+              icon: Icons.delete_outline_rounded,
+              title: 'Delete account',
+              subtitle: settingsController.isDeletingAccount.value
+                  ? 'Removing your account data...'
+                  : 'Permanently delete your profile, habits, and moments',
+              onTap: settingsController.isDeletingAccount.value
+                  ? null
+                  : settingsController.deleteAccount,
             ),
           ),
           const SizedBox(height: AppSizes.space12),
-          OutlinedButton.icon(
-            onPressed: settingsController.signOut,
-            icon: const Icon(Icons.logout_rounded),
-            label: const Text('Sign out'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.error,
-              side: const BorderSide(color: AppColors.error),
+          Obx(
+            () => OutlinedButton.icon(
+              onPressed: settingsController.isDeletingAccount.value
+                  ? null
+                  : settingsController.signOut,
+              icon: const Icon(Icons.logout_rounded),
+              label: const Text('Sign out'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.error,
+                side: const BorderSide(color: AppColors.error),
+              ),
             ),
           ),
         ],
@@ -204,7 +245,9 @@ class _MeProfileCard extends StatelessWidget {
                   children: [
                     Text(
                       displayName,
-                      style: AppTypography.titleLarge(color: AppColors.onSurface),
+                      style: AppTypography.titleLarge(
+                        color: AppColors.onSurface,
+                      ),
                     ),
                     const SizedBox(height: AppSizes.space2),
                     Text(
@@ -251,9 +294,7 @@ class _ProfileMetric extends StatelessWidget {
           const SizedBox(height: AppSizes.space2),
           Text(
             label,
-            style: AppTypography.bodySmall(
-              color: AppColors.onSurfaceVariant,
-            ),
+            style: AppTypography.bodySmall(color: AppColors.onSurfaceVariant),
           ),
         ],
       ),
@@ -461,7 +502,7 @@ class _MeArchiveTile extends StatelessWidget {
               ],
             ),
           ),
-          if (trailing != null) trailing!,
+          if (trailing case final trailing?) trailing,
         ],
       ),
     );
@@ -519,6 +560,72 @@ class _MeLinkTile extends StatelessWidget {
                 ),
               ),
               const Icon(Icons.chevron_right_rounded, color: AppColors.outline),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MeDangerTile extends StatelessWidget {
+  const _MeDangerTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: AppSizes.borderRadiusLg,
+        onTap: onTap,
+        child: Ink(
+          padding: const EdgeInsets.all(AppSizes.space16),
+          decoration: BoxDecoration(
+            color: AppColors.errorContainer.withValues(alpha: 0.42),
+            borderRadius: AppSizes.borderRadiusLg,
+            border: Border.all(color: AppColors.error.withValues(alpha: 0.18)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: AppColors.error.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Icon(icon, color: AppColors.error),
+              ),
+              const SizedBox(width: AppSizes.space12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: AppTypography.labelLarge(color: AppColors.error),
+                    ),
+                    const SizedBox(height: AppSizes.space4),
+                    Text(
+                      subtitle,
+                      style: AppTypography.bodySmall(
+                        color: AppColors.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right_rounded, color: AppColors.error),
             ],
           ),
         ),
