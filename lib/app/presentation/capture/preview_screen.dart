@@ -197,8 +197,8 @@ class _CaptionField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hintText = controller.isProofMoment
-        ? 'Add a short note about what you finished…'
-        : 'Add context if you want to remember this later…';
+        ? 'What did you finish?'
+        : 'Why does this moment matter?';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -338,77 +338,64 @@ class _AudienceSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Audience',
+          'Who sees this',
           style: AppTypography.titleMedium(color: AppColors.onSurface),
         ),
         const SizedBox(height: AppSizes.space8),
-        Text(
-          'Keep it intimate. No public feed, no broadcasting.',
-          style: AppTypography.bodySmall(color: AppColors.onSurfaceVariant),
-        ),
-        const SizedBox(height: AppSizes.space16),
         Obx(
-          () => Column(
+          () => Wrap(
+            spacing: AppSizes.space8,
+            runSpacing: AppSizes.space8,
             children: [
-              _AudienceCard(
+              _AudiencePill(
                 icon: Icons.lock_outline,
-                title: 'Save only',
-                subtitle: 'Keep this proof entirely private.',
+                label: 'Only me',
                 isSelected:
-                    controller.visibility.value ==
-                    AppConstants.visibilityPersonalOnly,
+                    controller.visibility.value == AppConstants.visibilityPersonalOnly,
                 onTap: () => controller.setVisibility(
                   AppConstants.visibilityPersonalOnly,
                 ),
               ),
-              const SizedBox(height: AppSizes.space12),
-              _AudienceCard(
+              _AudiencePill(
                 icon: Icons.person_outline,
-                title: 'Share privately',
-                subtitle: 'Pick a buddy or a small circle.',
+                label: 'Share privately',
                 isSelected:
-                    controller.visibility.value ==
-                    AppConstants.visibilitySelectedFriends,
+                    controller.visibility.value == AppConstants.visibilitySelectedFriends,
                 onTap: () => controller.setVisibility(
                   AppConstants.visibilitySelectedFriends,
                 ),
               ),
-              const SizedBox(height: AppSizes.space12),
-              _AudienceCard(
+              _AudiencePill(
                 icon: Icons.groups_outlined,
-                title: 'Close crew',
-                subtitle: 'Send it to everyone in your accountability circle.',
+                label: 'Close crew',
                 isSelected:
-                    controller.visibility.value ==
-                    AppConstants.visibilityAllFriends,
+                    controller.visibility.value == AppConstants.visibilityAllFriends,
                 onTap: () =>
                     controller.setVisibility(AppConstants.visibilityAllFriends),
               ),
-              if (controller.visibility.value ==
-                  AppConstants.visibilitySelectedFriends) ...[
-                const SizedBox(height: AppSizes.space16),
-                _SelectedFriendPicker(controller: controller),
-              ],
             ],
           ),
         ),
+        if (controller.visibility.value ==
+            AppConstants.visibilitySelectedFriends) ...[
+          const SizedBox(height: AppSizes.space16),
+          _SelectedFriendPicker(controller: controller),
+        ],
       ],
     );
   }
 }
 
-class _AudienceCard extends StatelessWidget {
-  const _AudienceCard({
+class _AudiencePill extends StatelessWidget {
+  const _AudiencePill({
     required this.icon,
-    required this.title,
-    required this.subtitle,
+    required this.label,
     required this.isSelected,
     required this.onTap,
   });
 
   final IconData icon;
-  final String title;
-  final String subtitle;
+  final String label;
   final bool isSelected;
   final VoidCallback onTap;
 
@@ -417,63 +404,38 @@ class _AudienceCard extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: AppSizes.borderRadiusLg,
+        borderRadius: AppSizes.borderRadiusFull,
         onTap: onTap,
         child: Ink(
-          padding: const EdgeInsets.all(AppSizes.space16),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSizes.space16,
+            vertical: AppSizes.space10,
+          ),
           decoration: BoxDecoration(
             color: isSelected
-                ? AppColors.primary.withValues(alpha: 0.06)
-                : AppColors.surfaceContainerLowest,
-            borderRadius: AppSizes.borderRadiusLg,
+                ? AppColors.primaryFixed
+                : AppColors.surfaceContainerLow,
+            borderRadius: AppSizes.borderRadiusFull,
             border: Border.all(
               color: isSelected ? AppColors.primary : AppColors.outlineVariant,
               width: isSelected ? 1.5 : 1,
             ),
           ),
           child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? AppColors.primary
-                      : AppColors.surfaceContainerHigh,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(
-                  icon,
-                  color: isSelected
-                      ? AppColors.onPrimary
-                      : AppColors.onSurfaceVariant,
+              Icon(
+                icon,
+                size: 16,
+                color: isSelected ? AppColors.primary : AppColors.onSurfaceVariant,
+              ),
+              const SizedBox(width: AppSizes.space6),
+              Text(
+                label,
+                style: AppTypography.labelMedium(
+                  color: isSelected ? AppColors.primary : AppColors.onSurfaceVariant,
                 ),
               ),
-              const SizedBox(width: AppSizes.space12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: AppTypography.labelLarge(
-                        color: isSelected
-                            ? AppColors.primary
-                            : AppColors.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: AppSizes.space4),
-                    Text(
-                      subtitle,
-                      style: AppTypography.bodySmall(
-                        color: AppColors.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (isSelected)
-                const Icon(Icons.check_circle, color: AppColors.primary),
             ],
           ),
         ),

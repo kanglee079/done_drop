@@ -348,6 +348,11 @@ class HomeController extends GetxController {
     await _activityRepo.archiveActivity(activityId);
   }
 
+  /// Restore a previously archived activity.
+  Future<void> restoreActivity(String activityId) async {
+    await _activityRepo.unarchiveActivity(activityId);
+  }
+
   /// Mark today's instance of an activity as missed.
   Future<void> missActivity(String activityId) async {
     final uid = _userId;

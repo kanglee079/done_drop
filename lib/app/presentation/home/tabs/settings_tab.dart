@@ -74,7 +74,7 @@ class _SettingsTab extends StatelessWidget {
             const _MeInfoTile(
               icon: Icons.archive_outlined,
               title: 'No archived habits',
-              subtitle: 'Archived habits will show up here.',
+              subtitle: 'Standards you pause will show here.',
             )
           else
             ...homeController.archivedActivities
@@ -82,11 +82,18 @@ class _SettingsTab extends StatelessWidget {
                 .map(
                   (activity) => Padding(
                     padding: const EdgeInsets.only(bottom: AppSizes.space12),
-                    child: _MeInfoTile(
+                    child: _MeArchiveTile(
                       key: ValueKey('archived-${activity.id}'),
                       icon: Icons.archive_outlined,
                       title: activity.title,
                       subtitle: activity.category ?? 'Archived habit',
+                      trailing: TextButton(
+                        onPressed: () => homeController.restoreActivity(activity.id),
+                        child: Text(
+                          'Restore',
+                          style: AppTypography.labelMedium(color: AppColors.primary),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -172,41 +179,49 @@ class _MeProfileCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSizes.space24),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.primary, AppColors.primaryContainer],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: AppColors.surfaceContainerLowest,
         borderRadius: AppSizes.borderRadiusLg,
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.16)),
         boxShadow: AppColors.elevatedShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
-            radius: 28,
-            backgroundColor: Colors.white.withValues(alpha: 0.16),
-            child: Text(
-              displayName.characters.first.toUpperCase(),
-              style: AppTypography.titleLarge(color: AppColors.onPrimary),
-            ),
-          ),
-          const SizedBox(height: AppSizes.space16),
-          Text(
-            displayName,
-            style: AppTypography.headlineSmall(color: AppColors.onPrimary),
-          ),
-          const SizedBox(height: AppSizes.space4),
-          Text(
-            email,
-            style: AppTypography.bodySmall(
-              color: AppColors.onPrimary.withValues(alpha: 0.82),
-            ),
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 28,
+                backgroundColor: AppColors.primaryFixed,
+                child: Text(
+                  displayName.characters.first.toUpperCase(),
+                  style: AppTypography.titleLarge(color: AppColors.primary),
+                ),
+              ),
+              const SizedBox(width: AppSizes.space16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      displayName,
+                      style: AppTypography.titleLarge(color: AppColors.onSurface),
+                    ),
+                    const SizedBox(height: AppSizes.space2),
+                    Text(
+                      email,
+                      style: AppTypography.bodySmall(
+                        color: AppColors.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: AppSizes.space20),
           Row(
             children: [
-              _ProfileMetric(label: 'Done', value: '$completedToday'),
+              _ProfileMetric(label: 'Done today', value: '$completedToday'),
               _ProfileMetric(label: 'Best streak', value: '$bestStreak'),
               _ProfileMetric(label: 'Buddies', value: '$buddyCount'),
             ],
@@ -231,13 +246,13 @@ class _ProfileMetric extends StatelessWidget {
         children: [
           Text(
             value,
-            style: AppTypography.titleLarge(color: AppColors.onPrimary),
+            style: AppTypography.titleLarge(color: AppColors.onSurface),
           ),
           const SizedBox(height: AppSizes.space2),
           Text(
             label,
             style: AppTypography.bodySmall(
-              color: AppColors.onPrimary.withValues(alpha: 0.78),
+              color: AppColors.onSurfaceVariant,
             ),
           ),
         ],
@@ -357,7 +372,6 @@ class _MeToggleTile extends StatelessWidget {
 
 class _MeInfoTile extends StatelessWidget {
   const _MeInfoTile({
-    super.key,
     required this.icon,
     required this.title,
     required this.subtitle,
@@ -397,6 +411,57 @@ class _MeInfoTile extends StatelessWidget {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MeArchiveTile extends StatelessWidget {
+  const _MeArchiveTile({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    this.trailing,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSizes.space16),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLowest,
+        borderRadius: AppSizes.borderRadiusLg,
+      ),
+      child: Row(
+        children: [
+          _MeIconBadge(icon: icon),
+          const SizedBox(width: AppSizes.space12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: AppTypography.labelLarge(color: AppColors.onSurface),
+                ),
+                const SizedBox(height: AppSizes.space4),
+                Text(
+                  subtitle,
+                  style: AppTypography.bodySmall(
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (trailing != null) trailing!,
         ],
       ),
     );

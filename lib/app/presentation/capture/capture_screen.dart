@@ -106,17 +106,17 @@ class _CaptureScreenState extends State<CaptureScreen> {
           backgroundColor: AppColors.surface.withValues(alpha: 0.92),
           surfaceTintColor: Colors.transparent,
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.close, color: AppColors.primary),
-            onPressed: () {
-              _controller.resetComposer();
-              Get.back();
-            },
-          ),
-          title: Text(
-            _isProofMoment ? 'Proof Capture' : 'Capture',
-            style: AppTypography.titleLarge(color: AppColors.onSurface),
-          ),
+        leading: IconButton(
+          icon: const Icon(Icons.close, color: AppColors.primary),
+          onPressed: () {
+            _controller.resetComposer();
+            Get.back();
+          },
+        ),
+        title: Text(
+          _isProofMoment ? 'Capture proof' : 'Capture moment',
+          style: AppTypography.titleLarge(color: AppColors.onSurface),
+        ),
         ),
         body: SafeArea(
           child: Padding(
@@ -197,7 +197,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
                         child: _CaptureOptionCard(
                           icon: Icons.camera_alt_outlined,
                           title: 'Camera',
-                          description: 'Take a proof photo right now.',
+                          description: 'Proof is freshest right now.',
                           onTap: _pickFromCamera,
                         ),
                       ),
@@ -206,7 +206,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
                         child: _CaptureOptionCard(
                           icon: Icons.photo_library_outlined,
                           title: 'Gallery',
-                          description: 'Use a recent moment from your roll.',
+                          description: 'Your recent wins are still waiting.',
                           onTap: _pickFromGallery,
                         ),
                       ),

@@ -5,47 +5,268 @@ import 'package:done_drop/app/presentation/home/widgets/habit_action_card.dart';
 import 'package:done_drop/core/models/activity.dart';
 import 'package:done_drop/core/models/activity_instance.dart';
 
-void main() {
-  testWidgets('hero habit card triggers both complete actions', (tester) async {
-    var quickCompleteCount = 0;
-    var proofCompleteCount = 0;
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: HabitActionCard(
-            activity: Activity(
-              id: 'habit-1',
-              ownerId: 'user-1',
-              title: 'Read',
-              updatedAt: DateTime(2026, 4, 14),
-            ),
-            instance: ActivityInstance(
-              id: 'inst-1',
-              activityId: 'habit-1',
-              ownerId: 'user-1',
-              date: DateTime(2026, 4, 14),
-              status: 'pending',
-              createdAt: DateTime(2026, 4, 14),
-              updatedAt: DateTime(2026, 4, 14),
-            ),
-            variant: HabitCardVariant.hero,
-            actionState: HabitActionState.none,
-            isCompleted: false,
-            isOverdue: false,
-            onCompleteNow: () async => quickCompleteCount++,
-            onCompleteWithProof: () async => proofCompleteCount++,
-          ),
-        ),
-      ),
+Activity _makeActivity({String id = 'habit-1', String title = 'Read'}) =>
+    Activity(
+      id: id,
+      ownerId: 'user-1',
+      title: title,
+      updatedAt: DateTime(2026, 4, 14),
     );
 
-    await tester.tap(find.byKey(const Key('complete-now-button')).last);
-    await tester.pump();
-    await tester.tap(find.byKey(const Key('complete-proof-button')).last);
-    await tester.pump();
+ActivityInstance _makeInstance({
+  String id = 'inst-1',
+  String activityId = 'habit-1',
+  String status = 'pending',
+  String? momentId,
+}) =>
+    ActivityInstance(
+      id: id,
+      activityId: activityId,
+      ownerId: 'user-1',
+      date: DateTime(2026, 4, 14),
+      status: status,
+      momentId: momentId,
+      createdAt: DateTime(2026, 4, 14),
+      updatedAt: DateTime(2026, 4, 14),
+    );
 
-    expect(quickCompleteCount, 1);
-    expect(proofCompleteCount, 1);
+void main() {
+  group('HabitActionCard — hero variant', () {
+    testWidgets('triggers both complete actions on tap', (tester) async {
+      var quickCompleteCount = 0;
+      var proofCompleteCount = 0;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: HabitActionCard(
+              activity: _makeActivity(),
+              instance: _makeInstance(),
+              variant: HabitCardVariant.hero,
+              actionState: HabitActionState.none,
+              isCompleted: false,
+              isOverdue: false,
+              onCompleteNow: () async => quickCompleteCount++,
+              onCompleteWithProof: () async => proofCompleteCount++,
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.byKey(const Key('complete-now-button')).last);
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('complete-proof-button')).last);
+      await tester.pump();
+
+      expect(quickCompleteCount, 1);
+      expect(proofCompleteCount, 1);
+    });
+
+    testWidgets('shows loading indicator on quick-complete actionState', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: HabitActionCard(
+              activity: _makeActivity(),
+              instance: _makeInstance(),
+              variant: HabitCardVariant.hero,
+              actionState: HabitActionState.quickComplete,
+              isCompleted: false,
+              isOverdue: false,
+              onCompleteNow: () async {},
+              onCompleteWithProof: () async {},
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(CircularProgressIndicator), findsWidgets);
+      expect(find.text('Complete now'), findsNothing);
+    });
+
+    testWidgets('shows loading indicator on complete-with-proof actionState', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: HabitActionCard(
+              activity: _makeActivity(),
+              instance: _makeInstance(),
+              variant: HabitCardVariant.hero,
+              actionState: HabitActionState.completeWithProof,
+              isCompleted: false,
+              isOverdue: false,
+              onCompleteNow: () async {},
+              onCompleteWithProof: () async {},
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(CircularProgressIndicator), findsWidgets);
+      expect(find.text('Complete + proof'), findsNothing);
+    });
+
+    testWidgets('shows completed state instead of buttons when isCompleted=true', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: HabitActionCard(
+              activity: _makeActivity(),
+              instance: _makeInstance(),
+              variant: HabitCardVariant.hero,
+              actionState: HabitActionState.none,
+              isCompleted: true,
+              isOverdue: false,
+              onCompleteNow: () async {},
+              onCompleteWithProof: () async {},
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byKey(const Key('complete-now-button')), findsNothing);
+      expect(find.byKey(const Key('complete-proof-button')), findsNothing);
+      expect(find.text('Completed today'), findsOneWidget);
+    });
+  });
+
+  group('HabitActionCard — content variant', () {
+    testWidgets('triggers quick complete on pill tap', (tester) async {
+      var completeCount = 0;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: HabitActionCard(
+              activity: _makeActivity(),
+              instance: _makeInstance(),
+              variant: HabitCardVariant.content,
+              actionState: HabitActionState.none,
+              isCompleted: false,
+              isOverdue: false,
+              onCompleteNow: () async => completeCount++,
+              onCompleteWithProof: () async {},
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.byKey(const Key('list-complete-pill')).last);
+      await tester.pump();
+
+      expect(completeCount, 1);
+    });
+
+    testWidgets('shows loading indicator on pill during quick-complete', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: HabitActionCard(
+              activity: _makeActivity(),
+              instance: _makeInstance(),
+              variant: HabitCardVariant.content,
+              actionState: HabitActionState.quickComplete,
+              isCompleted: false,
+              isOverdue: false,
+              onCompleteNow: () async {},
+              onCompleteWithProof: () async {},
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byKey(const Key('list-complete-pill')), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsWidgets);
+    });
+
+    testWidgets('shows loading indicator on proof button during complete-with-proof', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: HabitActionCard(
+              activity: _makeActivity(),
+              instance: _makeInstance(),
+              variant: HabitCardVariant.content,
+              actionState: HabitActionState.completeWithProof,
+              isCompleted: false,
+              isOverdue: false,
+              onCompleteNow: () async {},
+              onCompleteWithProof: () async {},
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byKey(const Key('list-proof-button')), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsWidgets);
+    });
+
+    testWidgets('hides proof button when isCompleted=true', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: HabitActionCard(
+              activity: _makeActivity(),
+              instance: _makeInstance(),
+              variant: HabitCardVariant.content,
+              actionState: HabitActionState.none,
+              isCompleted: true,
+              isOverdue: false,
+              onCompleteNow: () async {},
+              onCompleteWithProof: () async {},
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byKey(const Key('list-proof-button')), findsNothing);
+    });
+
+    testWidgets('shows verified icon when hasProof=true', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: HabitActionCard(
+              activity: _makeActivity(),
+              instance: _makeInstance(momentId: 'moment-1'),
+              variant: HabitCardVariant.content,
+              actionState: HabitActionState.none,
+              isCompleted: true,
+              isOverdue: false,
+              onCompleteNow: () async {},
+              onCompleteWithProof: () async {},
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byIcon(Icons.verified_outlined), findsOneWidget);
+    });
+
+    testWidgets('disabled pill does not call onCompleteNow when isCompleted=true', (tester) async {
+      var tapCount = 0;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: HabitActionCard(
+              activity: _makeActivity(),
+              instance: _makeInstance(),
+              variant: HabitCardVariant.content,
+              actionState: HabitActionState.none,
+              isCompleted: true,
+              isOverdue: false,
+              onCompleteNow: () async => tapCount++,
+              onCompleteWithProof: () async {},
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.byKey(const Key('list-complete-pill')).last);
+      await tester.pump();
+
+      expect(tapCount, 0);
+    });
   });
 }

@@ -7,8 +7,6 @@ import 'app_sizes.dart';
 class AppTheme {
   AppTheme._();
 
-  static const _darkModePrimaryAccent = Color(0xFFD9C1BB);
-
   static const String _newsreaderFamily = 'Newsreader';
   static const String _manropeFamily = 'Manrope';
 
@@ -81,13 +79,12 @@ class AppTheme {
           backgroundColor: AppColors.surface.withValues(alpha: 0.8),
           surfaceTintColor: Colors.transparent,
           elevation: 0,
-          centerTitle: true,
+          centerTitle: false,
           systemOverlayStyle: SystemUiOverlayStyle.dark,
-          titleTextStyle: _newsreaderText(
+          titleTextStyle: _manropeText(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            fontStyle: FontStyle.italic,
-            color: AppColors.primary,
+            color: AppColors.onSurface,
           ),
           iconTheme: const IconThemeData(color: AppColors.primary),
         ),
@@ -145,7 +142,7 @@ class AppTheme {
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: AppColors.surfaceContainerHighest,
+          fillColor: AppColors.surfaceContainerLow,
           border: InputBorder.none,
           enabledBorder: InputBorder.none,
           focusedBorder: InputBorder.none,
@@ -303,15 +300,14 @@ class AppTheme {
           backgroundColor: AppColors.darkSurface.withValues(alpha: 0.8),
           surfaceTintColor: Colors.transparent,
           elevation: 0,
-          centerTitle: true,
+          centerTitle: false,
           systemOverlayStyle: SystemUiOverlayStyle.light,
-          titleTextStyle: _newsreaderText(
+          titleTextStyle: _manropeText(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            fontStyle: FontStyle.italic,
-            color: _darkModePrimaryAccent,
+            color: AppColors.darkOnSurface,
           ),
-          iconTheme: const IconThemeData(color: _darkModePrimaryAccent),
+          iconTheme: const IconThemeData(color: AppColors.primary),
         ),
         cardTheme: CardThemeData(
           color: AppColors.darkSurfaceContainerLow,
@@ -390,7 +386,7 @@ class AppTheme {
         titleSmall: _manropeText(fontSize: 14, fontWeight: FontWeight.w600, color: color),
         bodyLarge: _manropeText(fontSize: 16, fontWeight: FontWeight.w400, color: color),
         bodyMedium: _manropeText(fontSize: 14, fontWeight: FontWeight.w400, color: color),
-        bodySmall: _manropeText(fontSize: 12, fontWeight: FontWeight.w400, color: AppColors.onSurfaceVariant),
+        bodySmall: _manropeText(fontSize: 12, fontWeight: FontWeight.w400, color: color),
         labelLarge: _manropeText(fontSize: 14, fontWeight: FontWeight.w600, color: color),
         labelMedium: _manropeText(fontSize: 12, fontWeight: FontWeight.w600, color: color),
         labelSmall: _manropeText(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.onSurfaceVariant),
