@@ -576,7 +576,7 @@ class _HeroMetaChip extends StatelessWidget {
         borderRadius: AppSizes.borderRadiusFull,
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: MainAxisSize.max,
         children: [
           Icon(
             icon,
