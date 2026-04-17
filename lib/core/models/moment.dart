@@ -137,25 +137,25 @@ class Moment {
       };
 
   factory Moment.fromFirestore(Map<String, dynamic> map) => Moment(
-        id: map['id'] as String,
-        ownerId: map['ownerId'] as String,
+        id: (map['id'] as String?) ?? '',
+        ownerId: (map['ownerId'] as String?) ?? '',
         ownerDisplayName: map['ownerDisplayName'] as String?,
         ownerAvatarUrl: map['ownerAvatarUrl'] as String?,
         activityId: map['activityId'] as String?,
         activityInstanceId: map['activityInstanceId'] as String?,
         completionLogId: map['completionLogId'] as String?,
         activityTitle: map['activityTitle'] as String?,
-        visibility: map['visibility'] as String,
+        visibility: (map['visibility'] as String?) ?? 'private',
         selectedFriendIds:
             (map['selectedFriendIds'] as List<dynamic>?)?.cast<String>() ?? [],
         media: map['media'] == null
             ? MomentMedia.empty()
             : MomentMedia.fromFirestore(map['media'] as Map<String, dynamic>),
-        caption: map['caption'] as String,
+        caption: (map['caption'] as String?) ?? '',
         category: map['category'] as String?,
-        completedAt: DateTime.parse(map['completedAt'] as String),
-        createdAt: DateTime.parse(map['createdAt'] as String),
-        updatedAt: DateTime.parse(map['updatedAt'] as String),
+        completedAt: _parseDateTime(map['completedAt']),
+        createdAt: _parseDateTime(map['createdAt']) ?? DateTime.now(),
+        updatedAt: _parseDateTime(map['updatedAt']) ?? DateTime.now(),
         reactionCounts:
             (map['reactionCounts'] as Map<String, dynamic>?)?.map(
                   (k, v) => MapEntry(k, v as int),
@@ -164,6 +164,18 @@ class Moment {
         isDeleted: map['isDeleted'] as bool? ?? false,
         moderationStatus: map['moderationStatus'] as String? ?? 'approved',
       );
+
+  static DateTime _parseDateTime(dynamic value) {
+    if (value == null) return DateTime.now();
+    if (value is String && value.isNotEmpty) {
+      try {
+        return DateTime.parse(value);
+      } catch (_) {
+        return DateTime.now();
+      }
+    }
+    return DateTime.now();
+  }
 
   factory Moment.fromFeedDelivery(FeedDelivery delivery) => Moment(
         id: delivery.momentId,

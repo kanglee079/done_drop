@@ -584,12 +584,16 @@ class _HeroMetaChip extends StatelessWidget {
             color: inverted ? AppColors.onPrimary : AppColors.onSurfaceVariant,
           ),
           const SizedBox(width: AppSizes.space6),
-          Text(
-            label,
-            style: AppTypography.bodySmall(
-              color: inverted
-                  ? AppColors.onPrimary
-                  : AppColors.onSurfaceVariant,
+          Flexible(
+            child: Text(
+              label,
+              style: AppTypography.bodySmall(
+                color: inverted
+                    ? AppColors.onPrimary
+                    : AppColors.onSurfaceVariant,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
