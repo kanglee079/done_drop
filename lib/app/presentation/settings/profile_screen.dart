@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:done_drop/core/theme/theme.dart';
 import 'package:done_drop/app/core/widgets/widgets.dart';
+import 'package:done_drop/app/routes/app_routes.dart';
 import 'package:done_drop/app/presentation/settings/profile_controller.dart';
 import 'package:done_drop/l10n/l10n.dart';
 
@@ -130,6 +131,65 @@ class ProfileScreen extends StatelessWidget {
                     );
                   }),
                   const SizedBox(height: AppSizes.space24),
+
+                  // User Code
+                  Obx(() {
+                    final code = ctrl.userCode;
+                    if (code == null || code.isEmpty) return const SizedBox.shrink();
+                    return GestureDetector(
+                      onTap: () => Get.toNamed(AppRoutes.myCode),
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: AppSizes.space20),
+                        padding: const EdgeInsets.all(AppSizes.space16),
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryFixed,
+                          borderRadius: AppSizes.borderRadiusMd,
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(Icons.qr_code_rounded, color: AppColors.primary, size: 22),
+                            ),
+                            const SizedBox(width: AppSizes.space12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    l10n.myCodeTitle,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.primary.withValues(alpha: 0.7),
+                                      letterSpacing: 1.5,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    code,
+                                    style: TextStyle(
+                                      fontFamily: 'monospace',
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 4,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Icon(Icons.arrow_forward_ios_rounded, color: AppColors.primary.withValues(alpha: 0.5), size: 16),
+                          ],
+                        ),
+                      ),
+                    );
+                  }),
 
                   // Name
                   _FieldSection(

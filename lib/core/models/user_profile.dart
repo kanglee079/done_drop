@@ -4,6 +4,7 @@ class UserProfile {
     required this.id,
     required this.displayName,
     this.username,
+    this.userCode,
     this.avatarUrl,
     this.bio,
     required this.createdAt,
@@ -16,6 +17,8 @@ class UserProfile {
   final String id;
   final String displayName;
   final String? username;
+  /// Short unique code (6 chars) for easy friend adding via QR/ID.
+  final String? userCode;
   final String? avatarUrl;
   final String? bio;
   final DateTime createdAt;
@@ -28,6 +31,7 @@ class UserProfile {
     String? id,
     String? displayName,
     String? username,
+    String? userCode,
     String? avatarUrl,
     String? bio,
     DateTime? createdAt,
@@ -39,6 +43,7 @@ class UserProfile {
     id: id ?? this.id,
     displayName: displayName ?? this.displayName,
     username: username ?? this.username,
+    userCode: userCode ?? this.userCode,
     avatarUrl: avatarUrl ?? this.avatarUrl,
     bio: bio ?? this.bio,
     createdAt: createdAt ?? this.createdAt,
@@ -52,6 +57,7 @@ class UserProfile {
     'id': id,
     'displayName': displayName,
     'username': username,
+    'userCode': userCode,
     'avatarUrl': avatarUrl,
     'bio': bio,
     'createdAt': createdAt.toIso8601String(),
@@ -65,6 +71,7 @@ class UserProfile {
     id: map['id'] as String,
     displayName: map['displayName'] as String,
     username: map['username'] as String?,
+    userCode: map['userCode'] as String?,
     avatarUrl: map['avatarUrl'] as String?,
     bio: map['bio'] as String?,
     createdAt: DateTime.parse(map['createdAt'] as String),

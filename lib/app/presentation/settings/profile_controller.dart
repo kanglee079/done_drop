@@ -54,6 +54,8 @@ class ProfileController extends GetxController {
 
   String? get _currentUserId => _authController.firebaseUser?.uid;
 
+  String? get userCode => profile.value?.userCode;
+
   Future<void> pickAndUploadAvatar() async {
     final picker = ImagePicker();
     final picked = await picker.pickImage(

@@ -26,6 +26,8 @@ abstract class AppRoutes {
   static const blocked = '/blocked';
   static const friends = '/friends';
   static const addFriend = '/friends/add';
+  static const myCode = '/friends/my-code';
+  static const scanCode = '/friends/scan';
   static const chat = '/chat';
   static const leaderboard = '/leaderboard';
   static const streakHistory = '/streak-history';

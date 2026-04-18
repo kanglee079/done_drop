@@ -685,5 +685,26 @@
   "recapCaptureMomentAction": "Capture a Moment",
   "recapDisciplineActivitiesTitle": "Discipline Activities",
   "recapTodayLabel": "Today",
-  "recapYesterdayLabel": "Yesterday"
+  "recapYesterdayLabel": "Yesterday",
+
+  "myCodeTitle": "My Code",
+  "myCodeSubtitle": "Share this code with friends so they can add you.",
+  "scanCodeTitle": "Scan Code",
+  "scanCodeSubtitle": "Scan your friend's QR code to add them instantly.",
+  "addByIdTitle": "Add by ID",
+  "addByIdSubtitle": "Enter your friend's unique ID to send a buddy request.",
+  "userIdLabel": "User ID",
+  "userIdHint": "Enter their ID",
+  "findByIdAction": "Find",
+  "findByEmailAction": "Find by Email",
+  "shareCodeAction": "Share my code",
+  "scanAction": "Scan code",
+  "myCodeCopied": "Code copied to clipboard",
+  "invalidCodeError": "Invalid QR code",
+  "userNotFoundError": "User not found",
+  "cantMessageSelfError": "You cannot message yourself",
+  "onlyFriendsCanChatError": "You can only chat with friends",
+  "selectAddMethod": "Add friends via",
+  "emailLabel": "Email",
+  "emailHint": "friend@example.com"
 }

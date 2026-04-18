@@ -48,16 +48,60 @@ class AddFriendController extends GetxController {
     return null;
   }
 
+  /// Search by username.
   Future<void> searchByUsername() async {
     final username = searchController.text.trim();
     if (username.isEmpty) return;
+
+    await _searchUser(() async {
+      return await _friendRepo.findUserByUsername(username);
+    });
+  }
+
+  /// Search by user code (from QR).
+  Future<void> searchByCode(String code) async {
+    if (code.isEmpty) return;
 
     isSearching.value = true;
     errorMessage.value = null;
     foundUser.value = null;
     requestSent.value = false;
 
-    final result = await _friendRepo.findUserByUsername(username);
+    final result = await _friendRepo.findUserByCode(code);
+
+    isSearching.value = false;
+
+    result.fold(
+      onSuccess: (user) {
+        if (user.id == _currentUserId) {
+          errorMessage.value = currentL10n.ownUsernameError;
+          return;
+        }
+        foundUser.value = user;
+      },
+      onFailure: (failure) {
+        errorMessage.value = failure.message;
+      },
+    );
+  }
+
+  /// Search by email.
+  Future<void> searchByEmail() async {
+    final email = searchController.text.trim();
+    if (email.isEmpty) return;
+
+    await _searchUser(() async {
+      return await _friendRepo.findUserByEmail(email);
+    });
+  }
+
+  Future<void> _searchUser(Future<Result<UserProfile>> Function() searchFn) async {
+    isSearching.value = true;
+    errorMessage.value = null;
+    foundUser.value = null;
+    requestSent.value = false;
+
+    final result = await searchFn();
 
     isSearching.value = false;
 

@@ -7,16 +7,19 @@ import 'package:intl/intl.dart';
 import 'package:done_drop/core/models/chat_message.dart';
 import 'package:done_drop/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:done_drop/firebase/repositories/chat_repository.dart';
+import 'package:done_drop/firebase/repositories/friend_repository.dart';
 
 class ChatController extends GetxController {
-  ChatController(this._chatRepository);
+  ChatController(this._chatRepository, this._friendRepository);
 
   final ChatRepository _chatRepository;
+  final FriendRepository _friendRepository;
 
   final messages = <ChatMessage>[].obs;
   final isLoading = true.obs;
   final isSending = false.obs;
   final draft = ''.obs;
+  final isNotFriend = false.obs;
 
   final TextEditingController textController = TextEditingController();
   final ScrollController scrollController = ScrollController();
@@ -42,6 +45,16 @@ class ChatController extends GetxController {
     final uid = _currentUserId ?? '';
     threadId = ChatRepository.threadIdForUsers(uid, buddyId);
 
+    // Prevent messaging self
+    if (buddyId == uid) {
+      isNotFriend.value = true;
+      isLoading.value = false;
+      return;
+    }
+
+    // Check if buddy is a friend
+    _checkFriendship(uid);
+
     textController.addListener(() {
       draft.value = textController.text;
     });
@@ -53,6 +66,17 @@ class ChatController extends GetxController {
     });
   }
 
+  Future<void> _checkFriendship(String uid) async {
+    if (uid.isEmpty || buddyId.isEmpty) return;
+    final friends = await _friendRepository.getFriends(uid);
+    final isFriend = friends.any(
+      (f) => f.userId1 == buddyId || f.userId2 == buddyId,
+    );
+    if (!isFriend) {
+      isNotFriend.value = true;
+    }
+  }
+
   @override
   void onClose() {
     _messagesSub?.cancel();
@@ -61,9 +85,13 @@ class ChatController extends GetxController {
     super.onClose();
   }
 
-  bool get canSend => draft.value.trim().isNotEmpty && !isSending.value;
+  bool get canSend =>
+      draft.value.trim().isNotEmpty &&
+      !isSending.value &&
+      !isNotFriend.value;
 
   Future<void> sendCurrentMessage() async {
+    if (isNotFriend.value) return;
     final text = textController.text.trim();
     if (text.isEmpty || isSending.value) return;
 

@@ -109,7 +109,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get emailLabel => 'Email';
 
   @override
-  String get emailHint => 'you@example.com';
+  String get emailHint => 'friend@example.com';
 
   @override
   String get passwordLabel => 'Password';
@@ -1615,4 +1615,61 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recapYesterdayLabel => 'Yesterday';
+
+  @override
+  String get myCodeTitle => 'My Code';
+
+  @override
+  String get myCodeSubtitle =>
+      'Share this code with friends so they can add you.';
+
+  @override
+  String get scanCodeTitle => 'Scan Code';
+
+  @override
+  String get scanCodeSubtitle =>
+      'Scan your friend\'s QR code to add them instantly.';
+
+  @override
+  String get addByIdTitle => 'Add by ID';
+
+  @override
+  String get addByIdSubtitle =>
+      'Enter your friend\'s unique ID to send a buddy request.';
+
+  @override
+  String get userIdLabel => 'User ID';
+
+  @override
+  String get userIdHint => 'Enter their ID';
+
+  @override
+  String get findByIdAction => 'Find';
+
+  @override
+  String get findByEmailAction => 'Find by Email';
+
+  @override
+  String get shareCodeAction => 'Share my code';
+
+  @override
+  String get scanAction => 'Scan code';
+
+  @override
+  String get myCodeCopied => 'Code copied to clipboard';
+
+  @override
+  String get invalidCodeError => 'Invalid QR code';
+
+  @override
+  String get userNotFoundError => 'User not found';
+
+  @override
+  String get cantMessageSelfError => 'You cannot message yourself';
+
+  @override
+  String get onlyFriendsCanChatError => 'You can only chat with friends';
+
+  @override
+  String get selectAddMethod => 'Add friends via';
 }

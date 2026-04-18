@@ -293,7 +293,7 @@ abstract class AppLocalizations {
   /// No description provided for @emailHint.
   ///
   /// In en, this message translates to:
-  /// **'you@example.com'**
+  /// **'friend@example.com'**
   String get emailHint;
 
   /// No description provided for @passwordLabel.
@@ -3037,6 +3037,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Yesterday'**
   String get recapYesterdayLabel;
+
+  /// No description provided for @myCodeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My Code'**
+  String get myCodeTitle;
+
+  /// No description provided for @myCodeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share this code with friends so they can add you.'**
+  String get myCodeSubtitle;
+
+  /// No description provided for @scanCodeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan Code'**
+  String get scanCodeTitle;
+
+  /// No description provided for @scanCodeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan your friend\'s QR code to add them instantly.'**
+  String get scanCodeSubtitle;
+
+  /// No description provided for @addByIdTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add by ID'**
+  String get addByIdTitle;
+
+  /// No description provided for @addByIdSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your friend\'s unique ID to send a buddy request.'**
+  String get addByIdSubtitle;
+
+  /// No description provided for @userIdLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'User ID'**
+  String get userIdLabel;
+
+  /// No description provided for @userIdHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter their ID'**
+  String get userIdHint;
+
+  /// No description provided for @findByIdAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Find'**
+  String get findByIdAction;
+
+  /// No description provided for @findByEmailAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Find by Email'**
+  String get findByEmailAction;
+
+  /// No description provided for @shareCodeAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Share my code'**
+  String get shareCodeAction;
+
+  /// No description provided for @scanAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan code'**
+  String get scanAction;
+
+  /// No description provided for @myCodeCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Code copied to clipboard'**
+  String get myCodeCopied;
+
+  /// No description provided for @invalidCodeError.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid QR code'**
+  String get invalidCodeError;
+
+  /// No description provided for @userNotFoundError.
+  ///
+  /// In en, this message translates to:
+  /// **'User not found'**
+  String get userNotFoundError;
+
+  /// No description provided for @cantMessageSelfError.
+  ///
+  /// In en, this message translates to:
+  /// **'You cannot message yourself'**
+  String get cantMessageSelfError;
+
+  /// No description provided for @onlyFriendsCanChatError.
+  ///
+  /// In en, this message translates to:
+  /// **'You can only chat with friends'**
+  String get onlyFriendsCanChatError;
+
+  /// No description provided for @selectAddMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Add friends via'**
+  String get selectAddMethod;
 }
 
 class _AppLocalizationsDelegate

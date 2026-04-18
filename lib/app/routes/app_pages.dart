@@ -33,6 +33,9 @@ import '../presentation/chat/chat_binding.dart';
 import '../presentation/chat/chat_screen.dart';
 import '../presentation/buddy_wall/buddy_wall_binding.dart';
 import '../presentation/buddy_wall/buddy_wall_screen.dart';
+import '../presentation/qr/qr_binding.dart';
+import '../presentation/qr/my_code_screen.dart';
+import '../presentation/qr/scan_code_screen.dart';
 import '../presentation/leaderboard/leaderboard_screen.dart';
 import '../presentation/leaderboard/leaderboard_binding.dart';
 import '../presentation/streak/streak_history_screen.dart';
@@ -204,6 +207,20 @@ class AppPages {
       name: AppRoutes.buddyWall,
       page: () => const BuddyWallScreen(),
       binding: BuddyWallBinding(),
+      middlewares: [AuthGuard()],
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: AppRoutes.myCode,
+      page: () => const MyCodeScreen(),
+      binding: QrBinding(),
+      middlewares: [AuthGuard()],
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: AppRoutes.scanCode,
+      page: () => const ScanCodeScreen(),
+      binding: QrBinding(),
       middlewares: [AuthGuard()],
       transition: Transition.rightToLeft,
     ),

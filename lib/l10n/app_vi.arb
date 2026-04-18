@@ -684,5 +684,26 @@
   "recapCaptureMomentAction": "Chụp một khoảnh khắc",
   "recapDisciplineActivitiesTitle": "Các thói quen kỷ luật",
   "recapTodayLabel": "Hôm nay",
-  "recapYesterdayLabel": "Hôm qua"
+  "recapYesterdayLabel": "Hôm qua",
+
+  "myCodeTitle": "Mã của tôi",
+  "myCodeSubtitle": "Chia sẻ mã này để bạn bè thêm bạn.",
+  "scanCodeTitle": "Quét mã",
+  "scanCodeSubtitle": "Quét mã QR của bạn bè để thêm họ ngay.",
+  "addByIdTitle": "Thêm bằng ID",
+  "addByIdSubtitle": "Nhập ID duy nhất của bạn bè để gửi lời mời kết bạn.",
+  "userIdLabel": "ID người dùng",
+  "userIdHint": "Nhập ID của họ",
+  "findByIdAction": "Tìm",
+  "findByEmailAction": "Tìm bằng Email",
+  "shareCodeAction": "Chia sẻ mã của tôi",
+  "scanAction": "Quét mã",
+  "myCodeCopied": "Đã sao chép mã vào bộ nhớ tạm",
+  "invalidCodeError": "Mã QR không hợp lệ",
+  "userNotFoundError": "Không tìm thấy người dùng",
+  "cantMessageSelfError": "Bạn không thể nhắn tin cho chính mình",
+  "onlyFriendsCanChatError": "Bạn chỉ có thể nhắn tin với bạn bè",
+  "selectAddMethod": "Thêm bạn bè qua",
+  "emailLabel": "Email",
+  "emailHint": "ban@example.com"
 }

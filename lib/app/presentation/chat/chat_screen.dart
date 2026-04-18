@@ -79,6 +79,40 @@ class ChatScreen extends GetView<ChatController> {
                   );
                 }
 
+                if (controller.isNotFriend.value) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSizes.space24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 72,
+                            height: 72,
+                            decoration: BoxDecoration(
+                              color: AppColors.errorContainer,
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            child: Icon(
+                              Icons.person_off_outlined,
+                              color: AppColors.error,
+                              size: 30,
+                            ),
+                          ),
+                          const SizedBox(height: AppSizes.space16),
+                          Text(
+                            context.l10n.onlyFriendsCanChatError,
+                            textAlign: TextAlign.center,
+                            style: AppTypography.headlineSmall(
+                              color: AppColors.onSurface,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
                 if (controller.messages.isEmpty) {
                   return Center(
                     child: Padding(
@@ -221,7 +255,14 @@ class ChatScreen extends GetView<ChatController> {
                                     color: AppColors.onPrimary,
                                   ),
                                 )
-                              : Text(context.l10n.chatSendAction),
+                              : Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.send_rounded, size: 18),
+                                    const SizedBox(width: 6),
+                                    Text(context.l10n.chatSendAction),
+                                  ],
+                                ),
                         ),
                       ),
                     ),

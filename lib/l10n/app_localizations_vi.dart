@@ -1621,4 +1621,59 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get recapYesterdayLabel => 'Hôm qua';
+
+  @override
+  String get myCodeTitle => 'Mã của tôi';
+
+  @override
+  String get myCodeSubtitle => 'Chia sẻ mã này để bạn bè thêm bạn.';
+
+  @override
+  String get scanCodeTitle => 'Quét mã';
+
+  @override
+  String get scanCodeSubtitle => 'Quét mã QR của bạn bè để thêm họ ngay.';
+
+  @override
+  String get addByIdTitle => 'Thêm bằng ID';
+
+  @override
+  String get addByIdSubtitle =>
+      'Nhập ID duy nhất của bạn bè để gửi lời mời kết bạn.';
+
+  @override
+  String get userIdLabel => 'ID người dùng';
+
+  @override
+  String get userIdHint => 'Nhập ID của họ';
+
+  @override
+  String get findByIdAction => 'Tìm';
+
+  @override
+  String get findByEmailAction => 'Tìm bằng Email';
+
+  @override
+  String get shareCodeAction => 'Chia sẻ mã của tôi';
+
+  @override
+  String get scanAction => 'Quét mã';
+
+  @override
+  String get myCodeCopied => 'Đã sao chép mã vào bộ nhớ tạm';
+
+  @override
+  String get invalidCodeError => 'Mã QR không hợp lệ';
+
+  @override
+  String get userNotFoundError => 'Không tìm thấy người dùng';
+
+  @override
+  String get cantMessageSelfError => 'Bạn không thể nhắn tin cho chính mình';
+
+  @override
+  String get onlyFriendsCanChatError => 'Bạn chỉ có thể nhắn tin với bạn bè';
+
+  @override
+  String get selectAddMethod => 'Thêm bạn bè qua';
 }

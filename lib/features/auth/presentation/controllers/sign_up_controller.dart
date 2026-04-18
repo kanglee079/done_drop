@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:done_drop/features/auth/repositories/auth_repository.dart';
@@ -9,6 +11,12 @@ import 'package:done_drop/core/services/analytics_service.dart';
 import 'package:done_drop/core/models/user_profile.dart';
 import 'package:done_drop/core/services/locale_controller.dart';
 import 'package:done_drop/l10n/l10n.dart';
+
+String _generateUserCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  final random = Random.secure();
+  return List.generate(6, (_) => chars[random.nextInt(chars.length)]).join();
+}
 
 class SignUpController extends GetxController {
   SignUpController(this._authRepo, this._userProfileRepo);
@@ -101,6 +109,7 @@ class SignUpController extends GetxController {
             id: uid,
             displayName: nameController.text.trim(),
             username: null,
+            userCode: _generateUserCode(),
             avatarUrl: null,
             bio: null,
             createdAt: DateTime.now(),
