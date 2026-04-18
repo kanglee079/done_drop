@@ -1,21 +1,38 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:done_drop/features/auth/repositories/auth_repository.dart';
 import 'package:done_drop/features/auth/data/onboarding_service.dart';
+import 'package:done_drop/features/auth/repositories/user_profile_repository.dart';
 import 'package:done_drop/app/routes/app_routes.dart';
 import 'package:done_drop/core/errors/result.dart';
+import 'package:done_drop/core/models/user_profile.dart';
+import 'package:done_drop/core/services/locale_controller.dart';
 
 class AuthController extends GetxController {
-  AuthController(this._authRepo, this._onboardingService);
+  AuthController(
+    this._authRepo,
+    this._onboardingService,
+    this._userProfileRepo,
+    this._localeController,
+  );
   final AuthRepository _authRepo;
   final OnboardingService _onboardingService;
+  final UserProfileRepository _userProfileRepo;
+  final LocaleController _localeController;
 
   final Rx<User?> _firebaseUser = Rx<User?>(null);
+  final Rx<UserProfile?> _userProfile = Rx<UserProfile?>(null);
   User? get firebaseUser => _firebaseUser.value;
+  UserProfile? get userProfile => _userProfile.value;
   bool get isLoggedIn => _firebaseUser.value != null;
+  bool get requiresInitialHabitSetup =>
+      _userProfile.value != null &&
+      !_userProfile.value!.settings.hasCompletedHabitSetup;
 
   StreamSubscription<User?>? _authSubscription;
+  StreamSubscription<UserProfile?>? _userProfileSubscription;
 
   /// Exposed stream of Firebase auth state changes.
   /// Use this in SplashScreen and route guards instead of StorageService.userId.
@@ -24,14 +41,18 @@ class AuthController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    _firebaseUser.value = _authRepo.currentUser;
+    _bindUserProfileStream(_firebaseUser.value);
     _authSubscription = _authRepo.authStateChanges.listen((user) {
       _firebaseUser.value = user;
+      _bindUserProfileStream(user);
     });
   }
 
   @override
   void onClose() {
     _authSubscription?.cancel();
+    _userProfileSubscription?.cancel();
     super.onClose();
   }
 
@@ -47,7 +68,8 @@ class AuthController extends GetxController {
       return;
     }
 
-    Get.offAllNamed(AppRoutes.home);
+    final destination = await resolveAuthenticatedRoute();
+    Get.offAllNamed(destination);
   }
 
   Future<void> signOut() async {
@@ -66,4 +88,56 @@ class AuthController extends GetxController {
       _authRepo.reauthenticateWithGoogle();
 
   bool get hasCompletedOnboarding => _onboardingService.hasCompletedOnboarding;
+
+  Future<String> resolveAuthenticatedRoute() async {
+    final uid = _firebaseUser.value?.uid;
+    if (uid == null) {
+      return AppRoutes.signIn;
+    }
+
+    final profile = await ensureCurrentUserProfile();
+    if (profile == null) {
+      return AppRoutes.home;
+    }
+
+    return profile.settings.hasCompletedHabitSetup
+        ? AppRoutes.home
+        : AppRoutes.initialSetup;
+  }
+
+  Future<UserProfile?> ensureCurrentUserProfile() async {
+    final uid = _firebaseUser.value?.uid;
+    if (uid == null) return null;
+    if (_userProfile.value != null) return _userProfile.value;
+
+    final result = await _userProfileRepo.getUserProfile(uid);
+    UserProfile? profile;
+    result.fold(onSuccess: (value) => profile = value, onFailure: (_) {});
+
+    if (profile != null) {
+      _userProfile.value = profile;
+      await _localeController.syncFromProfile(profile);
+    }
+    return profile;
+  }
+
+  void _bindUserProfileStream(User? user) {
+    _userProfileSubscription?.cancel();
+    if (user == null) {
+      _userProfile.value = null;
+      return;
+    }
+
+    _userProfileSubscription = _userProfileRepo
+        .watchUserProfile(user.uid)
+        .listen(
+          (profile) async {
+            _userProfile.value = profile;
+            await _localeController.syncFromProfile(profile);
+          },
+          onError: (error) {
+            debugPrint('[_bindUserProfileStream] Error: $error');
+          },
+        );
+  }
 }

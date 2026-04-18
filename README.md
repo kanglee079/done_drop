@@ -112,6 +112,20 @@ flutter build ios --simulator
 flutter build apk --debug
 ```
 
+### 6. Optional: Faster Media Backend Mode
+
+DoneDrop supports a backend thumbnail mode where the app uploads only one original image and Firebase generates the resized thumbnail.
+
+Guide:
+
+- [docs/MEDIA_BACKEND_SETUP.md](/Users/xikang/dev/project/done_drop/docs/MEDIA_BACKEND_SETUP.md)
+
+Run locally with:
+
+```bash
+flutter run --dart-define=DD_USE_SERVER_THUMBNAILS=true
+```
+
 ## Design System
 
 ### Colors

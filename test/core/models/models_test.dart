@@ -6,6 +6,7 @@ import 'package:done_drop/core/models/moment.dart';
 import 'package:done_drop/core/models/friend_request.dart';
 import 'package:done_drop/core/models/friendship.dart';
 import 'package:done_drop/core/models/feed_delivery.dart';
+import 'package:done_drop/core/models/chat_message.dart';
 import 'package:done_drop/core/constants/app_constants.dart';
 
 MediaMetadata _makeMedia({
@@ -14,16 +15,15 @@ MediaMetadata _makeMedia({
   int w = 100,
   int h = 100,
   int size = 1000,
-}) =>
-    MediaMetadata(
-      storagePath: path,
-      downloadUrl: url,
-      mimeType: 'image/jpeg',
-      width: w,
-      height: h,
-      bytesUploaded: size,
-      ownerId: 'user_1',
-    );
+}) => MediaMetadata(
+  storagePath: path,
+  downloadUrl: url,
+  mimeType: 'image/jpeg',
+  width: w,
+  height: h,
+  bytesUploaded: size,
+  ownerId: 'user_1',
+);
 
 void main() {
   group('Activity', () {
@@ -101,10 +101,7 @@ void main() {
         updatedAt: now,
       );
 
-      final updated = original.copyWith(
-        title: 'Updated',
-        currentStreak: 2,
-      );
+      final updated = original.copyWith(title: 'Updated', currentStreak: 2);
 
       expect(updated.title, 'Updated');
       expect(updated.currentStreak, 2);
@@ -130,10 +127,7 @@ void main() {
       expect(pending.isCompleted, false);
       expect(pending.isMissed, false);
 
-      final completed = pending.copyWith(
-        status: 'completed',
-        completedAt: now,
-      );
+      final completed = pending.copyWith(status: 'completed', completedAt: now);
 
       expect(completed.isPending, false);
       expect(completed.isCompleted, true);
@@ -192,7 +186,10 @@ void main() {
       expect(restored.id, moment.id);
       expect(restored.visibility, AppConstants.visibilityAllFriends);
       expect(restored.selectedFriendIds.length, 2);
-      expect(restored.media.thumbnail.downloadUrl, moment.media.thumbnail.downloadUrl);
+      expect(
+        restored.media.thumbnail.downloadUrl,
+        moment.media.thumbnail.downloadUrl,
+      );
       expect(restored.caption, 'My morning run!');
     });
 
@@ -217,6 +214,32 @@ void main() {
 
       expect(moment.visibility, 'personal_only');
       expect(moment.selectedFriendIds.isEmpty, true);
+    });
+
+    test('bestThumbnailUrl falls back to original when thumbnail is pending', () {
+      final now = DateTime.now();
+      final moment = Moment(
+        id: 'moment_2',
+        ownerId: 'user_1',
+        visibility: AppConstants.visibilityPersonalOnly,
+        media: MomentMedia(
+          original: _makeMedia(
+            path: 'moments/user_1/moment_2/original.jpg',
+            url: 'https://storage.example.com/original.jpg',
+          ),
+          thumbnail: _makeMedia(
+            path: 'moments/user_1/moment_2/original_280x420.jpg',
+            url: '',
+          ),
+        ),
+        caption: 'Pending thumb',
+        completedAt: now,
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      expect(moment.media.bestThumbnailUrl, 'https://storage.example.com/original.jpg');
+      expect(moment.media.isGeneratedThumbnailPending, true);
     });
   });
 
@@ -270,7 +293,15 @@ void main() {
         recipientId: 'user_2',
         momentId: 'moment_1',
         ownerId: 'user_1',
+        ownerDisplayName: 'User One',
+        ownerAvatarUrl: 'https://example.com/avatar.jpg',
         visibility: 'all_friends',
+        caption: 'Locked in.',
+        category: 'Health',
+        activityTitle: 'Morning Run',
+        originalUrl: 'https://example.com/original.jpg',
+        thumbnailUrl: 'https://example.com/thumb.jpg',
+        completedAt: now,
         createdAt: now,
         isRead: false,
       );
@@ -281,8 +312,29 @@ void main() {
       expect(restored.id, delivery.id);
       expect(restored.recipientId, delivery.recipientId);
       expect(restored.momentId, delivery.momentId);
+      expect(restored.ownerDisplayName, 'User One');
       expect(restored.visibility, 'all_friends');
+      expect(restored.thumbnailUrl, 'https://example.com/thumb.jpg');
       expect(restored.isRead, false);
+    });
+
+    test('previewUrl falls back to original when thumbnail is empty', () {
+      final now = DateTime.now();
+      final delivery = FeedDelivery(
+        id: 'fd_m2_u2',
+        recipientId: 'user_2',
+        momentId: 'moment_2',
+        ownerId: 'user_1',
+        ownerDisplayName: 'User One',
+        visibility: 'all_friends',
+        caption: 'Locked in.',
+        originalUrl: 'https://example.com/original.jpg',
+        thumbnailUrl: '',
+        completedAt: now,
+        createdAt: now,
+      );
+
+      expect(delivery.previewUrl, 'https://example.com/original.jpg');
     });
   });
 
@@ -305,6 +357,30 @@ void main() {
       expect(restored.id, log.id);
       expect(restored.activityId, log.activityId);
       expect(restored.momentId, 'moment_1');
+    });
+  });
+
+  group('ChatMessage', () {
+    test('roundtrip toFirestore/fromFirestore', () {
+      final now = DateTime.now();
+      final message = ChatMessage(
+        id: 'msg_1',
+        threadId: 'user_1_user_2',
+        senderId: 'user_1',
+        text: 'Locked in today.',
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      final map = message.toFirestore();
+      final restored = ChatMessage.fromFirestore(map);
+
+      expect(restored.id, message.id);
+      expect(restored.threadId, message.threadId);
+      expect(restored.senderId, message.senderId);
+      expect(restored.text, message.text);
+      expect(restored.createdAt, message.createdAt);
+      expect(restored.updatedAt, message.updatedAt);
     });
   });
 }

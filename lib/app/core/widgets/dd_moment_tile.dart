@@ -48,10 +48,10 @@ class DDMomentTile extends StatelessWidget {
             CachedNetworkImage(
               imageUrl: imageUrl,
               fit: BoxFit.cover,
-              placeholder: (_, __) => Container(
+              placeholder: (context, url) => Container(
                 color: AppColors.surfaceContainerHigh,
               ),
-              errorWidget: (_, __, ___) => Container(
+              errorWidget: (context, url, error) => Container(
                 color: AppColors.surfaceContainerHigh,
                 child: const Icon(Icons.image_not_supported,
                     color: AppColors.outline, size: 24),

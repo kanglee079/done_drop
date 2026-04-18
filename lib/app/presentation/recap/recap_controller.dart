@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:done_drop/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:done_drop/firebase/repositories/moment_repository.dart';
 import 'package:done_drop/firebase/repositories/activity_repository.dart';
@@ -108,12 +109,14 @@ class RecapController extends GetxController {
     final now = DateTime.now();
     final weekStart = now.subtract(Duration(days: now.weekday - 1));
     final weekEnd = weekStart.add(const Duration(days: 6));
-    final months = ['Jan','Feb','Mar','Apr','May','Jun',
-                    'Jul','Aug','Sep','Oct','Nov','Dec'];
+    final locale = Get.locale?.toLanguageTag() ?? 'en';
+    final startFormat = DateFormat.MMMd(locale);
+    final endDayFormat = DateFormat.d(locale);
+    final endFormat = DateFormat.MMMd(locale);
     if (weekStart.month == weekEnd.month) {
-      return '${months[weekStart.month - 1]} ${weekStart.day} — ${weekEnd.day}';
+      return '${startFormat.format(weekStart)} — ${endDayFormat.format(weekEnd)}';
     }
-    return '${months[weekStart.month - 1]} ${weekStart.day} — ${months[weekEnd.month - 1]} ${weekEnd.day}';
+    return '${startFormat.format(weekStart)} — ${endFormat.format(weekEnd)}';
   }
 
   String _dateKey(DateTime d) =>

@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:done_drop/core/models/streak.dart';
 import 'package:done_drop/core/models/activity.dart';
 import 'package:done_drop/core/theme/theme.dart';
+import 'package:done_drop/app/core/widgets/widgets.dart';
 import 'package:done_drop/app/presentation/streak/streak_badge.dart';
 import 'package:done_drop/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:done_drop/firebase/repositories/activity_repository.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:done_drop/l10n/l10n.dart';
 
 class StreakHistoryScreen extends StatelessWidget {
   const StreakHistoryScreen({super.key});
@@ -22,9 +25,9 @@ class StreakHistoryScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back, color: AppColors.primary),
           onPressed: () => Get.back(),
         ),
-        title: const Text(
-          'Streak Journey',
-          style: TextStyle(
+        title: Text(
+          context.l10n.streakJourneyTitle,
+          style: const TextStyle(
             fontFamily: AppTypography.serifFamily,
             fontSize: 22,
             fontWeight: FontWeight.w600,
@@ -33,7 +36,10 @@ class StreakHistoryScreen extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-      body: const _StreakHistoryContent(),
+      body: const DDResponsiveCenter(
+        maxWidth: 760,
+        child: _StreakHistoryContent(),
+      ),
     );
   }
 }
@@ -73,11 +79,13 @@ class _StreakHistoryContentState extends State<_StreakHistoryContent> {
 
   int get _bestStreak {
     if (_activities.isEmpty) return 0;
-    return _activities.map((a) => a.longestStreak).reduce((a, b) => a > b ? a : b);
+    return _activities
+        .map((a) => a.longestStreak)
+        .reduce((a, b) => a > b ? a : b);
   }
 
   int get _totalStreakDays {
-    return _activities.fold(0, (sum, a) => sum + a.currentStreak);
+    return _activities.fold(0, (total, a) => total + a.currentStreak);
   }
 
   @override
@@ -110,11 +118,15 @@ class _StreakHistoryContentState extends State<_StreakHistoryContent> {
             padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
             child: Row(
               children: [
-                const Icon(Icons.list_alt, size: 18, color: AppColors.onSurfaceVariant),
+                const Icon(
+                  Icons.list_alt,
+                  size: 18,
+                  color: AppColors.onSurfaceVariant,
+                ),
                 const SizedBox(width: 8),
-                const Text(
-                  'Activity Streaks',
-                  style: TextStyle(
+                Text(
+                  context.l10n.streakActivityStreaksTitle,
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
                     color: AppColors.onSurface,
@@ -126,13 +138,13 @@ class _StreakHistoryContentState extends State<_StreakHistoryContent> {
         ),
 
         if (_activities.isEmpty)
-          const SliverToBoxAdapter(
+          SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.all(32),
               child: Center(
                 child: Text(
-                  'No activities yet. Create one to start your streak!',
-                  style: TextStyle(color: AppColors.onSurfaceVariant),
+                  context.l10n.streakNoActivitiesYet,
+                  style: const TextStyle(color: AppColors.onSurfaceVariant),
                 ),
               ),
             ),
@@ -177,9 +189,7 @@ class _StreakHeroCard extends StatelessWidget {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.2),
-        ),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
       ),
       child: Column(
         children: [
@@ -190,7 +200,9 @@ class _StreakHeroCard extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Text(
-            bestStreak > 0 ? 'Your Best Streak' : 'Start Your Streak!',
+            bestStreak > 0
+                ? context.l10n.streakBestTitle
+                : context.l10n.streakStartTitle,
             style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w700,
@@ -198,12 +210,26 @@ class _StreakHeroCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 20,
+            runSpacing: 12,
             children: [
-              _StatItem(label: 'Best', value: '$bestStreak days', icon: Icons.emoji_events),
-              _StatItem(label: 'Total', value: '$totalDays days', icon: Icons.local_fire_department),
-              _StatItem(label: 'Active', value: '$activityCount', icon: Icons.check_circle),
+              _StatItem(
+                label: context.l10n.streakBestStatLabel,
+                value: '$bestStreak ${context.l10n.streakDaysUnit}',
+                icon: Icons.emoji_events,
+              ),
+              _StatItem(
+                label: context.l10n.streakTotalStatLabel,
+                value: '$totalDays ${context.l10n.streakDaysUnit}',
+                icon: Icons.local_fire_department,
+              ),
+              _StatItem(
+                label: context.l10n.streakActiveStatLabel,
+                value: '$activityCount',
+                icon: Icons.check_circle,
+              ),
             ],
           ),
         ],
@@ -225,26 +251,29 @@ class _StatItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Icon(icon, size: 20, color: AppColors.primary),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w800,
-            color: AppColors.onSurface,
+    return SizedBox(
+      width: 92,
+      child: Column(
+        children: [
+          Icon(icon, size: 20, color: AppColors.primary),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: AppColors.onSurface,
+            ),
           ),
-        ),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 11,
-            color: AppColors.onSurfaceVariant,
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11,
+              color: AppColors.onSurfaceVariant,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -261,13 +290,17 @@ class _MilestoneRoadmap extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.flag, size: 18, color: AppColors.onSurfaceVariant),
-              SizedBox(width: 8),
+              const Icon(
+                Icons.flag,
+                size: 18,
+                color: AppColors.onSurfaceVariant,
+              ),
+              const SizedBox(width: 8),
               Text(
-                'Milestone Roadmap',
-                style: TextStyle(
+                context.l10n.streakMilestoneRoadmapTitle,
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
                   color: AppColors.onSurface,
@@ -276,14 +309,20 @@ class _MilestoneRoadmap extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          ...StreakMilestones.all.map((milestone) => _MilestoneRow(
-                milestone: milestone,
-                isReached: milestone.days <= currentStreak,
-                isCurrent: currentStreak < milestone.days &&
-                    (StreakMilestones.all.indexOf(milestone) == 0 ||
-                        StreakMilestones.all[StreakMilestones.all.indexOf(milestone) - 1].days <= currentStreak),
-                currentStreak: currentStreak,
-              )),
+          ...StreakMilestones.all.map(
+            (milestone) => _MilestoneRow(
+              milestone: milestone,
+              isReached: milestone.days <= currentStreak,
+              isCurrent:
+                  currentStreak < milestone.days &&
+                  (StreakMilestones.all.indexOf(milestone) == 0 ||
+                      StreakMilestones
+                              .all[StreakMilestones.all.indexOf(milestone) - 1]
+                              .days <=
+                          currentStreak),
+              currentStreak: currentStreak,
+            ),
+          ),
         ],
       ),
     );
@@ -316,15 +355,15 @@ class _MilestoneRow extends StatelessWidget {
               color: isReached
                   ? milestone.backgroundColor
                   : isCurrent
-                      ? AppColors.surfaceContainerHighest
-                      : Colors.transparent,
+                  ? AppColors.surfaceContainerHighest
+                  : Colors.transparent,
               shape: BoxShape.circle,
               border: Border.all(
                 color: isReached
                     ? milestone.badgeColor
                     : isCurrent
-                        ? AppColors.primary
-                        : AppColors.outlineVariant,
+                    ? AppColors.primary
+                    : AppColors.outlineVariant,
                 width: isCurrent ? 2 : 1,
               ),
             ),
@@ -334,8 +373,8 @@ class _MilestoneRow extends StatelessWidget {
               color: isReached
                   ? milestone.badgeColor
                   : isCurrent
-                      ? AppColors.primary
-                      : AppColors.outline,
+                  ? AppColors.primary
+                  : AppColors.outline,
             ),
           ),
           const SizedBox(width: 12),
@@ -346,11 +385,13 @@ class _MilestoneRow extends StatelessWidget {
                 color: isReached
                     ? milestone.backgroundColor.withValues(alpha: 0.3)
                     : isCurrent
-                        ? AppColors.primary.withValues(alpha: 0.05)
-                        : AppColors.surfaceContainerLow,
+                    ? AppColors.primary.withValues(alpha: 0.05)
+                    : AppColors.surfaceContainerLow,
                 borderRadius: BorderRadius.circular(12),
                 border: isCurrent
-                    ? Border.all(color: AppColors.primary.withValues(alpha: 0.3))
+                    ? Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.3),
+                      )
                     : null,
               ),
               child: Row(
@@ -360,16 +401,20 @@ class _MilestoneRow extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          milestone.label,
+                          milestone.localizedLabel(context.l10n),
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
-                            color: isReached ? milestone.badgeColor : AppColors.onSurface,
+                            color: isReached
+                                ? milestone.badgeColor
+                                : AppColors.onSurface,
                           ),
                         ),
                         if (isCurrent)
                           Text(
-                            '${milestone.days - currentStreak} days to go',
+                            context.l10n.streakDaysToGo(
+                              milestone.days - currentStreak,
+                            ),
                             style: TextStyle(
                               fontSize: 11,
                               color: AppColors.onSurfaceVariant,
@@ -383,7 +428,9 @@ class _MilestoneRow extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w800,
-                      color: isReached ? milestone.badgeColor : AppColors.onSurfaceVariant,
+                      color: isReached
+                          ? milestone.badgeColor
+                          : AppColors.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -420,8 +467,12 @@ class _ActivityStreakCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
-              activity.currentStreak > 0 ? Icons.local_fire_department : Icons.schedule,
-              color: activity.currentStreak > 0 ? AppColors.primary : AppColors.outline,
+              activity.currentStreak > 0
+                  ? Icons.local_fire_department
+                  : Icons.schedule,
+              color: activity.currentStreak > 0
+                  ? AppColors.primary
+                  : AppColors.outline,
             ),
           ),
           const SizedBox(width: 12),
@@ -440,8 +491,13 @@ class _ActivityStreakCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 if (activity.lastCompletedAt != null)
                   Text(
-                    'Last: ${_formatDate(activity.lastCompletedAt!)}',
-                    style: const TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant),
+                    context.l10n.streakLastCompleted(
+                      _formatDate(context, activity.lastCompletedAt!),
+                    ),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.onSurfaceVariant,
+                    ),
                   ),
               ],
             ),
@@ -454,7 +510,9 @@ class _ActivityStreakCard extends StatelessWidget {
                   Icon(
                     Icons.local_fire_department,
                     size: 14,
-                    color: activity.currentStreak > 0 ? AppColors.primary : AppColors.outline,
+                    color: activity.currentStreak > 0
+                        ? AppColors.primary
+                        : AppColors.outline,
                   ),
                   const SizedBox(width: 2),
                   Text(
@@ -462,14 +520,19 @@ class _ActivityStreakCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w800,
-                      color: activity.currentStreak > 0 ? AppColors.primary : AppColors.outline,
+                      color: activity.currentStreak > 0
+                          ? AppColors.primary
+                          : AppColors.outline,
                     ),
                   ),
                 ],
               ),
               Text(
-                'best: ${activity.longestStreak}d',
-                style: const TextStyle(fontSize: 10, color: AppColors.onSurfaceVariant),
+                context.l10n.streakBestShort(activity.longestStreak),
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: AppColors.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -478,13 +541,20 @@ class _ActivityStreakCard extends StatelessWidget {
     );
   }
 
-  String _formatDate(DateTime dt) {
+  String _formatDate(BuildContext context, DateTime dt) {
     final now = DateTime.now();
-    final diff = DateTime(now.year, now.month, now.day)
-        .difference(DateTime(dt.year, dt.month, dt.day))
-        .inDays;
-    if (diff == 0) return 'Today';
-    if (diff == 1) return 'Yesterday';
-    return '$diff days ago';
+    final diff = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).difference(DateTime(dt.year, dt.month, dt.day)).inDays;
+    if (diff == 0) return context.l10n.streakTodayShort;
+    if (diff == 1) return context.l10n.streakYesterdayShort;
+    if (diff > 1 && diff < 7) {
+      return context.l10n.streakDaysAgo(diff);
+    }
+    return DateFormat.yMMMd(
+      Localizations.localeOf(context).toLanguageTag(),
+    ).format(dt);
   }
 }

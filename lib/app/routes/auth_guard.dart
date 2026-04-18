@@ -53,6 +53,16 @@ class AuthGuard extends GetMiddleware {
       return RouteSettings(name: AppRoutes.signIn);
     }
 
+    if (authController.requiresInitialHabitSetup &&
+        route != AppRoutes.initialSetup) {
+      return const RouteSettings(name: AppRoutes.initialSetup);
+    }
+
+    if (!authController.requiresInitialHabitSetup &&
+        route == AppRoutes.initialSetup) {
+      return const RouteSettings(name: AppRoutes.home);
+    }
+
     // Logged in — allow through
     return null;
   }

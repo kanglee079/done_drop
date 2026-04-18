@@ -7,6 +7,7 @@ import 'package:done_drop/firebase/repositories/friend_repository.dart';
 import 'package:done_drop/firebase/repositories/activity_repository.dart';
 import 'package:done_drop/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:done_drop/features/auth/repositories/user_profile_repository.dart';
+import 'package:done_drop/l10n/l10n.dart';
 
 /// Leaderboard controller — fetches friend activity rankings.
 ///
@@ -78,7 +79,7 @@ class LeaderboardController extends GetxController {
         final profile = profiles[id];
         ranked.add(LeaderboardEntry(
           userId: id,
-          displayName: profile?.displayName ?? 'Unknown',
+          displayName: profile?.displayName ?? currentL10n.memberFallbackName,
           avatarUrl: profile?.avatarUrl,
           completedCount: stat['count'] as int,
           currentStreak: stat['streak'] as int,

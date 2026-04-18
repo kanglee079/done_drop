@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:done_drop/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:done_drop/firebase/repositories/report_repository.dart';
 import 'package:done_drop/core/services/analytics_service.dart';
+import 'package:done_drop/core/theme/theme.dart';
+import 'package:done_drop/l10n/l10n.dart';
 
 /// Controller for the report screen.
 class ReportController extends GetxController {
@@ -20,12 +22,46 @@ class ReportController extends GetxController {
   final hasSubmitted = false.obs;
 
   final List<String> reasons = [
-    'Inappropriate content',
-    'Harassment or bullying',
-    'Spam or misleading',
-    'Privacy concern',
-    'Something else',
+    'inappropriate',
+    'harassment',
+    'spam',
+    'privacy',
+    'other',
   ];
+
+  String reasonLabel(String reason) {
+    switch (reason) {
+      case 'inappropriate':
+        return currentL10n.reportReasonInappropriate;
+      case 'harassment':
+        return currentL10n.reportReasonHarassment;
+      case 'spam':
+        return currentL10n.reportReasonSpam;
+      case 'privacy':
+        return currentL10n.reportReasonPrivacy;
+      case 'other':
+        return currentL10n.reportReasonOther;
+      default:
+        return currentL10n.reportReasonOther;
+    }
+  }
+
+  String _reasonPayload(String reason) {
+    switch (reason) {
+      case 'inappropriate':
+        return 'Inappropriate content';
+      case 'harassment':
+        return 'Harassment or bullying';
+      case 'spam':
+        return 'Spam or misleading';
+      case 'privacy':
+        return 'Privacy concern';
+      case 'other':
+        return 'Something else';
+      default:
+        return 'Something else';
+    }
+  }
 
   void selectReason(String reason) {
     selectedReason.value = reason;
@@ -34,10 +70,13 @@ class ReportController extends GetxController {
   Future<void> submitReport({required String reportedUserId, String? momentId}) async {
     final reason = selectedReason.value;
     if (reason == null) {
-      Get.snackbar('Please select a reason', '',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red.shade100,
-          colorText: Colors.red.shade900);
+      Get.snackbar(
+        currentL10n.reportReasonRequiredTitle,
+        '',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppColors.errorContainer,
+        colorText: AppColors.onErrorContainer,
+      );
       return;
     }
 
@@ -48,7 +87,7 @@ class ReportController extends GetxController {
         reporterId: _userId ?? 'unknown',
         reporterEmail: _userEmail ?? 'unknown',
         reportedUserId: reportedUserId,
-        reason: reason,
+        reason: _reasonPayload(reason),
         additionalDetails: additionalDetails.text.trim().isEmpty
             ? null
             : additionalDetails.text.trim(),
@@ -57,10 +96,13 @@ class ReportController extends GetxController {
       AnalyticsService.instance.reportSubmitted();
       hasSubmitted.value = true;
     } catch (e) {
-      Get.snackbar('Failed to submit report', 'Please try again.',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red.shade100,
-          colorText: Colors.red.shade900);
+      Get.snackbar(
+        currentL10n.reportSubmitFailedTitle,
+        currentL10n.reportSubmitFailedMessage,
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppColors.errorContainer,
+        colorText: AppColors.onErrorContainer,
+      );
     } finally {
       isSubmitting.value = false;
     }

@@ -31,7 +31,53 @@ class AccountDeletionService {
   final NotificationService _notifications;
 
   static const _batchLimit = 200;
+  static const _softDeleteDays = 30;
 
+  /// Schedules account for soft deletion. The account will be permanently
+  /// deleted after 30 days unless the user signs in again to cancel.
+  Future<Result<void>> scheduleSoftDelete(String userId) async {
+    try {
+      final scheduledAt = DateTime.now();
+      final deleteAt = scheduledAt.add(const Duration(days: _softDeleteDays));
+
+      await _db.collection(AppConstants.colUsers).doc(userId).update({
+        'scheduledDeletionAt': Timestamp.fromDate(deleteAt),
+        'deletedAt': Timestamp.fromDate(scheduledAt),
+        'isDeleted': true,
+      });
+
+      return Result.success(null);
+    } catch (e) {
+      return Result.failure(
+        AppFailure.unexpected('Failed to schedule account deletion: $e'),
+      );
+    }
+  }
+
+  /// Cancels a scheduled soft deletion if the account is still pending deletion.
+  Future<Result<void>> cancelSoftDelete(String userId) async {
+    try {
+      final userDoc = await _db.collection(AppConstants.colUsers).doc(userId).get();
+      if (!userDoc.exists) return Result.success(null);
+
+      final data = userDoc.data()!;
+      if (data['isDeleted'] != true) return Result.success(null);
+
+      await _db.collection(AppConstants.colUsers).doc(userId).update({
+        'scheduledDeletionAt': FieldValue.delete(),
+        'deletedAt': FieldValue.delete(),
+        'isDeleted': false,
+      });
+
+      return Result.success(null);
+    } catch (e) {
+      return Result.failure(
+        AppFailure.unexpected('Failed to cancel account deletion: $e'),
+      );
+    }
+  }
+
+  /// Permanently deletes user data from Firestore.
   Future<Result<void>> deleteUserData(String userId) async {
     try {
       await _deleteOwnedMoments(userId);

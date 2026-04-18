@@ -1,10 +1,13 @@
 import 'package:get/get.dart';
+import 'package:flutter/material.dart';
 import 'package:done_drop/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:done_drop/firebase/repositories/friend_repository.dart';
 import 'package:done_drop/core/models/friend_request.dart';
 import 'package:done_drop/core/models/friendship.dart';
 import 'package:done_drop/core/errors/result.dart';
 import 'package:done_drop/core/services/analytics_service.dart';
+import 'package:done_drop/core/theme/theme.dart';
+import 'package:done_drop/l10n/l10n.dart';
 
 /// Controller for friend management screens.
 class FriendsController extends GetxController {
@@ -76,25 +79,107 @@ class FriendsController extends GetxController {
       onSuccess: (_) {
         AnalyticsService.instance.inviteAccepted();
         Get.snackbar(
-          'Friend Added',
-          '${request.senderDisplayName ?? 'User'} is now your friend',
+          currentL10n.friendAddedTitle,
+          currentL10n.friendAddedMessage(
+            request.senderDisplayName ?? currentL10n.memberFallbackName,
+          ),
           snackPosition: SnackPosition.BOTTOM,
         );
       },
       onFailure: (failure) {
-        Get.snackbar('Error', failure.message, snackPosition: SnackPosition.BOTTOM);
+        Get.snackbar(
+          currentL10n.genericErrorTitle,
+          failure.message,
+          snackPosition: SnackPosition.BOTTOM,
+        );
       },
     );
   }
 
   /// Decline an incoming friend request.
   Future<void> declineRequest(FriendRequest request) async {
-    await _friendRepo.declineRequest(request.id);
+    final confirmed = await Get.dialog<bool>(
+      AlertDialog(
+        title: Text(currentL10n.declineRequestTitle),
+        content: Text(currentL10n.declineRequestMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: Text(currentL10n.cancelAction),
+          ),
+          TextButton(
+            onPressed: () => Get.back(result: true),
+            child: Text(
+              currentL10n.declineRequestTitle,
+              style: TextStyle(color: AppColors.error),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    final result = await _friendRepo.declineRequest(request.id);
+    result.fold(
+      onSuccess: (_) {
+        Get.snackbar(
+          currentL10n.removedSuccessfully,
+          currentL10n.declineRequestTitle,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      },
+      onFailure: (failure) {
+        Get.snackbar(
+          currentL10n.actionFailed,
+          failure.message,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      },
+    );
   }
 
   /// Cancel an outgoing friend request.
   Future<void> cancelRequest(FriendRequest request) async {
-    await _friendRepo.cancelRequest(request.id);
+    final confirmed = await Get.dialog<bool>(
+      AlertDialog(
+        title: Text(currentL10n.cancelRequestTitle),
+        content: Text(currentL10n.cancelRequestMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: Text(currentL10n.cancelAction),
+          ),
+          TextButton(
+            onPressed: () => Get.back(result: true),
+            child: Text(
+              currentL10n.cancelAction,
+              style: TextStyle(color: AppColors.error),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    final result = await _friendRepo.cancelRequest(request.id);
+    result.fold(
+      onSuccess: (_) {
+        Get.snackbar(
+          currentL10n.removedSuccessfully,
+          currentL10n.cancelRequestTitle,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      },
+      onFailure: (failure) {
+        Get.snackbar(
+          currentL10n.actionFailed,
+          failure.message,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      },
+    );
   }
 
   /// Remove an existing friendship.
@@ -105,11 +190,18 @@ class FriendsController extends GetxController {
     final result = await _friendRepo.removeFriend(friendship.id, uid);
     result.fold(
       onSuccess: (_) {
-        Get.snackbar('Friend Removed', 'The friendship has been removed',
-            snackPosition: SnackPosition.BOTTOM);
+        Get.snackbar(
+          currentL10n.friendRemovedTitle,
+          currentL10n.friendRemovedMessage,
+          snackPosition: SnackPosition.BOTTOM,
+        );
       },
       onFailure: (failure) {
-        Get.snackbar('Error', failure.message, snackPosition: SnackPosition.BOTTOM);
+        Get.snackbar(
+          currentL10n.genericErrorTitle,
+          failure.message,
+          snackPosition: SnackPosition.BOTTOM,
+        );
       },
     );
   }

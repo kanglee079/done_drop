@@ -6,4 +6,5 @@ export 'activity_instance.dart';
 export 'completion_log.dart';
 export 'friend_request.dart';
 export 'friendship.dart';
+export 'chat_message.dart';
 export 'streak.dart';

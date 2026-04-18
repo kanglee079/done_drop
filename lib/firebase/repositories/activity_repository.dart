@@ -77,6 +77,7 @@ class ActivityRepository implements HabitCompletionRepository {
   }
 
   /// Increment streak on activity after completion.
+  @override
   Future<void> incrementStreak(String activityId) async {
     final ref = _activityCol.doc(activityId);
     final doc = await ref.get();
@@ -139,6 +140,7 @@ class ActivityRepository implements HabitCompletionRepository {
   }
 
   /// Create or get today's instance for an activity.
+  @override
   Future<ActivityInstance> getOrCreateTodayInstance(
     String activityId,
     String ownerId,
@@ -172,6 +174,7 @@ class ActivityRepository implements HabitCompletionRepository {
   }
 
   /// Mark instance as completed with optional moment link.
+  @override
   Future<void> completeInstance(String instanceId, {String? momentId}) async {
     final now = DateTime.now();
     await _instanceCol.doc(instanceId).update({
@@ -231,23 +234,32 @@ class ActivityRepository implements HabitCompletionRepository {
     var current = from;
 
     while (!current.isAfter(to)) {
-      for (final activityId in activityIds) {
-        final dateStr = _dateToString(current);
-        final instanceId = 'inst_${activityId}_$dateStr';
+      final dateStr = _dateToString(current);
+      final existingForDate = await _instanceCol
+          .where('ownerId', isEqualTo: ownerId)
+          .where('date', isEqualTo: dateStr)
+          .get();
+      final existingActivityIds = existingForDate.docs
+          .map((doc) => doc.data()['activityId'] as String?)
+          .whereType<String>()
+          .toSet();
 
-        final snap = await _instanceCol.doc(instanceId).get();
-        if (!snap.exists) {
-          final instance = ActivityInstance(
-            id: instanceId,
-            activityId: activityId,
-            ownerId: ownerId,
-            date: current,
-            status: AppConstants.instanceStatusPending,
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-          );
-          batch.set(_instanceCol.doc(instanceId), instance.toFirestore());
+      for (final activityId in activityIds) {
+        if (existingActivityIds.contains(activityId)) {
+          continue;
         }
+
+        final instanceId = 'inst_${activityId}_$dateStr';
+        final instance = ActivityInstance(
+          id: instanceId,
+          activityId: activityId,
+          ownerId: ownerId,
+          date: current,
+          status: AppConstants.instanceStatusPending,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+        batch.set(_instanceCol.doc(instanceId), instance.toFirestore());
       }
       current = current.add(const Duration(days: 1));
     }
@@ -259,6 +271,7 @@ class ActivityRepository implements HabitCompletionRepository {
   // COMPLETION LOGS
   // ══════════════════════════════════════════════════════════════════
 
+  @override
   Future<void> createCompletionLog(CompletionLog log) async {
     await _logCol.doc(log.id).set(log.toFirestore());
   }

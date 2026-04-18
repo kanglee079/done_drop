@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:done_drop/core/theme/theme.dart';
 import 'package:done_drop/app/core/widgets/widgets.dart';
 import 'package:done_drop/app/presentation/recap/recap_controller.dart';
 import 'package:done_drop/app/routes/app_routes.dart';
 import 'package:done_drop/core/services/analytics_service.dart';
+import 'package:done_drop/l10n/l10n.dart';
 
 /// DoneDrop Weekly Recap Screen
 class RecapScreen extends StatelessWidget {
@@ -16,6 +18,9 @@ class RecapScreen extends StatelessWidget {
     return GetBuilder<RecapController>(
       init: RecapController(),
       builder: (ctrl) {
+        final spec = DDResponsiveSpec.of(context);
+        final l10n = context.l10n;
+
         return Scaffold(
           backgroundColor: AppColors.surface,
           body: SafeArea(
@@ -26,15 +31,22 @@ class RecapScreen extends StatelessWidget {
                 );
               }
 
-              return SingleChildScrollView(
-                padding: const EdgeInsets.all(AppSizes.space24),
+              return DDResponsiveScrollBody(
+                maxWidth: 820,
+                padding: spec.pagePadding(
+                  top: AppSizes.space24,
+                  bottom: AppSizes.space24,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.arrow_back, color: AppColors.primary),
+                          icon: const Icon(
+                            Icons.arrow_back,
+                            color: AppColors.primary,
+                          ),
                           onPressed: () => Get.back(),
                         ),
                         const Spacer(),
@@ -60,7 +72,7 @@ class RecapScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: AppSizes.space24),
                     Text(
-                      'Your Week in Moments',
+                      l10n.recapTitle,
                       style: TextStyle(
                         fontFamily: AppTypography.serifFamily,
                         fontSize: 40,
@@ -71,7 +83,7 @@ class RecapScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: AppSizes.space8),
                     Text(
-                      '"You\'re building a beautiful life,\none moment at a time."',
+                      l10n.recapQuote,
                       style: TextStyle(
                         fontFamily: AppTypography.serifFamily,
                         fontSize: 16,
@@ -106,7 +118,7 @@ class RecapScreen extends StatelessWidget {
                                   ),
                                 ),
                                 Text(
-                                  'MOMENTS',
+                                  l10n.recapMomentsStatLabel,
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w700,
@@ -138,7 +150,7 @@ class RecapScreen extends StatelessWidget {
                                   ),
                                 ),
                                 Text(
-                                  'DAY STREAK',
+                                  l10n.recapDayStreakStatLabel,
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w700,
@@ -160,11 +172,14 @@ class RecapScreen extends StatelessWidget {
                           padding: const EdgeInsets.all(AppSizes.space32),
                           child: Column(
                             children: [
-                              Icon(Icons.photo_camera_outlined,
-                                  size: 48, color: AppColors.outline),
+                              Icon(
+                                Icons.photo_camera_outlined,
+                                size: 48,
+                                color: AppColors.outline,
+                              ),
                               const SizedBox(height: AppSizes.space16),
                               Text(
-                                'No moments this week yet.',
+                                l10n.recapNoMomentsYet,
                                 style: TextStyle(
                                   fontFamily: AppTypography.serifFamily,
                                   fontSize: 18,
@@ -180,18 +195,22 @@ class RecapScreen extends StatelessWidget {
                     const SizedBox(height: AppSizes.space48),
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: AppSizes.space20),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppSizes.space20,
+                      ),
                       decoration: BoxDecoration(
                         border: Border(
                           top: BorderSide(
-                            color: AppColors.outlineVariant.withValues(alpha: 0.15),
+                            color: AppColors.outlineVariant.withValues(
+                              alpha: 0.15,
+                            ),
                           ),
                         ),
                       ),
                       child: Column(
                         children: [
                           Text(
-                            'Ready to share this story?',
+                            l10n.recapShareTitle,
                             style: TextStyle(
                               fontFamily: AppTypography.serifFamily,
                               fontSize: 22,
@@ -200,7 +219,7 @@ class RecapScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: AppSizes.space16),
                           DDPrimaryButton(
-                            label: 'Capture a Moment',
+                            label: l10n.recapCaptureMomentAction,
                             icon: Icons.camera_alt,
                             onPressed: () {
                               AnalyticsService.instance.recapShared();
@@ -247,7 +266,7 @@ class _DisciplineRecap extends StatelessWidget {
                 Icon(Icons.emoji_events, color: AppColors.primary, size: 20),
                 const SizedBox(width: 8),
                 Text(
-                  'Discipline Activities',
+                  context.l10n.recapDisciplineActivitiesTitle,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -262,7 +281,10 @@ class _DisciplineRecap extends StatelessWidget {
               runSpacing: 8,
               children: activities.take(5).map((activity) {
                 return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: activity.currentStreak > 0
                         ? AppColors.primary.withValues(alpha: 0.1)
@@ -273,17 +295,29 @@ class _DisciplineRecap extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       if (activity.currentStreak > 0) ...[
-                        Icon(Icons.local_fire_department, size: 14, color: AppColors.primary),
+                        Icon(
+                          Icons.local_fire_department,
+                          size: 14,
+                          color: AppColors.primary,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           '${activity.currentStreak}',
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary,
+                          ),
                         ),
                         const SizedBox(width: 4),
                       ],
                       Text(
                         activity.title,
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.onSurface),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.onSurface,
+                        ),
                       ),
                     ],
                   ),
@@ -301,17 +335,17 @@ class _DaySection extends StatelessWidget {
   const _DaySection({required this.day});
   final RecapDay day;
 
-  String get _dayLabel {
+  String _dayLabel(BuildContext context) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
     final dayDate = DateTime(day.date.year, day.date.month, day.date.day);
-    if (dayDate == today) return 'Today';
-    if (dayDate == yesterday) return 'Yesterday';
-    const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-    const months = ['Jan','Feb','Mar','Apr','May','Jun',
-                    'Jul','Aug','Sep','Oct','Nov','Dec'];
-    return '${days[dayDate.weekday - 1]}, ${months[dayDate.month - 1]} ${dayDate.day}';
+    if (dayDate == today) return context.l10n.recapTodayLabel;
+    if (dayDate == yesterday) return context.l10n.recapYesterdayLabel;
+    return DateFormat(
+      'EEE, MMM d',
+      Localizations.localeOf(context).toLanguageTag(),
+    ).format(dayDate);
   }
 
   @override
@@ -322,7 +356,7 @@ class _DaySection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            _dayLabel,
+            _dayLabel(context),
             style: TextStyle(
               fontFamily: AppTypography.serifFamily,
               fontSize: 18,
@@ -334,8 +368,11 @@ class _DaySection extends StatelessWidget {
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
+            gridDelegate: ddAdaptiveGridDelegate(
+              context,
+              compactExtent: 96,
+              mediumExtent: 120,
+              expandedExtent: 140,
               crossAxisSpacing: 4,
               mainAxisSpacing: 4,
             ),
@@ -345,12 +382,11 @@ class _DaySection extends StatelessWidget {
               return ClipRRect(
                 borderRadius: AppSizes.borderRadiusSm,
                 child: CachedNetworkImage(
-                  imageUrl: m.media.thumbnail.downloadUrl,
+                  imageUrl: m.media.bestThumbnailUrl,
                   fit: BoxFit.cover,
-                  placeholder: (_, __) => Container(
-                    color: AppColors.surfaceContainerHighest,
-                  ),
-                  errorWidget: (_, __, ___) => Container(
+                  placeholder: (context, url) =>
+                      Container(color: AppColors.surfaceContainerHighest),
+                  errorWidget: (context, url, error) => Container(
                     color: AppColors.surfaceContainerHighest,
                     child: const Icon(Icons.broken_image, size: 20),
                   ),

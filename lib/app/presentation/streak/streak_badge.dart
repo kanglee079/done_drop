@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:done_drop/core/models/streak.dart';
 import 'package:done_drop/core/theme/theme.dart';
+import 'package:done_drop/l10n/l10n.dart';
 
 /// Enhanced streak badge with animated pulse, progress ring,
 /// and milestone indicator for home screen.
@@ -160,7 +161,7 @@ class _StreakBadgeState extends State<StreakBadge>
                       ),
                     ),
                     Text(
-                      'days',
+                      context.l10n.streakDaysUnit,
                       style: TextStyle(
                         color: _primaryColor.withValues(alpha: 0.8),
                         fontWeight: FontWeight.w600,
@@ -305,7 +306,7 @@ class MilestoneProgressBar extends StatelessWidget {
             Icon(milestone.icon, size: 12, color: milestone.badgeColor),
             const SizedBox(width: 4),
             Text(
-              '${milestone.days - currentStreak} days to ${milestone.label}',
+              '${context.l10n.streakDaysToGo(milestone.days - currentStreak)} • ${milestone.localizedLabel(context.l10n)}',
               style: TextStyle(
                 fontSize: 11,
                 color: milestone.badgeColor,

@@ -25,7 +25,7 @@ class AppSizes {
   static const double radiusNone = 0;
   static const double radiusSm = 6;
   static const double radiusMd = 12; // sharper default
-  static const double radiusLg = 20; // 
+  static const double radiusLg = 20; //
   static const double radiusXl = 32; //
   static const double radiusFull = 999;
 
@@ -40,13 +40,12 @@ class AppSizes {
     double topRight = 0,
     double bottomLeft = 0,
     double bottomRight = 0,
-  }) =>
-      BorderRadius.only(
-        topLeft: Radius.circular(topLeft),
-        topRight: Radius.circular(topRight),
-        bottomLeft: Radius.circular(bottomLeft),
-        bottomRight: Radius.circular(bottomRight),
-      );
+  }) => BorderRadius.only(
+    topLeft: Radius.circular(topLeft),
+    topRight: Radius.circular(topRight),
+    bottomLeft: Radius.circular(bottomLeft),
+    bottomRight: Radius.circular(bottomRight),
+  );
 
   // ── Icon Sizes ──────────────────────────────────────────────────────────
   static const double iconSm = 16;
@@ -75,8 +74,8 @@ class AppSizes {
   static const double cardWideAspectRatio = 16 / 9;
 
   // ── Breakpoints ────────────────────────────────────────────────────────
-  static const double breakpointMobile = 650;
-  static const double breakpointTablet = 1100;
+  static const double breakpointMobile = 600;
+  static const double breakpointTablet = 840;
 
   // ── Screen Padding ──────────────────────────────────────────────────────
   static const EdgeInsets screenPadding = EdgeInsets.symmetric(
@@ -93,4 +92,10 @@ class AppSizes {
   // ── Nav Bar (bottom) ───────────────────────────────────────────────────
   static const double navBarBottomPadding = 28.0;
   static const double navBarRadius = 32.0;
+  static const double metricCardMinHeight = 116.0;
+  static const double dockedCaptureOuterSize = 56.0;
+  static const double dockedCaptureInnerSize = 46.0;
+
+  // ── Glass Nav Bar ──────────────────────────────────────────────────────
+  static const double glassNavBarHeight = 68.0;
 }

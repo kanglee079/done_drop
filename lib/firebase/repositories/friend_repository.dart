@@ -281,6 +281,22 @@ class FriendRepository {
 
   // ── User Search ──────────────────────────────────────────────────
 
+  /// Search by userCode (6-char unique ID for QR/ID sharing).
+  Future<Result<UserProfile>> findUserByCode(String code) async {
+    try {
+      final snap = await _usersCol
+          .where('userCode', isEqualTo: code.toUpperCase().trim())
+          .limit(1)
+          .get();
+      if (snap.docs.isEmpty) {
+        return Result.failure(AppFailure.notFound('No user found with this code'));
+      }
+      return Result.success(UserProfile.fromFirestore(snap.docs.first.data()));
+    } catch (e) {
+      return Result.failure(AppFailure.unexpected(e.toString()));
+    }
+  }
+
   /// Search by username (preferred over email for privacy).
   Future<Result<UserProfile>> findUserByUsername(String username) async {
     try {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:done_drop/core/services/storage_service.dart';
 import 'package:done_drop/core/services/notification_service.dart';
+import 'package:done_drop/l10n/l10n.dart';
 
 /// Controller for notification scheduling.
 /// Manages daily reminder time and day-of-week toggles.
@@ -28,11 +29,14 @@ class NotificationController extends GetxController {
   ].obs;
 
   String get reminderTimeLabel {
-    final h = reminderHour.value;
-    final m = reminderMinute.value;
-    final period = h >= 12 ? 'PM' : 'AM';
-    final displayH = h > 12 ? h - 12 : (h == 0 ? 12 : h);
-    return '$displayH:${m.toString().padLeft(2, '0')} $period';
+    final localizations = Get.context != null
+        ? MaterialLocalizations.of(Get.context!)
+        : null;
+    return localizations?.formatTimeOfDay(
+          TimeOfDay(hour: reminderHour.value, minute: reminderMinute.value),
+          alwaysUse24HourFormat: false,
+        ) ??
+        '${reminderHour.value}:${reminderMinute.value.toString().padLeft(2, '0')}';
   }
 
   @override
@@ -113,10 +117,18 @@ class NotificationController extends GetxController {
 
   Future<void> pickRecapDay() async {
     // Simple day picker using a dialog
-    final days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    final days = [
+      currentL10n.dayMonShort,
+      currentL10n.dayTueShort,
+      currentL10n.dayWedShort,
+      currentL10n.dayThuShort,
+      currentL10n.dayFriShort,
+      currentL10n.daySatShort,
+      currentL10n.daySunShort,
+    ];
     final picked = await Get.dialog<int>(
       AlertDialog(
-        title: const Text('Select Day'),
+        title: Text(currentL10n.selectDayTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: List.generate(7, (i) {
@@ -161,19 +173,30 @@ class NotificationController extends GetxController {
   }
 
   String get recapDayLabel {
-    const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    final days = [
+      currentL10n.dayMonShort,
+      currentL10n.dayTueShort,
+      currentL10n.dayWedShort,
+      currentL10n.dayThuShort,
+      currentL10n.dayFriShort,
+      currentL10n.daySatShort,
+      currentL10n.daySunShort,
+    ];
     return days[(recapDay.value - 1) % 7];
   }
 
   String get recapTimeLabel {
-    final h = recapHour.value;
-    final m = recapMinute.value;
-    final period = h >= 12 ? 'PM' : 'AM';
-    final displayH = h > 12 ? h - 12 : (h == 0 ? 12 : h);
-    return '$displayH:${m.toString().padLeft(2, '0')} $period';
+    final localizations = Get.context != null
+        ? MaterialLocalizations.of(Get.context!)
+        : null;
+    return localizations?.formatTimeOfDay(
+          TimeOfDay(hour: recapHour.value, minute: recapMinute.value),
+          alwaysUse24HourFormat: false,
+        ) ??
+        '${recapHour.value}:${recapMinute.value.toString().padLeft(2, '0')}';
   }
 
   Future<void> requestPermissions() async {
-    await _notifService.requestPermission();
+    await _notifService.requestPermission(requestExactAlarms: true);
   }
 }

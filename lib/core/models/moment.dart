@@ -1,11 +1,25 @@
+import 'package:done_drop/core/models/feed_delivery.dart';
+
 /// Moment model — a captured proof moment tied to a completed activity
+enum MomentSyncStatus {
+  synced,
+  queued,
+  processing,
+  uploading,
+  finalizing,
+  failed,
+}
+
 class Moment {
   const Moment({
     required this.id,
     required this.ownerId,
+    this.ownerDisplayName,
+    this.ownerAvatarUrl,
     this.activityId,
     this.activityInstanceId,
     this.completionLogId, // links moment to its CompletionLog for audit trail
+    this.activityTitle,
     required this.visibility,
     this.selectedFriendIds = const [],
     // Media stored in Firebase Storage; Firestore holds metadata
@@ -18,13 +32,19 @@ class Moment {
     this.reactionCounts = const {},
     this.isDeleted = false,
     this.moderationStatus = 'approved',
+    this.localPreviewPath,
+    this.uploadProgress = 1,
+    this.syncStatus = MomentSyncStatus.synced,
   });
 
   final String id;
   final String ownerId;
+  final String? ownerDisplayName;
+  final String? ownerAvatarUrl;
   final String? activityId; // optional link to discipline activity
   final String? activityInstanceId; // optional link to activity instance
   final String? completionLogId; // links moment to its CompletionLog
+  final String? activityTitle; // denormalized for feed/wall rendering
   /// Visibility: personal_only | all_friends | selected_friends
   final String visibility;
   /// Used when visibility == selected_friends
@@ -39,13 +59,21 @@ class Moment {
   final Map<String, int> reactionCounts;
   final bool isDeleted;
   final String moderationStatus; // approved, pending, rejected
+  final String? localPreviewPath; // local-only image path for optimistic UI
+  final double uploadProgress; // local-only progress: 0..1
+  final MomentSyncStatus syncStatus; // local-only sync state for UI
+
+  bool get isPendingSync => syncStatus != MomentSyncStatus.synced;
 
   Moment copyWith({
     String? id,
     String? ownerId,
+    String? ownerDisplayName,
+    String? ownerAvatarUrl,
     String? activityId,
     String? activityInstanceId,
     String? completionLogId,
+    String? activityTitle,
     String? visibility,
     List<String>? selectedFriendIds,
     MomentMedia? media,
@@ -57,13 +85,19 @@ class Moment {
     Map<String, int>? reactionCounts,
     bool? isDeleted,
     String? moderationStatus,
+    String? localPreviewPath,
+    double? uploadProgress,
+    MomentSyncStatus? syncStatus,
   }) =>
       Moment(
         id: id ?? this.id,
         ownerId: ownerId ?? this.ownerId,
+        ownerDisplayName: ownerDisplayName ?? this.ownerDisplayName,
+        ownerAvatarUrl: ownerAvatarUrl ?? this.ownerAvatarUrl,
         activityId: activityId ?? this.activityId,
         activityInstanceId: activityInstanceId ?? this.activityInstanceId,
         completionLogId: completionLogId ?? this.completionLogId,
+        activityTitle: activityTitle ?? this.activityTitle,
         visibility: visibility ?? this.visibility,
         selectedFriendIds: selectedFriendIds ?? this.selectedFriendIds,
         media: media ?? this.media,
@@ -75,14 +109,20 @@ class Moment {
         reactionCounts: reactionCounts ?? this.reactionCounts,
         isDeleted: isDeleted ?? this.isDeleted,
         moderationStatus: moderationStatus ?? this.moderationStatus,
+        localPreviewPath: localPreviewPath ?? this.localPreviewPath,
+        uploadProgress: uploadProgress ?? this.uploadProgress,
+        syncStatus: syncStatus ?? this.syncStatus,
       );
 
   Map<String, dynamic> toFirestore() => {
         'id': id,
         'ownerId': ownerId,
+        'ownerDisplayName': ownerDisplayName,
+        'ownerAvatarUrl': ownerAvatarUrl,
         'activityId': activityId,
         'activityInstanceId': activityInstanceId,
         'completionLogId': completionLogId,
+        'activityTitle': activityTitle,
         'visibility': visibility,
         'selectedFriendIds': selectedFriendIds,
         'media': media.toFirestore(),
@@ -97,20 +137,25 @@ class Moment {
       };
 
   factory Moment.fromFirestore(Map<String, dynamic> map) => Moment(
-        id: map['id'] as String,
-        ownerId: map['ownerId'] as String,
+        id: (map['id'] as String?) ?? '',
+        ownerId: (map['ownerId'] as String?) ?? '',
+        ownerDisplayName: map['ownerDisplayName'] as String?,
+        ownerAvatarUrl: map['ownerAvatarUrl'] as String?,
         activityId: map['activityId'] as String?,
         activityInstanceId: map['activityInstanceId'] as String?,
         completionLogId: map['completionLogId'] as String?,
-        visibility: map['visibility'] as String,
+        activityTitle: map['activityTitle'] as String?,
+        visibility: (map['visibility'] as String?) ?? 'private',
         selectedFriendIds:
             (map['selectedFriendIds'] as List<dynamic>?)?.cast<String>() ?? [],
-        media: MomentMedia.fromFirestore(map['media'] as Map<String, dynamic>),
-        caption: map['caption'] as String,
+        media: map['media'] == null
+            ? MomentMedia.empty()
+            : MomentMedia.fromFirestore(map['media'] as Map<String, dynamic>),
+        caption: (map['caption'] as String?) ?? '',
         category: map['category'] as String?,
-        completedAt: DateTime.parse(map['completedAt'] as String),
-        createdAt: DateTime.parse(map['createdAt'] as String),
-        updatedAt: DateTime.parse(map['updatedAt'] as String),
+        completedAt: _parseDateTime(map['completedAt']),
+        createdAt: _parseDateTime(map['createdAt']),
+        updatedAt: _parseDateTime(map['updatedAt']),
         reactionCounts:
             (map['reactionCounts'] as Map<String, dynamic>?)?.map(
                   (k, v) => MapEntry(k, v as int),
@@ -118,6 +163,54 @@ class Moment {
                 {},
         isDeleted: map['isDeleted'] as bool? ?? false,
         moderationStatus: map['moderationStatus'] as String? ?? 'approved',
+      );
+
+  static DateTime _parseDateTime(dynamic value) {
+    if (value == null) return DateTime.now();
+    if (value is String && value.isNotEmpty) {
+      try {
+        return DateTime.parse(value);
+      } catch (_) {
+        return DateTime.now();
+      }
+    }
+    return DateTime.now();
+  }
+
+  factory Moment.fromFeedDelivery(FeedDelivery delivery) => Moment(
+        id: delivery.momentId,
+        ownerId: delivery.ownerId,
+        ownerDisplayName: delivery.ownerDisplayName,
+        ownerAvatarUrl: delivery.ownerAvatarUrl,
+        activityTitle: delivery.activityTitle,
+        visibility: delivery.visibility,
+        media: MomentMedia(
+          original: MediaMetadata(
+            storagePath: '',
+            downloadUrl: delivery.originalUrl,
+            mimeType: 'image/jpeg',
+            width: 0,
+            height: 0,
+            bytesUploaded: 0,
+            ownerId: delivery.ownerId,
+            momentId: delivery.momentId,
+          ),
+          thumbnail: MediaMetadata(
+            storagePath: '',
+            downloadUrl: delivery.previewUrl,
+            mimeType: 'image/jpeg',
+            width: 0,
+            height: 0,
+            bytesUploaded: 0,
+            ownerId: delivery.ownerId,
+            momentId: delivery.momentId,
+          ),
+        ),
+        caption: delivery.caption,
+        category: delivery.category,
+        completedAt: delivery.completedAt,
+        createdAt: delivery.createdAt,
+        updatedAt: delivery.createdAt,
       );
 }
 
@@ -142,6 +235,26 @@ class MediaMetadata {
     required this.ownerId,
     this.momentId,
   });
+
+  MediaMetadata copyWith({
+    String? storagePath,
+    String? downloadUrl,
+    String? mimeType,
+    int? width,
+    int? height,
+    int? bytesUploaded,
+    String? ownerId,
+    String? momentId,
+  }) => MediaMetadata(
+        storagePath: storagePath ?? this.storagePath,
+        downloadUrl: downloadUrl ?? this.downloadUrl,
+        mimeType: mimeType ?? this.mimeType,
+        width: width ?? this.width,
+        height: height ?? this.height,
+        bytesUploaded: bytesUploaded ?? this.bytesUploaded,
+        ownerId: ownerId ?? this.ownerId,
+        momentId: momentId ?? this.momentId,
+      );
 
   Map<String, dynamic> toFirestore() => {
         'storagePath': storagePath,
@@ -175,6 +288,25 @@ class MomentMedia {
     required this.original,
     required this.thumbnail,
   });
+
+  String get bestOriginalUrl => original.downloadUrl.isNotEmpty
+      ? original.downloadUrl
+      : thumbnail.downloadUrl;
+
+  String get bestThumbnailUrl => thumbnail.downloadUrl.isNotEmpty
+      ? thumbnail.downloadUrl
+      : original.downloadUrl;
+
+  bool get isGeneratedThumbnailPending =>
+      thumbnail.storagePath.isNotEmpty && thumbnail.downloadUrl.isEmpty;
+
+  MomentMedia copyWith({
+    MediaMetadata? original,
+    MediaMetadata? thumbnail,
+  }) => MomentMedia(
+        original: original ?? this.original,
+        thumbnail: thumbnail ?? this.thumbnail,
+      );
 
   Map<String, dynamic> toFirestore() => {
         'original': original.toFirestore(),
@@ -268,6 +400,23 @@ class Reaction {
         reactionType: map['reactionType'] as String,
         createdAt: DateTime.parse(map['createdAt'] as String),
       );
+}
+
+class MomentReactionSummary {
+  const MomentReactionSummary({
+    this.counts = const {},
+    this.currentUserReaction,
+  });
+
+  final Map<String, int> counts;
+  final String? currentUserReaction;
+
+  int countFor(String reactionType) => counts[reactionType] ?? 0;
+
+  int get totalCount =>
+      counts.values.fold<int>(0, (sum, value) => sum + value);
+
+  bool isActive(String reactionType) => currentUserReaction == reactionType;
 }
 
 /// Task template — recurring tasks user creates

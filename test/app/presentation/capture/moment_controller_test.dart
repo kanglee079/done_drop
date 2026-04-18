@@ -7,7 +7,10 @@ void main() {
 
   group('MomentController session reset', () {
     test('clears stale proof context when a new free capture starts', () {
-      final controller = MomentController();
+      final controller = MomentController(
+        warmPreparedUpload: (_) {},
+        discardPreparedUpload: (_) {},
+      );
 
       controller.startCaptureSession({
         'activityId': 'habit-1',
@@ -33,7 +36,10 @@ void main() {
     });
 
     test('resetComposer clears a finished session', () {
-      final controller = MomentController();
+      final controller = MomentController(
+        warmPreparedUpload: (_) {},
+        discardPreparedUpload: (_) {},
+      );
 
       controller.startCaptureSession({
         'activityId': 'habit-1',

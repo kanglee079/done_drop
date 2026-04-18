@@ -2,11 +2,13 @@ import 'package:get/get.dart';
 import 'package:done_drop/core/models/recap.dart';
 import 'package:done_drop/firebase/repositories/moment_repository.dart';
 import 'package:done_drop/core/models/moment.dart';
+import 'package:done_drop/l10n/l10n.dart';
 
 /// Handles the generation and presentation of the Sunday Weekly Recap
 class WeeklyRecapController extends GetxController {
   WeeklyRecapController(this._momentRepo);
 
+  // ignore: unused_field
   final MomentRepository _momentRepo;
 
   final RxBool isLoading = true.obs;
@@ -16,12 +18,14 @@ class WeeklyRecapController extends GetxController {
     isLoading.value = true;
     try {
       final now = DateTime.now();
-      // Find the start of the week (Monday)
-      final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-      final endOfWeek = startOfWeek.add(const Duration(days: 6));
-
       // In a real implementation we would fetch proofs for the week:
-      // final weekProofs = await _momentRepo.getMomentsBetween(userId, startOfWeek, endOfWeek);
+      // final weekProofs = await _momentRepo.getMomentsBetween(
+      //   userId,
+      //   now.subtract(Duration(days: now.weekday - 1)),
+      //   now
+      //       .subtract(Duration(days: now.weekday - 1))
+      //       .add(const Duration(days: 6)),
+      // );
       final List<Moment> weekProofs = []; // placeholder
 
       // We'd aggregate stats
@@ -41,7 +45,10 @@ class WeeklyRecapController extends GetxController {
         consistencyScore: avgConsistency,
       );
     } catch (e) {
-      Get.snackbar('Error', 'Failed to load weekly recap');
+      Get.snackbar(
+        currentL10n.genericErrorTitle,
+        currentL10n.weeklyRecapLoadFailed,
+      );
     } finally {
       isLoading.value = false;
     }

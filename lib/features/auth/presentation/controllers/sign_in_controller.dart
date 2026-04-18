@@ -7,6 +7,8 @@ import 'package:done_drop/core/errors/failures.dart';
 import 'package:done_drop/core/errors/result.dart';
 import 'package:done_drop/core/services/analytics_service.dart';
 import 'package:done_drop/core/models/user_profile.dart';
+import 'package:done_drop/core/services/locale_controller.dart';
+import 'package:done_drop/l10n/l10n.dart';
 
 class SignInController extends GetxController {
   SignInController(this._authRepo, this._userProfileRepo);
@@ -17,9 +19,12 @@ class SignInController extends GetxController {
   final passwordController = TextEditingController();
   final formKey = GlobalKey<FormState>();
 
-  final isLoading = false.obs;
+  final isEmailLoading = false.obs;
+  final isGoogleLoading = false.obs;
   final errorMessage = RxnString();
   final isPasswordVisible = false.obs;
+
+  bool get isBusy => isEmailLoading.value || isGoogleLoading.value;
 
   void togglePasswordVisibility() {
     isPasswordVisible.value = !isPasswordVisible.value;
@@ -27,20 +32,20 @@ class SignInController extends GetxController {
 
   String? validateEmail(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Please enter your email';
+      return currentL10n.emailRequired;
     }
     if (!GetUtils.isEmail(value)) {
-      return 'Please enter a valid email';
+      return currentL10n.emailInvalid;
     }
     return null;
   }
 
   String? validatePassword(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Please enter your password';
+      return currentL10n.passwordRequired;
     }
     if (value.length < 6) {
-      return 'Password must be at least 6 characters';
+      return currentL10n.passwordTooShort;
     }
     return null;
   }
@@ -48,9 +53,10 @@ class SignInController extends GetxController {
   /// Sign-in entry point. Triggers analytics, authenticates, then bootstraps
   /// the user profile in Firestore if it's a new user.
   Future<void> signInWithEmail() async {
+    if (isBusy) return;
     if (!(formKey.currentState?.validate() ?? false)) return;
 
-    isLoading.value = true;
+    isEmailLoading.value = true;
     errorMessage.value = null;
     AnalyticsService.instance.signInStarted();
 
@@ -59,13 +65,17 @@ class SignInController extends GetxController {
       passwordController.text,
     );
 
-    isLoading.value = false;
+    isEmailLoading.value = false;
 
     await result.fold(
       onSuccess: (credential) async {
         AnalyticsService.instance.logLogin('email');
-        await _bootstrapUserProfile(credential.user?.uid);
-        Get.offAllNamed(AppRoutes.home);
+        final profile = await _bootstrapUserProfile(credential.user?.uid);
+        Get.offAllNamed(
+          profile.settings.hasCompletedHabitSetup
+              ? AppRoutes.home
+              : AppRoutes.initialSetup,
+        );
       },
       onFailure: (failure) {
         final msg = failure is AppFailure
@@ -79,21 +89,25 @@ class SignInController extends GetxController {
 
   /// Google Sign-In entry point.
   Future<void> signInWithGoogle() async {
-    if (isLoading.value) return;
+    if (isBusy) return;
 
-    isLoading.value = true;
+    isGoogleLoading.value = true;
     errorMessage.value = null;
     AnalyticsService.instance.signInStarted();
 
     final result = await _authRepo.signInWithGoogle();
 
-    isLoading.value = false;
+    isGoogleLoading.value = false;
 
     await result.fold(
       onSuccess: (credential) async {
         AnalyticsService.instance.logLogin('google');
-        await _bootstrapUserProfile(credential.user?.uid);
-        Get.offAllNamed(AppRoutes.home);
+        final profile = await _bootstrapUserProfile(credential.user?.uid);
+        Get.offAllNamed(
+          profile.settings.hasCompletedHabitSetup
+              ? AppRoutes.home
+              : AppRoutes.initialSetup,
+        );
       },
       onFailure: (failure) {
         final msg = failure is AppFailure
@@ -107,13 +121,23 @@ class SignInController extends GetxController {
 
   /// If the user profile document doesn't exist in Firestore, create one.
   /// This handles the bootstrap case for both new sign-ups and new sign-ins.
-  Future<void> _bootstrapUserProfile(String? uid) async {
-    if (uid == null) return;
+  Future<UserProfile> _bootstrapUserProfile(String? uid) async {
+    if (uid == null) {
+      throw StateError('Cannot bootstrap user profile without uid.');
+    }
 
     final profileResult = await _userProfileRepo.getUserProfile(uid);
-    if (profileResult.isSuccess) return; // Already exists
+    UserProfile? existingProfile;
+    profileResult.fold(
+      onSuccess: (profile) => existingProfile = profile,
+      onFailure: (_) {},
+    );
+    if (existingProfile != null) {
+      return existingProfile!;
+    }
 
     final user = _authRepo.currentUser;
+    final localeCode = Get.find<LocaleController>().currentLanguageCode;
     final profile = UserProfile(
       id: uid,
       displayName: user?.displayName ?? 'DoneDrop User',
@@ -123,11 +147,15 @@ class SignInController extends GetxController {
       createdAt: DateTime.now(),
       premiumStatus: false,
       blockedUserIds: const [],
-      settings: const UserSettings(),
+      settings: UserSettings(
+        hasCompletedHabitSetup: false,
+        preferredLocaleCode: localeCode,
+      ),
       widgetPreferences: const WidgetPreferences(),
     );
 
     await _userProfileRepo.createUserProfile(profile);
+    return profile;
   }
 
   void goToSignUp() {

@@ -134,7 +134,7 @@ class _DDImageState extends State<DDImage> {
       width: widget.width,
       height: widget.height,
       fit: widget.fit,
-      errorBuilder: (_, __, ___) => _buildError(),
+      errorBuilder: (context, error, stackTrace) => _buildError(),
     );
 
     if (widget.borderRadius != null) {
@@ -150,8 +150,8 @@ class _DDImageState extends State<DDImage> {
       width: widget.width,
       height: widget.height,
       fit: widget.fit,
-      placeholder: (_, __) => widget.placeholder ?? _buildPlaceholder(),
-      errorWidget: (_, __, ___) => widget.errorWidget ?? _buildError(),
+      placeholder: (context, url) => widget.placeholder ?? _buildPlaceholder(),
+      errorWidget: (context, url, error) => widget.errorWidget ?? _buildError(),
     );
 
     if (widget.borderRadius != null) {

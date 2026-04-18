@@ -1,6 +1,4 @@
-import 'dart:io' as io;
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:get/get.dart';
 import 'package:done_drop/core/services/local_database_service.dart';
 import 'package:done_drop/core/services/connectivity_service.dart';
@@ -9,6 +7,7 @@ import 'package:done_drop/core/services/feed_delivery_planner.dart';
 import 'package:done_drop/data/local/models/pending_sync_item.dart';
 import 'package:done_drop/core/models/moment.dart';
 import 'package:done_drop/core/models/completion_log.dart';
+import 'package:done_drop/core/services/media_service.dart';
 
 /// OfflineQueueService — queues Firestore/Storage operations when offline,
 /// and syncs them when connectivity is restored.
@@ -25,6 +24,7 @@ class OfflineQueueService extends GetxService implements HabitCompletionQueue {
   LocalDatabaseService get _db => LocalDatabaseService.instance;
   ConnectivityService get _connectivity => Get.find<ConnectivityService>();
   final FeedDeliveryPlanner _deliveryPlanner = const FeedDeliveryPlanner();
+  MediaService get _mediaService => MediaService.instance;
 
   /// Whether currently syncing
   final RxBool isSyncing = false.obs;
@@ -92,7 +92,7 @@ class OfflineQueueService extends GetxService implements HabitCompletionQueue {
         localFilePath: localMediaPath,
         storagePath: 'moments/$ownerId/$momentId/original.jpg',
         targetId: momentId,
-        priority: 10,
+        priority: 5,
       ),
     );
   }
@@ -117,7 +117,7 @@ class OfflineQueueService extends GetxService implements HabitCompletionQueue {
           'completedAt': completedAt.toIso8601String(),
         },
         targetId: instanceId,
-        priority: 5,
+        priority: 10,
       ),
     );
   }
@@ -137,9 +137,6 @@ class OfflineQueueService extends GetxService implements HabitCompletionQueue {
         await _db.completeSyncItem(item.id);
       } catch (e) {
         await _db.failSyncItem(item.id, e.toString());
-        if (item.retryCount >= 3) {
-          await _db.completeSyncItem(item.id);
-        }
       }
     }
 
@@ -174,59 +171,16 @@ class OfflineQueueService extends GetxService implements HabitCompletionQueue {
     final completionLogId = payload['completionLogId'] as String?;
 
     final db = FirebaseFirestore.instance;
-    final storage = FirebaseStorage.instance;
 
-    // 1. Upload media if local file exists
     MomentMedia? momentMedia;
-    if (item.localFilePath != null && item.storagePath != null) {
-      try {
-        final originalRef = storage.ref().child(item.storagePath!);
-        final uploadTask = originalRef.putFile(
-          io.File(item.localFilePath!),
-          SettableMetadata(contentType: 'image/jpeg'),
-        );
-        await uploadTask;
-        final downloadUrl = await originalRef.getDownloadURL();
-
-        // Build MomentMedia with original + thumbnail metadata
-        final thumbPath = item.storagePath!.replaceAll(
-          'original.jpg',
-          'thumb.jpg',
-        );
-        final thumbRef = storage.ref().child(thumbPath);
-        final thumbUpload = thumbRef.putFile(
-          io.File(item.localFilePath!),
-          SettableMetadata(contentType: 'image/jpeg'),
-        );
-        await thumbUpload;
-        final thumbUrl = await thumbRef.getDownloadURL();
-
-        momentMedia = MomentMedia(
-          original: MediaMetadata(
-            storagePath: item.storagePath!,
-            downloadUrl: downloadUrl,
-            mimeType: 'image/jpeg',
-            width: 0,
-            height: 0,
-            bytesUploaded: 0,
-            ownerId: ownerId,
-          ),
-          thumbnail: MediaMetadata(
-            storagePath: thumbPath,
-            downloadUrl: thumbUrl,
-            mimeType: 'image/jpeg',
-            width: 0,
-            height: 0,
-            bytesUploaded: 0,
-            ownerId: ownerId,
-          ),
-        );
-      } catch (e) {
-        rethrow;
-      }
+    if (item.localFilePath != null) {
+      momentMedia = await _mediaService.uploadMomentImages(
+        userId: ownerId,
+        momentId: momentId,
+        localFilePath: item.localFilePath!,
+      );
     }
 
-    // 2. Create moment document
     final completedAt = DateTime.parse(momentData['completedAt'] as String);
     final createdAt = DateTime.parse(momentData['createdAt'] as String);
     final updatedAt = DateTime.parse(momentData['updatedAt'] as String);
@@ -234,8 +188,12 @@ class OfflineQueueService extends GetxService implements HabitCompletionQueue {
     final moment = Moment(
       id: momentId,
       ownerId: ownerId,
+      ownerDisplayName: momentData['ownerDisplayName'] as String?,
+      ownerAvatarUrl: momentData['ownerAvatarUrl'] as String?,
       activityId: activityId,
+      activityInstanceId: activityInstanceId,
       completionLogId: completionLogId,
+      activityTitle: momentData['activityTitle'] as String?,
       visibility: momentData['visibility'] as String? ?? 'personal_only',
       selectedFriendIds:
           (momentData['selectedFriendIds'] as List<dynamic>?)?.cast<String>() ??
@@ -253,7 +211,6 @@ class OfflineQueueService extends GetxService implements HabitCompletionQueue {
 
     await db.collection('moments').doc(momentId).set(moment.toFirestore());
 
-    // 3. Link moment to activity instance if proof moment
     if (activityInstanceId != null && completionLogId != null) {
       await db.collection('activity_instances').doc(activityInstanceId).update({
         'momentId': momentId,
@@ -261,20 +218,15 @@ class OfflineQueueService extends GetxService implements HabitCompletionQueue {
       });
     }
 
-    // 4. Create feed deliveries
     final visibility = momentData['visibility'] as String?;
     if (visibility != null && recipientIds.isNotEmpty) {
       await _createFeedDeliveries(
         db,
-        momentId: momentId,
-        ownerId: ownerId,
-        visibility: visibility,
+        moment: moment,
         recipientIds: recipientIds,
-        createdAt: createdAt,
       );
     }
 
-    // 5. Link moment back to CompletionLog for audit trail (if proof moment)
     if (completionLogId != null) {
       await db.collection('completion_logs').doc(completionLogId).update({
         'momentId': momentId,
@@ -333,17 +285,11 @@ class OfflineQueueService extends GetxService implements HabitCompletionQueue {
 
   Future<void> _createFeedDeliveries(
     FirebaseFirestore db, {
-    required String momentId,
-    required String ownerId,
-    required String visibility,
+    required Moment moment,
     required List<String> recipientIds,
-    required DateTime createdAt,
   }) async {
     final deliveries = _deliveryPlanner.buildDeliveries(
-      momentId: momentId,
-      ownerId: ownerId,
-      visibility: visibility,
-      createdAt: createdAt,
+      moment: moment,
       recipientIds: recipientIds,
     );
     if (deliveries.isEmpty) return;

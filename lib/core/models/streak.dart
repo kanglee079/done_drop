@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:done_drop/l10n/app_localizations.dart';
 
 /// Represents a single streak milestone.
 class StreakMilestone {
@@ -26,6 +27,20 @@ class StreakMilestone {
   bool get isHalfYear => days == 180;
   bool get isYear => days == 365;
   bool get isLegendary => days >= 365;
+
+  String localizedLabel(AppLocalizations l10n) => switch (days) {
+    3 => l10n.streakMilestoneGettingStarted,
+    7 => l10n.streakMilestoneOneWeek,
+    14 => l10n.streakMilestoneTwoWeeks,
+    21 => l10n.streakMilestoneThreeWeeks,
+    30 => l10n.streakMilestoneOneMonth,
+    60 => l10n.streakMilestoneTwoMonths,
+    90 => l10n.streakMilestoneQuarter,
+    100 => l10n.streakMilestoneCentury,
+    180 => l10n.streakMilestoneHalfYear,
+    365 => l10n.streakMilestoneOneYear,
+    _ => label,
+  };
 }
 
 /// Built-in milestone definitions.
@@ -196,6 +211,7 @@ class StreakState {
     DateTime? lastCompletedAt,
     bool? isAtRisk,
     int? daysUntilRisk,
+    int? freezesAvailable,
   }) =>
       StreakState(
         activityId: activityId ?? this.activityId,

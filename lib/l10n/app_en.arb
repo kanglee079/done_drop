@@ -1,0 +1,710 @@
+{
+  "@@locale": "en",
+  "appName": "DoneDrop",
+  "memberFallbackName": "DoneDrop member",
+  "greetingFallbackName": "there",
+  "authTagline": "Complete it. Capture it.\nShare the moment.",
+  "todayTabTitle": "Today",
+  "todayTabSubtitle": "Discipline stays visible.",
+  "buddyTabTitle": "Buddy",
+  "buddyTabSubtitle": "Private proof from your circle.",
+  "wallTabTitle": "Wall",
+  "wallTabSubtitle": "Your archive, grouped by memory.",
+  "meTabTitle": "Me",
+  "meTabSubtitle": "Stats, reminders, and settings.",
+  "languageLabel": "Language",
+  "languageEnglish": "English",
+  "languageVietnamese": "Tiếng Việt",
+  "welcomeGetStarted": "Get Started",
+  "welcomeContinue": "Continue",
+  "welcomeDone": "Done",
+  "onboardingHeadline": "Hold yourself accountable.\nComplete your habits. Prove it.",
+  "onboardingSubtitle": "Build habits. Complete them. Capture proof. Share privately with accountability partners.",
+  "onboardingUseCaseTitle": "WHAT BRINGS YOU HERE?",
+  "captureProofTitle": "Capture Your Proof",
+  "captureProofSubtitle": "DoneDrop needs camera access to capture proof moments. Your photos stay private until you choose to share them.",
+  "privateByDefault": "Private by default",
+  "privateByDefaultDesc": "You control who sees your proof moments.",
+  "secureByDefault": "End-to-end secure",
+  "secureByDefaultDesc": "Your accountability data stays yours.",
+  "gentleRemindersTitle": "Gentle reminders",
+  "gentleRemindersDesc": "Optional nudges to complete your habits.",
+  "proofOnlyWhenYouChoose": "Only when it matters",
+  "proofOnlyWhenYouChooseDesc": "Attach proof only when the habit deserves it.",
+  "emailLabel": "Email",
+  "emailHint": "you@example.com",
+  "passwordLabel": "Password",
+  "passwordHint": "••••••••",
+  "fullNameLabel": "Full name",
+  "fullNameHint": "Your name",
+  "confirmPasswordLabel": "Confirm password",
+  "confirmPasswordHint": "Repeat your password",
+  "createAccountTitle": "Create Account",
+  "createAccountSubtitle": "Start capturing your done moments today.",
+  "signInAction": "Sign In",
+  "signUpAction": "Sign Up",
+  "createAccountAction": "Create Account",
+  "continueWithGoogle": "Continue with Google",
+  "forgotPasswordAction": "Forgot password?",
+  "orLabel": "or",
+  "noAccountPrompt": "Don't have an account? ",
+  "alreadyHaveAccountPrompt": "Already have an account? ",
+  "termsAgreementPrefix": "By continuing, you agree to our ",
+  "createTermsAgreementPrefix": "By creating an account, you agree to our ",
+  "termsOfService": "Terms of Service",
+  "privacyPolicy": "Privacy Policy",
+  "andLabel": " and ",
+  "nameRequired": "Please enter your name",
+  "nameTooShort": "Name must be at least 2 characters",
+  "emailRequired": "Please enter your email",
+  "emailInvalid": "Please enter a valid email",
+  "passwordRequired": "Please enter a password",
+  "passwordTooShort": "Password must be at least 6 characters",
+  "confirmPasswordRequired": "Please confirm your password",
+  "confirmPasswordMismatch": "Passwords do not match",
+  "todayGreeting": "Hi {name}",
+  "@todayGreeting": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "todayIntroTitle": "Keep today simple and visible.",
+  "todayIntroProgress": "{completed} of {total} habits finished so far.",
+  "@todayIntroProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "summaryDone": "Done",
+  "summaryToday": "Today",
+  "summaryBestStreak": "Best streak",
+  "summaryDays": "Days",
+  "summaryBuddies": "Buddies",
+  "summaryPrivate": "Private",
+  "nextUpTitle": "Next up",
+  "nextUpSubtitle": "The one habit to finish before the rest of the day slips away.",
+  "overdueTitle": "Overdue",
+  "overdueSubtitle": "Recover these before tomorrow starts.",
+  "laterTodayTitle": "Later today",
+  "laterTodayEmpty": "No extra habits queued after your next priority.",
+  "laterTodayFilled": "Keep the rest of the day glanceable.",
+  "capturedTodayTitle": "Captured today",
+  "capturedTodaySubtitle": "Proof moments and finished habits from this session.",
+  "weeklyRecapTitle": "Weekly recap",
+  "weeklyRecapOpen": "Open",
+  "weeklyRecapSummary": "{count} habit completions logged in the last 7 days.",
+  "@weeklyRecapSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "needNewHabitTitle": "Need a new habit?",
+  "needNewHabitSubtitle": "Add it while the standard is clear.",
+  "addAction": "Add",
+  "addHabitTitle": "Add a habit",
+  "addHabitSubtitle": "Keep it specific enough that you know exactly what “done” means.",
+  "habitNameHint": "Habit name",
+  "habitCategoryHint": "Category (optional)",
+  "habitTimeLabel": "Time",
+  "pickTimeAction": "Pick time",
+  "createHabitAction": "Create habit",
+  "emptyTodayTitle": "Start with one standard.",
+  "emptyTodaySubtitle": "Create the first habit you want to prove to yourself today.",
+  "createFirstHabitAction": "Create first habit",
+  "nothingCapturedTitle": "Nothing captured yet",
+  "nothingCapturedSubtitle": "Complete a habit and attach proof when it adds meaning.",
+  "capturedProofAttached": "Proof attached",
+  "capturedSavedOnly": "Saved only",
+  "allHabitsHandledTitle": "All habits handled",
+  "allHabitsHandledSubtitle": "You are clear for the day. Capture proof if a win deserves it.",
+  "onlyOneThingLeftTitle": "Only one thing left",
+  "onlyOneThingLeftSubtitle": "Finish your hero habit and you are done for today.",
+  "heroOverdueNow": "Overdue now",
+  "heroNextUp": "Next up",
+  "heroProofAttached": "Proof attached",
+  "heroPrivateByDefault": "Private by default",
+  "heroNeedsRecovery": "Needs recovery",
+  "heroOneTapToFinish": "Photo required to finish",
+  "heroCompletedWithProof": "Completed with proof today",
+  "heroCompletedToday": "Completed today",
+  "completeNowAction": "Complete now",
+  "completeWithProofAction": "Finish with photo",
+  "proofLabel": "Proof",
+  "themeSettingsTitle": "Theme & settings",
+  "themeSettingsSubtitle": "App preferences and personal controls.",
+  "statsSectionTitle": "Stats",
+  "statsSectionSubtitle": "The numbers that matter right now.",
+  "weeklyWinsLabel": "Weekly wins",
+  "activeHabitsLabel": "Active habits",
+  "remindersSectionTitle": "Reminders",
+  "remindersSectionSubtitle": "Keep the discipline loop visible.",
+  "habitRemindersTitle": "Habit reminders",
+  "habitRemindersSubtitle": "{count} habits currently have reminders.",
+  "@habitRemindersSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "archivedHabitsSectionTitle": "Archived habits",
+  "archivedHabitsSectionSubtitle": "Standards you have paused, not deleted.",
+  "noArchivedHabitsTitle": "No archived habits",
+  "noArchivedHabitsSubtitle": "Standards you pause will show here.",
+  "archivedHabitFallback": "Archived habit",
+  "restoreAction": "Restore",
+  "themeTitle": "Theme",
+  "themeSubtitle": "Using system theme",
+  "profileTitle": "Profile",
+  "profileSubtitle": "Display name, username, avatar",
+  "buddyCircleTitle": "Buddy circle",
+  "buddyCircleSubtitle": "Invite, remove, and manage close accountability friends",
+  "privacySupportSectionTitle": "Privacy & support",
+  "privacySupportSectionSubtitle": "Policies, help, and release details.",
+  "privacyPolicySubtitle": "Read how DoneDrop handles your account and moment data",
+  "termsSubtitle": "The rules for using DoneDrop and private buddy features",
+  "supportTitle": "Support",
+  "supportSubtitle": "Report an issue or get help from inside the app",
+  "appVersionTitle": "App version",
+  "accountActionsSectionTitle": "Account actions",
+  "accountActionsSectionSubtitle": "Sign out, or permanently remove this account.",
+  "deleteAccountTitle": "Delete account",
+  "deleteAccountSubtitle": "Permanently delete your profile, habits, and moments",
+  "deleteAccountRemovingSubtitle": "Removing your account data...",
+  "signOutAction": "Sign out",
+  "themeSettingsSnackbarTitle": "Theme settings",
+  "themeSettingsSnackbarMessage": "Theme controls are currently following your system setting.",
+  "setupTitle": "Set up your first 3 habits",
+  "setupSubtitle": "Give today structure before you land on the home screen.",
+  "setupHabitTitle": "Habit {index}",
+  "@setupHabitTitle": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "setupHabitPrompt": "What do you want to show up for?",
+  "setupHabitTimePrompt": "When should it show up today?",
+  "setupPrimaryAction": "Start my day",
+  "setupValidationError": "Create all 3 habits before continuing.",
+  "setupSaveError": "We couldn't save your first habits. Please try again.",
+  "setupMorningDefault": "Drink water",
+  "setupMiddayDefault": "Walk for 10 minutes",
+  "setupEveningDefault": "Read 20 pages",
+  "saveAction": "Save",
+  "closeAction": "Close",
+  "cancelAction": "Cancel",
+  "continueAction": "Continue",
+  "deleteAction": "Delete",
+  "removeAction": "Remove",
+  "doneAction": "Done",
+  "searchAction": "Search",
+  "verifyAction": "Verify",
+  "genericErrorTitle": "Error",
+  "statusPreviewOnly": "Preview only",
+  "statusQueued": "Queued",
+  "statusPreparing": "Preparing",
+  "statusUploading": "Uploading {progress}%",
+  "@statusUploading": {
+    "placeholders": {
+      "progress": {
+        "type": "int"
+      }
+    }
+  },
+  "statusSyncing": "Syncing",
+  "statusFailed": "Failed",
+  "statusPosted": "Posted",
+  "uploadStagePreparingImage": "Preparing image…",
+  "uploadStageFinalizingMoment": "Finalizing moment…",
+  "uploadReady": "Ready",
+  "buddyEmptyTitle": "Your buddy feed is private by design.",
+  "buddyEmptySubtitle": "Invite a few close people you trust to keep the proof loop intimate.",
+  "buddyViewWallAction": "Open wall",
+  "inviteBuddyAction": "Invite buddy",
+  "manageCircleAction": "Manage circle ({count})",
+  "@manageCircleAction": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "wallSectionSubtitle": "Every proof you kept, including the ones you shared.",
+  "wallLeadFallback": "A kept promise from {date}",
+  "@wallLeadFallback": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "wallTileFallback": "Saved to your archive",
+  "wallEmptyTitle": "Keep one promise.",
+  "wallEmptySubtitle": "The wall grows from there, one kept standard at a time.",
+  "buddyWallTitle": "{name}'s wall",
+  "@buddyWallTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "buddyWallHeroSubtitle": "{count} shared proof moments you can revisit.",
+  "@buddyWallHeroSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "buddyWallEmptyTitle": "Nothing shared yet.",
+  "buddyWallEmptySubtitle": "{name} hasn't shared a proof moment with you yet.",
+  "@buddyWallEmptySubtitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "reactionLoveLabel": "Favorite",
+  "reactionCelebrateLabel": "Celebrate",
+  "reactionInspiringLabel": "Inspiring",
+  "friendFeedTitle": "Friend Feed",
+  "markAllReadTooltip": "Mark all as read",
+  "feedEmptyTitle": "No moments yet",
+  "feedEmptySubtitle": "Moments shared by your friends\nwill appear here.",
+  "addFriendsAction": "Add Friends",
+  "memoryWallTitle": "Memory Wall",
+  "memoryWallAllFilter": "All moments",
+  "memoryWallEmptyTitle": "No moments yet",
+  "memoryWallEmptySubtitle": "Your archive of kept promises\nwill appear here.",
+  "createFirstMomentAction": "Create your first moment",
+  "deleteMomentTitle": "Delete Moment",
+  "deleteMomentMessage": "Are you sure you want to delete this moment?",
+  "buddyCrewTitle": "Buddy Crew",
+  "crewTabLabel": "Crew",
+  "crewTabCountLabel": "Crew ({count}/{limit})",
+  "@crewTabCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "requestsTabLabel": "Requests",
+  "noFriendsYetTitle": "No friends yet",
+  "noFriendsYetSubtitle": "Add some buddies to keep you accountable.",
+  "addFriendAction": "Add Friend",
+  "removeFriendTitle": "Remove Friend",
+  "removeFriendMessage": "Remove this friend?",
+  "noPendingRequestsTitle": "No pending requests",
+  "noPendingRequestsSubtitle": "Incoming and outgoing requests appear here.",
+  "incomingSectionLabel": "INCOMING",
+  "sentSectionLabel": "SENT",
+  "friendRequestIncomingSubtitle": "Wants to be your friend",
+  "friendRequestSentSubtitle": "Friend request sent",
+  "friendAddedTitle": "Friend added",
+  "friendAddedMessage": "{name} is now your friend",
+  "@friendAddedMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "friendRemovedTitle": "Friend removed",
+  "friendRemovedMessage": "The friendship has been removed",
+  "addBuddyTitle": "Add Buddy",
+  "findByUsernameTitle": "Find by Username",
+  "findByUsernameSubtitle": "Enter their username to send a buddy request.",
+  "usernameLabel": "Username",
+  "usernameHint": "johndoe",
+  "buddyLimitReachedTitle": "Buddy Limit Reached",
+  "buddyLimitReachedSubtitle": "Free plan allows up to {limit} buddies. Upgrade for more.",
+  "@buddyLimitReachedSubtitle": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "enterUsernameError": "Enter a username",
+  "usernameTooShort": "Username must be at least 3 characters",
+  "ownUsernameError": "That is your own username",
+  "friendCapReachedError": "You have reached the maximum of {limit} friends.",
+  "@friendCapReachedError": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "requestSentTitle": "Request Sent",
+  "requestSentMessage": "Friend request sent to {name}",
+  "@requestSentMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sendBuddyRequestPrompt": "Send a buddy request?",
+  "sendBuddyRequestAction": "Send Buddy Request",
+  "requestSentSuccessTitle": "Request Sent!",
+  "requestSentSuccessMessage": "Buddy request sent to {name}",
+  "@requestSentSuccessMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "addAnotherBuddyAction": "Add Another Buddy",
+  "chatOpenAction": "Message",
+  "chatScreenSubtitle": "Private conversation with this buddy.",
+  "chatEmptyTitle": "Start the conversation",
+  "chatEmptySubtitle": "Keep the accountability loop private and clear.",
+  "chatInputHint": "Send a message...",
+  "chatSendAction": "Send",
+  "profileFieldDisplayName": "DISPLAY NAME",
+  "profileFieldBio": "BIO",
+  "profileNameHint": "Your name",
+  "profileBioHint": "Tell your friends a little about yourself",
+  "dangerZoneLabel": "DANGER ZONE",
+  "notificationSettingsTitle": "Notifications",
+  "notificationCenterEmptyTitle": "No notifications yet.",
+  "notificationCenterEmptySubtitle": "Friend requests and new buddy moments will show up here.",
+  "notificationPermissionOffSubtitle": "Allow notifications so DoneDrop can alert you at each task's exact time.",
+  "notificationExactAlarmOffSubtitle": "Enable exact alarms so Android can fire reminders at the precise minute on this device.",
+  "momentRemindersTitle": "Moment Reminders",
+  "momentRemindersSubtitle": "Get a gentle daily nudge to capture your moment.",
+  "notificationReminderTitle": "Reminder",
+  "notificationReminderDesc": "Toggle daily reminder on/off",
+  "notificationTimeTitle": "Time",
+  "weeklyRecapSettingsTitle": "Weekly Recap",
+  "weeklyRecapSettingsSubtitle": "Receive a weekly summary of your moments.",
+  "weeklyRecapToggleTitle": "Recap",
+  "weeklyRecapToggleDesc": "Toggle weekly recap on/off",
+  "notificationDayTitle": "Day",
+  "requestNotificationPermissionAction": "Request Notification Permission",
+  "selectDayTitle": "Select Day",
+  "dayMonShort": "Mon",
+  "dayTueShort": "Tue",
+  "dayWedShort": "Wed",
+  "dayThuShort": "Thu",
+  "dayFriShort": "Fri",
+  "daySatShort": "Sat",
+  "daySunShort": "Sun",
+  "settingsArchiveTitle": "The Archive",
+  "settingsTitle": "Settings",
+  "settingsSubtitle": "Curate your personal experience",
+  "premiumBannerTitle": "DoneDrop Premium",
+  "premiumBannerSubtitle": "Unlock more friends and premium themes.",
+  "preferencesTitle": "Preferences",
+  "habitRemindersSettingTitle": "Habit Reminders",
+  "habitRemindersSettingSubtitle": "Daily gentle nudges to complete your habits",
+  "schedulePreferencesTitle": "Schedule & Preferences",
+  "schedulePreferencesSubtitle": "Reminder time, recap day, and more",
+  "privacySharingTitle": "Privacy & Sharing",
+  "profileSettingsDescFallback": "Edit your name, avatar, and bio",
+  "friendsSettingsTitle": "Friends",
+  "friendsSettingsSubtitle": "Manage your accountability partners",
+  "visibilitySettingsTitle": "Visibility",
+  "visibilitySettingsSubtitle": "Current setting: Personal Only",
+  "signOutTitle": "Sign Out",
+  "signOutSubtitle": "Sign out of your account",
+  "signOutDialogMessage": "Are you sure you want to sign out?",
+  "profileSaved": "Profile saved",
+  "uploadAvatarFailed": "Failed to upload avatar",
+  "profileNameEmpty": "Name cannot be empty",
+  "deleteAccountDialogMessage": "This permanently removes your profile, habits, proof moments, and private buddy data from DoneDrop. Subscription billing, if ever enabled later, must still be cancelled through the app store.",
+  "keepAccountAction": "Keep account",
+  "verificationRequiredTitle": "Verification required",
+  "verificationRequiredFallback": "Could not verify your account. Please try again.",
+  "deleteFailedTitle": "Delete failed",
+  "deleteFailedFallback": "Failed to remove account data.",
+  "deleteIncompleteTitle": "Delete incomplete",
+  "deleteIncompleteFallback": "Account credentials could not be removed.",
+  "accountDeletedTitle": "Account deleted",
+  "accountDeletedMessage": "Your DoneDrop account has been removed from this device.",
+  "verifyWithGoogleTitle": "Verify with Google",
+  "verifyWithGoogleMessage": "To protect your account, continue with Google one more time before deletion.",
+  "unsupportedDeletionMethod": "This sign-in method is not supported for in-app deletion yet. Sign in again with a supported method and retry.",
+  "confirmPasswordTitle": "Confirm your password",
+  "currentPasswordHint": "Enter your current password",
+  "reportTitle": "Report",
+  "reportContentTitle": "Report Content",
+  "reportContentSubtitle": "Help us keep DoneDrop safe. Select a reason for reporting.",
+  "reportAdditionalDetailsHint": "Additional details (optional)",
+  "submitReportAction": "Submit Report",
+  "reportSubmittedTitle": "Report Submitted",
+  "reportSubmittedMessage": "Thank you for helping keep DoneDrop safe. We will review your report shortly.",
+  "reportReasonRequiredTitle": "Please select a reason",
+  "reportSubmitFailedTitle": "Failed to submit report",
+  "reportSubmitFailedMessage": "Please try again.",
+  "weeklyRecapLoadFailed": "Failed to load weekly recap",
+  "reportReasonInappropriate": "Inappropriate content",
+  "reportReasonHarassment": "Harassment or bullying",
+  "reportReasonSpam": "Spam or misleading",
+  "reportReasonPrivacy": "Privacy concern",
+  "reportReasonOther": "Something else",
+  "forgotPasswordTitle": "Reset Password",
+  "forgotPasswordSubtitle": "Enter your email and we'll send you a link to reset your password.",
+  "checkYourEmailTitle": "Check Your Email",
+  "checkYourEmailMessage": "We sent a password reset link to\n{email}.\nCheck your inbox and spam folder.",
+  "@checkYourEmailMessage": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "backToSignInAction": "Back to Sign In",
+  "sendResetLinkAction": "Send Reset Link",
+  "forgotPasswordUnexpectedError": "Something went wrong. Please try again.",
+  "forgotPasswordUserNotFound": "No account found with this email address.",
+  "forgotPasswordInvalidEmail": "Please enter a valid email address.",
+  "forgotPasswordUnableToSend": "Unable to send reset email. Please try again.",
+  "premiumHiddenTitle": "Premium is hidden in this build",
+  "premiumHiddenMessage": "Store billing is not wired yet, so subscriptions stay unavailable until native purchases are ready.",
+  "premiumScreenTitle": "Premium stays off until billing is real",
+  "premiumScreenSubtitle": "This build removes fake purchase flows. When StoreKit and Play Billing are wired, pricing, restore, renewal, and cancellation details will appear here.",
+  "premiumWhatUnlocksTitle": "What will unlock later",
+  "premiumWhatUnlocksSubtitle": "Pricing, trial terms, restore, auto-renew disclosure, and manage subscription links will only ship together with native billing.",
+  "premiumBenefitUnlimitedFriendsTitle": "Unlimited Friends",
+  "premiumBenefitUnlimitedFriendsDesc": "Connect with all your accountability partners.",
+  "premiumBenefitAdvancedFiltersTitle": "Advanced Filters",
+  "premiumBenefitAdvancedFiltersDesc": "Search by mood, person, or subtle themes.",
+  "premiumBenefitCustomThemesTitle": "Custom Recap Themes",
+  "premiumBenefitCustomThemesDesc": "Exclusive editorial layouts for your memory books.",
+  "premiumBenefitHighResBackupsTitle": "High-Res Backups",
+  "premiumBenefitHighResBackupsDesc": "Lossless storage for every photo you treasure.",
+  "premiumUnavailableAction": "Premium unavailable in this build",
+  "premiumFooterNote": "Premium is intentionally hidden until store-compliant billing is implemented end to end.",
+  "momentSavedTitle": "Moment saved",
+  "savedForSyncTitle": "Saved for sync",
+  "proofCapturedMessage": "Habit completed. Proof captured.",
+  "quietProofMessage": "A quiet proof of your effort.",
+  "backToTodayAction": "Back to Today",
+  "openBuddyAction": "Open Buddy",
+  "capturePhotoRequired": "No image selected",
+  "authRequiredMessage": "You must be signed in",
+  "captureUnavailableTitle": "Camera unavailable",
+  "captureUnavailableMessage": "We couldn't open the proof camera. Please try again.",
+  "captureSelectBuddyError": "Pick at least one buddy before sharing.",
+  "timeJustNow": "Just now",
+  "timeMinutesAgo": "{count}m ago",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeHoursAgo": "{count}h ago",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeDaysAgo": "{count}d ago",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "visibilityCrew": "Crew",
+  "visibilityBuddy": "Buddy",
+  "visibilityPrivate": "Private",
+  "visibilityFriends": "Friends",
+  "visibilitySelected": "Selected",
+  "visibilityPersonal": "Personal",
+  "momentPostFailed": "Failed to post moment: {error}",
+  "@momentPostFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "offlineSyncQueuedMessage": "Will upload when you are back online."
+  ,
+  "captureOpeningProofCamera": "Opening your proof camera…",
+  "captureProofTitle": "Capture proof",
+  "captureMomentTitle": "Capture moment",
+  "captureSourceCameraTitle": "Camera",
+  "captureSourceCameraSubtitle": "Proof is freshest right now.",
+  "captureSourceGalleryTitle": "Gallery",
+  "captureSourceGallerySubtitle": "Your recent wins are still waiting.",
+  "captureHeroProofBadge": "Complete + proof",
+  "captureHeroMomentBadge": "Save or share later",
+  "captureHeroProofTitle": "Capture the proof while the win is fresh.",
+  "captureHeroMomentTitle": "Add a photo when the moment matters.",
+  "captureHeroProofSubtitle": "The habit only counts once you save a real photo as proof.",
+  "captureHeroMomentSubtitle": "You can keep it private, attach it to a habit later, or share it with your buddy circle.",
+  "captureChooseSource": "Choose source",
+  "previewProofTitle": "Proof Preview",
+  "previewMomentTitle": "Moment Preview",
+  "postAction": "Post",
+  "previewProofBadge": "Habit proof",
+  "previewMomentBadge": "Private moment",
+  "previewProofSummaryTitle": "Saving this proof will finish the habit.",
+  "previewMomentSummaryTitle": "You can save this privately or share it with a small buddy circle.",
+  "previewProofSummarySubtitle": "We'll mark the habit done, keep this image linked as proof, and sync everything as soon as it can.",
+  "previewMomentSummarySubtitle": "Keep the loop simple: save only, add proof, or share privately.",
+  "previewProofCaptionHint": "What did you finish?",
+  "previewMomentCaptionHint": "Why does this moment matter?",
+  "captionLabel": "Caption",
+  "categoryLabel": "Category",
+  "noneLabel": "None",
+  "audienceTitle": "Who sees this",
+  "audienceOnlyMe": "Only me",
+  "audienceSharePrivately": "Share privately",
+  "audienceCloseCrew": "Close crew",
+  "previewAddBuddyFirst": "Add a buddy first to share proof privately.",
+  
+  "confirmSignOutTitle": "Confirm Sign Out",
+  "confirmSignOutMessage": "Are you sure you want to sign out of your account?",
+  "confirmSignOutTabHint": "Type to confirm",
+  "confirmSignOutPlaceholder": "sign out",
+  "confirmDeleteAccountTitle": "Delete Account",
+  "confirmDeleteAccountMessage": "This will permanently delete your account and all associated data. This action cannot be undone.",
+  "confirmDeleteAccountTabHint": "Type to confirm deletion",
+  "confirmDeleteAccountPlaceholder": "delete my account",
+  "confirmFieldRequired": "This field is required",
+  "confirmFieldMismatch": "Text does not match. Please try again.",
+  "softDeleteInitiatedTitle": "Account Scheduled for Deletion",
+  "softDeleteInitiatedMessage": "Your account has been scheduled for deletion. You have 30 days to cancel this request by signing back in.",
+  "cancelRequestTitle": "Cancel Request",
+  "cancelRequestMessage": "Are you sure you want to cancel this request?",
+  "declineRequestTitle": "Decline Request",
+  "declineRequestMessage": "Are you sure you want to decline this request?",
+  "actionSuccess": "Success",
+  "savedSuccessfully": "Saved successfully",
+  "updatedSuccessfully": "Updated successfully",
+  "removedSuccessfully": "Removed successfully",
+  "actionFailed": "Action failed",
+  "tryAgainLater": "Please try again later",
+  "networkError": "Network error. Please check your connection.",
+  "errorTitle": "Error",
+  "successTitle": "Success",
+  "leaderboardTitle": "Leaderboard",
+  "leaderboardPeriodToday": "Today",
+  "leaderboardPeriodWeek": "Week",
+  "leaderboardPeriodMonth": "Month",
+  "leaderboardPeriodAll": "All",
+  "leaderboardDoneLabel": "done",
+  "leaderboardNoFriendsTitle": "No friends yet",
+  "leaderboardNoFriendsSubtitle": "Add friends to compete on the leaderboard.",
+  "leaderboardDayStreak": "{count} day streak",
+  "@leaderboardDayStreak": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "streakJourneyTitle": "Streak Journey",
+  "streakActivityStreaksTitle": "Activity Streaks",
+  "streakNoActivitiesYet": "No activities yet. Create one to start your streak!",
+  "streakBestTitle": "Your Best Streak",
+  "streakStartTitle": "Start Your Streak!",
+  "streakBestStatLabel": "Best",
+  "streakTotalStatLabel": "Total",
+  "streakActiveStatLabel": "Active",
+  "streakMilestoneRoadmapTitle": "Milestone Roadmap",
+  "streakDaysToGo": "{count} days to go",
+  "@streakDaysToGo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "streakLastCompleted": "Last: {value}",
+  "@streakLastCompleted": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "streakBestShort": "best: {count}d",
+  "@streakBestShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "streakTodayShort": "Today",
+  "streakYesterdayShort": "Yesterday",
+  "streakDaysAgo": "{count} days ago",
+  "@streakDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "streakDaysUnit": "days",
+  "streakMilestoneGettingStarted": "Getting Started",
+  "streakMilestoneOneWeek": "One Week",
+  "streakMilestoneTwoWeeks": "Two Weeks",
+  "streakMilestoneThreeWeeks": "Three Weeks",
+  "streakMilestoneOneMonth": "One Month",
+  "streakMilestoneTwoMonths": "Two Months",
+  "streakMilestoneQuarter": "Quarter",
+  "streakMilestoneCentury": "Century",
+  "streakMilestoneHalfYear": "Half Year",
+  "streakMilestoneOneYear": "One Year",
+  "streakMilestoneReachedTitle": "Milestone reached!",
+  "streakKeepGoingAction": "Keep Going!",
+  "recapTitle": "Your Week in Moments",
+  "recapQuote": "\"You're building a beautiful life,\\none moment at a time.\"",
+  "recapMomentsStatLabel": "MOMENTS",
+  "recapDayStreakStatLabel": "DAY STREAK",
+  "recapNoMomentsYet": "No moments this week yet.",
+  "recapShareTitle": "Ready to share this story?",
+  "recapCaptureMomentAction": "Capture a Moment",
+  "recapDisciplineActivitiesTitle": "Discipline Activities",
+  "recapTodayLabel": "Today",
+  "recapYesterdayLabel": "Yesterday",
+
+  "myCodeTitle": "My Code",
+  "myCodeSubtitle": "Share this code with friends so they can add you.",
+  "scanCodeTitle": "Scan Code",
+  "scanCodeSubtitle": "Scan your friend's QR code to add them instantly.",
+  "addByIdTitle": "Add by ID",
+  "addByIdSubtitle": "Enter your friend's unique ID to send a buddy request.",
+  "userIdLabel": "User ID",
+  "userIdHint": "Enter their ID",
+  "findByIdAction": "Find",
+  "findByEmailAction": "Find by Email",
+  "shareCodeAction": "Share my code",
+  "scanAction": "Scan code",
+  "myCodeCopied": "Code copied to clipboard",
+  "invalidCodeError": "Invalid QR code",
+  "userNotFoundError": "User not found",
+  "cantMessageSelfError": "You cannot message yourself",
+  "onlyFriendsCanChatError": "You can only chat with friends",
+  "selectAddMethod": "Add friends via",
+  "emailLabel": "Email",
+  "emailHint": "friend@example.com"
+}
