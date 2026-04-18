@@ -10,6 +10,7 @@ import 'package:done_drop/core/theme/theme.dart';
 import 'package:done_drop/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:done_drop/features/auth/repositories/user_profile_repository.dart';
 import 'package:done_drop/firebase/repositories/friend_repository.dart';
+import 'package:done_drop/l10n/l10n.dart';
 
 class PreviewScreen extends StatefulWidget {
   const PreviewScreen({super.key});
@@ -152,7 +153,9 @@ class _PreviewTopBar extends StatelessWidget {
             ),
             Expanded(
               child: Text(
-                controller.isProofMoment ? 'Proof Preview' : 'Moment Preview',
+                controller.isProofMoment
+                    ? context.l10n.previewProofTitle
+                    : context.l10n.previewMomentTitle,
                 textAlign: TextAlign.center,
                 style: AppTypography.titleLarge(color: AppColors.onSurface),
               ),
@@ -171,7 +174,9 @@ class _PreviewTopBar extends StatelessWidget {
                       ),
                     )
                   : Text(
-                      controller.isProofMoment ? 'Save' : 'Post',
+                      controller.isProofMoment
+                          ? context.l10n.saveAction
+                          : context.l10n.postAction,
                       style: AppTypography.labelLarge(color: AppColors.primary),
                     ),
             ),
@@ -189,6 +194,7 @@ class _ProofSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Container(
       padding: const EdgeInsets.all(AppSizes.space20),
       decoration: BoxDecoration(
@@ -211,7 +217,9 @@ class _ProofSummary extends StatelessWidget {
               borderRadius: AppSizes.borderRadiusFull,
             ),
             child: Text(
-              controller.isProofMoment ? 'Habit proof' : 'Private moment',
+              controller.isProofMoment
+                  ? l10n.previewProofBadge
+                  : l10n.previewMomentBadge,
               style: AppTypography.labelMedium(
                 color: controller.isProofMoment
                     ? AppColors.primary
@@ -222,15 +230,15 @@ class _ProofSummary extends StatelessWidget {
           const SizedBox(height: AppSizes.space16),
           Text(
             controller.isProofMoment
-                ? 'This post stays linked to the habit you just completed.'
-                : 'You can save this privately or share it with a small buddy circle.',
+                ? l10n.previewProofSummaryTitle
+                : l10n.previewMomentSummaryTitle,
             style: AppTypography.titleMedium(color: AppColors.onSurface),
           ),
           const SizedBox(height: AppSizes.space8),
           Text(
             controller.isProofMoment
-                ? 'Posting here will only handle the proof image, audience, and linking. Completion is already locked in.'
-                : 'Keep the loop simple: save only, add proof, or share privately.',
+                ? l10n.previewProofSummarySubtitle
+                : l10n.previewMomentSummarySubtitle,
             style: AppTypography.bodySmall(color: AppColors.onSurfaceVariant),
           ),
         ],
@@ -247,14 +255,14 @@ class _CaptionField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hintText = controller.isProofMoment
-        ? 'What did you finish?'
-        : 'Why does this moment matter?';
+        ? context.l10n.previewProofCaptionHint
+        : context.l10n.previewMomentCaptionHint;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Caption',
+          context.l10n.captionLabel,
           style: AppTypography.labelMedium(color: AppColors.onSurfaceVariant),
         ),
         const SizedBox(height: AppSizes.space8),
@@ -302,7 +310,7 @@ class _CategorySelector extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Category',
+          context.l10n.categoryLabel,
           style: AppTypography.labelMedium(color: AppColors.onSurfaceVariant),
         ),
         const SizedBox(height: AppSizes.space8),
@@ -312,7 +320,7 @@ class _CategorySelector extends StatelessWidget {
             child: Row(
               children: [
                 _CategoryChip(
-                  label: 'None',
+                  label: context.l10n.noneLabel,
                   isSelected: controller.selectedCategory.value.isEmpty,
                   onTap: () => controller.setCategory(null),
                 ),
@@ -389,7 +397,7 @@ class _AudienceSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Who sees this',
+          context.l10n.audienceTitle,
           style: AppTypography.titleMedium(color: AppColors.onSurface),
         ),
         const SizedBox(height: AppSizes.space8),
@@ -400,7 +408,7 @@ class _AudienceSection extends StatelessWidget {
             children: [
               _AudiencePill(
                 icon: Icons.lock_outline,
-                label: 'Only me',
+                label: context.l10n.audienceOnlyMe,
                 isSelected:
                     controller.visibility.value ==
                     AppConstants.visibilityPersonalOnly,
@@ -410,7 +418,7 @@ class _AudienceSection extends StatelessWidget {
               ),
               _AudiencePill(
                 icon: Icons.person_outline,
-                label: 'Share privately',
+                label: context.l10n.audienceSharePrivately,
                 isSelected:
                     controller.visibility.value ==
                     AppConstants.visibilitySelectedFriends,
@@ -420,7 +428,7 @@ class _AudienceSection extends StatelessWidget {
               ),
               _AudiencePill(
                 icon: Icons.groups_outlined,
-                label: 'Close crew',
+                label: context.l10n.audienceCloseCrew,
                 isSelected:
                     controller.visibility.value ==
                     AppConstants.visibilityAllFriends,
@@ -531,7 +539,7 @@ class _SelectedFriendPicker extends StatelessWidget {
               borderRadius: AppSizes.borderRadiusMd,
             ),
             child: Text(
-              'Add a buddy first to share proof privately.',
+              context.l10n.previewAddBuddyFirst,
               style: AppTypography.bodySmall(color: AppColors.onSurfaceVariant),
             ),
           );
@@ -555,7 +563,9 @@ class _SelectedFriendPicker extends StatelessWidget {
                     .map((friendId) {
                       final profile = profiles[friendId];
                       final displayName =
-                          profile?.displayName ?? profile?.username ?? 'Buddy';
+                          profile?.displayName ??
+                          profile?.username ??
+                          context.l10n.memberFallbackName;
                       final isSelected = controller.selectedFriendIds.contains(
                         friendId,
                       );

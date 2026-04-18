@@ -5,6 +5,7 @@ import 'package:done_drop/firebase/repositories/friend_repository.dart';
 import 'package:done_drop/core/models/user_profile.dart';
 import 'package:done_drop/core/errors/result.dart';
 import 'package:done_drop/core/services/analytics_service.dart';
+import 'package:done_drop/l10n/l10n.dart';
 
 /// Controller for Add Friend screen.
 class AddFriendController extends GetxController {
@@ -39,10 +40,10 @@ class AddFriendController extends GetxController {
 
   String? validateUsername(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Enter a username';
+      return currentL10n.enterUsernameError;
     }
     if (value.length < 3) {
-      return 'Username must be at least 3 characters';
+      return currentL10n.usernameTooShort;
     }
     return null;
   }
@@ -63,7 +64,7 @@ class AddFriendController extends GetxController {
     result.fold(
       onSuccess: (user) {
         if (user.id == _currentUserId) {
-          errorMessage.value = 'That is your own username';
+          errorMessage.value = currentL10n.ownUsernameError;
           return;
         }
         foundUser.value = user;
@@ -82,7 +83,7 @@ class AddFriendController extends GetxController {
     final uid = _currentUserId;
     if (uid == null) return;
     if (!(await _friendRepo.canAddFriend(uid))) {
-      errorMessage.value = 'You have reached the maximum of $maxFriends friends.';
+      errorMessage.value = currentL10n.friendCapReachedError(maxFriends);
       return;
     }
 
@@ -92,7 +93,7 @@ class AddFriendController extends GetxController {
     final result = await _friendRepo.sendFriendRequest(
       senderId: _currentUserId!,
       receiverId: user.id,
-      senderDisplayName: _currentUserName ?? 'User',
+      senderDisplayName: _currentUserName ?? currentL10n.memberFallbackName,
       senderAvatarUrl: _currentUserPhoto,
     );
 
@@ -103,8 +104,8 @@ class AddFriendController extends GetxController {
         requestSent.value = true;
         AnalyticsService.instance.inviteSent();
         Get.snackbar(
-          'Request Sent',
-          'Friend request sent to ${user.displayName}',
+          currentL10n.requestSentTitle,
+          currentL10n.requestSentMessage(user.displayName),
           snackPosition: SnackPosition.BOTTOM,
         );
         _checkCap();

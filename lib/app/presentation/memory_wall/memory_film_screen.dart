@@ -43,7 +43,7 @@ class MemoryFilmScreen extends StatelessWidget {
               right: AppSizes.space16,
               child: Row(
                 children: List.generate(
-                  moments.length > 0 ? moments.length : 1,
+                  moments.isNotEmpty ? moments.length : 1,
                   (index) => Expanded(
                     child: Container(
                       margin: const EdgeInsets.symmetric(horizontal: 2),

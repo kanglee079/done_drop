@@ -5,15 +5,18 @@ abstract class AppRoutes {
   static const signIn = '/sign-in';
   static const signUp = '/sign-up';
   static const forgotPassword = '/forgot-password';
+  static const initialSetup = '/setup/initial-habits';
   static const home = '/home';
   static const capture = '/capture';
   static const preview = '/preview';
   static const success = '/success';
   static const feed = '/feed';
   static const memoryWall = '/wall';
+  static const buddyWall = '/buddy-wall';
   static const momentDetail = '/moment/:id';
   static const recap = '/recap';
   static const settings = '/settings';
+  static const notifications = '/notifications';
   static const notificationSettings = '/settings/notifications';
   static const profile = '/profile';
   static const premium = '/premium';
@@ -23,6 +26,7 @@ abstract class AppRoutes {
   static const blocked = '/blocked';
   static const friends = '/friends';
   static const addFriend = '/friends/add';
+  static const chat = '/chat';
   static const leaderboard = '/leaderboard';
   static const streakHistory = '/streak-history';
 }

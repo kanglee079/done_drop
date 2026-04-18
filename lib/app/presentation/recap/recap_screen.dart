@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:done_drop/core/theme/theme.dart';
 import 'package:done_drop/app/core/widgets/widgets.dart';
 import 'package:done_drop/app/presentation/recap/recap_controller.dart';
 import 'package:done_drop/app/routes/app_routes.dart';
 import 'package:done_drop/core/services/analytics_service.dart';
+import 'package:done_drop/l10n/l10n.dart';
 
 /// DoneDrop Weekly Recap Screen
 class RecapScreen extends StatelessWidget {
@@ -17,6 +19,7 @@ class RecapScreen extends StatelessWidget {
       init: RecapController(),
       builder: (ctrl) {
         final spec = DDResponsiveSpec.of(context);
+        final l10n = context.l10n;
 
         return Scaffold(
           backgroundColor: AppColors.surface,
@@ -69,7 +72,7 @@ class RecapScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: AppSizes.space24),
                     Text(
-                      'Your Week in Moments',
+                      l10n.recapTitle,
                       style: TextStyle(
                         fontFamily: AppTypography.serifFamily,
                         fontSize: 40,
@@ -80,7 +83,7 @@ class RecapScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: AppSizes.space8),
                     Text(
-                      '"You\'re building a beautiful life,\none moment at a time."',
+                      l10n.recapQuote,
                       style: TextStyle(
                         fontFamily: AppTypography.serifFamily,
                         fontSize: 16,
@@ -115,7 +118,7 @@ class RecapScreen extends StatelessWidget {
                                   ),
                                 ),
                                 Text(
-                                  'MOMENTS',
+                                  l10n.recapMomentsStatLabel,
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w700,
@@ -147,7 +150,7 @@ class RecapScreen extends StatelessWidget {
                                   ),
                                 ),
                                 Text(
-                                  'DAY STREAK',
+                                  l10n.recapDayStreakStatLabel,
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w700,
@@ -176,7 +179,7 @@ class RecapScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: AppSizes.space16),
                               Text(
-                                'No moments this week yet.',
+                                l10n.recapNoMomentsYet,
                                 style: TextStyle(
                                   fontFamily: AppTypography.serifFamily,
                                   fontSize: 18,
@@ -207,7 +210,7 @@ class RecapScreen extends StatelessWidget {
                       child: Column(
                         children: [
                           Text(
-                            'Ready to share this story?',
+                            l10n.recapShareTitle,
                             style: TextStyle(
                               fontFamily: AppTypography.serifFamily,
                               fontSize: 22,
@@ -216,7 +219,7 @@ class RecapScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: AppSizes.space16),
                           DDPrimaryButton(
-                            label: 'Capture a Moment',
+                            label: l10n.recapCaptureMomentAction,
                             icon: Icons.camera_alt,
                             onPressed: () {
                               AnalyticsService.instance.recapShared();
@@ -263,7 +266,7 @@ class _DisciplineRecap extends StatelessWidget {
                 Icon(Icons.emoji_events, color: AppColors.primary, size: 20),
                 const SizedBox(width: 8),
                 Text(
-                  'Discipline Activities',
+                  context.l10n.recapDisciplineActivitiesTitle,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -332,29 +335,17 @@ class _DaySection extends StatelessWidget {
   const _DaySection({required this.day});
   final RecapDay day;
 
-  String get _dayLabel {
+  String _dayLabel(BuildContext context) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
     final dayDate = DateTime(day.date.year, day.date.month, day.date.day);
-    if (dayDate == today) return 'Today';
-    if (dayDate == yesterday) return 'Yesterday';
-    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    return '${days[dayDate.weekday - 1]}, ${months[dayDate.month - 1]} ${dayDate.day}';
+    if (dayDate == today) return context.l10n.recapTodayLabel;
+    if (dayDate == yesterday) return context.l10n.recapYesterdayLabel;
+    return DateFormat(
+      'EEE, MMM d',
+      Localizations.localeOf(context).toLanguageTag(),
+    ).format(dayDate);
   }
 
   @override
@@ -365,7 +356,7 @@ class _DaySection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            _dayLabel,
+            _dayLabel(context),
             style: TextStyle(
               fontFamily: AppTypography.serifFamily,
               fontSize: 18,
@@ -391,7 +382,7 @@ class _DaySection extends StatelessWidget {
               return ClipRRect(
                 borderRadius: AppSizes.borderRadiusSm,
                 child: CachedNetworkImage(
-                  imageUrl: m.media.thumbnail.downloadUrl,
+                  imageUrl: m.media.bestThumbnailUrl,
                   fit: BoxFit.cover,
                   placeholder: (context, url) =>
                       Container(color: AppColors.surfaceContainerHighest),

@@ -59,12 +59,16 @@ class LocalDatabaseService {
     return key;
   }
 
-  /// Get all pending sync items, ordered by createdAt.
+  /// Get all pending sync items, ordered by priority and createdAt.
   Future<List<PendingSyncItem>> getPendingItems() async {
     final items = _syncBox.values
         .where((item) => item.status == 'pending')
         .toList();
-    items.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    items.sort((a, b) {
+      final priorityCompare = b.priority.compareTo(a.priority);
+      if (priorityCompare != 0) return priorityCompare;
+      return a.createdAt.compareTo(b.createdAt);
+    });
     return items;
   }
 
@@ -77,9 +81,9 @@ class LocalDatabaseService {
   Future<void> failSyncItem(int id, String error) async {
     final item = _syncBox.get(id);
     if (item != null) {
-      item.status = 'failed';
       item.retryCount = item.retryCount + 1;
       item.lastError = error;
+      item.status = item.retryCount >= 3 ? 'failed' : 'pending';
       await item.save();
     }
   }

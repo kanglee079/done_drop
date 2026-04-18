@@ -8,6 +8,7 @@ import 'package:done_drop/core/models/moment.dart';
 import 'package:done_drop/app/core/widgets/widgets.dart';
 import 'package:done_drop/app/presentation/memory_wall/memory_wall_controller.dart';
 import 'package:done_drop/app/routes/app_routes.dart';
+import 'package:done_drop/l10n/l10n.dart';
 
 /// DoneDrop Memory Wall Screen — personal moments grid with category filters.
 class MemoryWallScreen extends StatelessWidget {
@@ -15,6 +16,7 @@ class MemoryWallScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return GetBuilder<MemoryWallController>(
       builder: (ctrl) {
         final spec = DDResponsiveSpec.of(context);
@@ -30,7 +32,7 @@ class MemoryWallScreen extends StatelessWidget {
               onPressed: () => Get.back(),
             ),
             title: Text(
-              'Memory Wall',
+              l10n.memoryWallTitle,
               style: TextStyle(
                 fontFamily: AppTypography.serifFamily,
                 fontSize: 18,
@@ -63,14 +65,16 @@ class MemoryWallScreen extends StatelessWidget {
                     ),
                     child: Row(
                       children: MemoryWallController.categories.map((cat) {
-                        final isSelected =
-                            (cat == 'All Moments' &&
-                                ctrl.selectedCategory.value.isEmpty) ||
-                            ctrl.selectedCategory.value == cat;
+                        final label = cat.isEmpty
+                            ? l10n.memoryWallAllFilter
+                            : cat;
+                        final isSelected = cat.isEmpty
+                            ? ctrl.selectedCategory.value.isEmpty
+                            : ctrl.selectedCategory.value == cat;
                         return Padding(
                           padding: const EdgeInsets.only(right: 8),
                           child: DDChip(
-                            label: cat,
+                            label: label,
                             isSelected: isSelected,
                             onTap: () => ctrl.setFilter(cat),
                           ),
@@ -100,7 +104,7 @@ class MemoryWallScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: AppSizes.space24),
                             Text(
-                              'No moments yet',
+                              l10n.memoryWallEmptyTitle,
                               style: TextStyle(
                                 fontFamily: AppTypography.serifFamily,
                                 fontSize: 24,
@@ -110,7 +114,7 @@ class MemoryWallScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Your archive of kept promises\nwill appear here.',
+                              l10n.memoryWallEmptySubtitle,
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 14,
@@ -119,7 +123,7 @@ class MemoryWallScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: AppSizes.space24),
                             DDPrimaryButton(
-                              label: 'Create your first moment',
+                              label: l10n.createFirstMomentAction,
                               icon: Icons.camera_alt,
                               onPressed: () => Get.toNamed(AppRoutes.capture),
                             ),
@@ -172,16 +176,19 @@ class _MomentTile extends StatelessWidget {
       onLongPress: () async {
         final confirmed = await Get.dialog<bool>(
           AlertDialog(
-            title: const Text('Delete Moment'),
-            content: const Text('Are you sure you want to delete this moment?'),
+            title: Text(context.l10n.deleteMomentTitle),
+            content: Text(context.l10n.deleteMomentMessage),
             actions: [
               TextButton(
                 onPressed: () => Get.back(result: false),
-                child: const Text('Cancel'),
+                child: Text(context.l10n.cancelAction),
               ),
               TextButton(
                 onPressed: () => Get.back(result: true),
-                child: Text('Delete', style: TextStyle(color: AppColors.error)),
+                child: Text(
+                  context.l10n.deleteAction,
+                  style: TextStyle(color: AppColors.error),
+                ),
               ),
             ],
           ),
@@ -193,18 +200,30 @@ class _MomentTile extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            CachedNetworkImage(
-              imageUrl: moment.media.thumbnail.downloadUrl,
-              fit: BoxFit.cover,
-              placeholder: (context, url) =>
-                  Container(color: AppColors.surfaceContainerHigh),
-              errorWidget: (context, url, error) => Container(
-                color: AppColors.surfaceContainerHigh,
-                child: Icon(
-                  Icons.image_not_supported,
-                  color: AppColors.outline,
-                ),
-              ),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
+                final cacheWidth =
+                    (constraints.maxWidth * devicePixelRatio).round();
+
+                return CachedNetworkImage(
+                  imageUrl: moment.media.bestThumbnailUrl,
+                  fit: BoxFit.cover,
+                  memCacheWidth: cacheWidth,
+                  maxWidthDiskCache: cacheWidth,
+                  fadeInDuration: const Duration(milliseconds: 120),
+                  fadeOutDuration: Duration.zero,
+                  placeholder: (context, url) =>
+                      Container(color: AppColors.surfaceContainerHigh),
+                  errorWidget: (context, url, error) => Container(
+                    color: AppColors.surfaceContainerHigh,
+                    child: Icon(
+                      Icons.image_not_supported,
+                      color: AppColors.outline,
+                    ),
+                  ),
+                );
+              },
             ),
             if (moment.localPreviewPath != null &&
                 moment.localPreviewPath!.isNotEmpty)
@@ -212,6 +231,7 @@ class _MomentTile extends StatelessWidget {
                 child: Image.file(
                   File(moment.localPreviewPath!),
                   fit: BoxFit.cover,
+                  filterQuality: FilterQuality.low,
                 ),
               ),
             if (moment.isPendingSync)
@@ -279,6 +299,7 @@ class _SyncBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Align(
       alignment: Alignment.topLeft,
       child: Container(
@@ -289,13 +310,13 @@ class _SyncBadge extends StatelessWidget {
         ),
         child: Text(
           switch (moment.syncStatus) {
-            MomentSyncStatus.queued => 'Queued',
-            MomentSyncStatus.processing => 'Preparing',
+            MomentSyncStatus.queued => l10n.statusQueued,
+            MomentSyncStatus.processing => l10n.statusPreparing,
             MomentSyncStatus.uploading =>
-              'Uploading ${(moment.uploadProgress * 100).round()}%',
-            MomentSyncStatus.finalizing => 'Syncing',
-            MomentSyncStatus.failed => 'Failed',
-            MomentSyncStatus.synced => 'Posted',
+              l10n.statusUploading((moment.uploadProgress * 100).round()),
+            MomentSyncStatus.finalizing => l10n.statusSyncing,
+            MomentSyncStatus.failed => l10n.statusFailed,
+            MomentSyncStatus.synced => l10n.statusPosted,
           },
           style: const TextStyle(
             color: Colors.white,

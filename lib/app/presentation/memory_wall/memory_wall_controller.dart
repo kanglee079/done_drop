@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
@@ -36,7 +37,7 @@ class MemoryWallController extends GetxController {
   }
 
   static List<String> get categories => [
-        'All Moments',
+        '',
         ...AppConstants.momentCategories,
       ];
 
@@ -52,17 +53,23 @@ class MemoryWallController extends GetxController {
       isLoading.value = false;
       return;
     }
-    _momentRepo.watchOwnerArchiveMoments(uid).listen((remoteMoments) {
-      _remoteMoments
-        ..clear()
-        ..addAll(remoteMoments);
-      _mergeMoments();
-      isLoading.value = false;
-    });
+    _momentRepo.watchOwnerArchiveMoments(uid).listen(
+      (remoteMoments) {
+        _remoteMoments
+          ..clear()
+          ..addAll(remoteMoments);
+        _mergeMoments();
+        isLoading.value = false;
+      },
+      onError: (error) {
+        debugPrint('[_watchMoments] Error: $error');
+        isLoading.value = false;
+      },
+    );
   }
 
   void setFilter(String category) {
-    selectedCategory.value = category == 'All Moments' ? '' : category;
+    selectedCategory.value = category;
   }
 
   void upsertOptimisticMoment(Moment moment) {

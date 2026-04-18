@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:done_drop/core/theme/theme.dart';
+import 'package:done_drop/l10n/l10n.dart';
 
 /// A global snackbar overlay wrapper for GetX navigation.
 /// Wraps any page widget so errors / info messages can be shown globally.
@@ -20,10 +21,18 @@ class SnackbarOverlay extends StatelessWidget {
 void showAppError(String message) {
   if (!Get.isSnackbarOpen) {
     Get.rawSnackbar(
-      titleText: const Text('Error', style: TextStyle(
-        color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14,
-      )),
-      messageText: Text(message, style: const TextStyle(color: Colors.white, fontSize: 13)),
+      titleText: Text(
+        currentL10n.errorTitle,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 14,
+        ),
+      ),
+      messageText: Text(
+        message,
+        style: const TextStyle(color: Colors.white, fontSize: 13),
+      ),
       backgroundColor: AppColors.error,
       duration: const Duration(seconds: 4),
       snackPosition: SnackPosition.BOTTOM,
@@ -38,9 +47,19 @@ void showAppInfo(String message, {String? title}) {
   if (!Get.isSnackbarOpen) {
     Get.rawSnackbar(
       titleText: title != null
-          ? Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14))
+          ? Text(
+              title,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            )
           : const SizedBox.shrink(),
-      messageText: Text(message, style: const TextStyle(color: Colors.white, fontSize: 13)),
+      messageText: Text(
+        message,
+        style: const TextStyle(color: Colors.white, fontSize: 13),
+      ),
       backgroundColor: AppColors.primary,
       duration: const Duration(seconds: 3),
       snackPosition: SnackPosition.BOTTOM,
@@ -55,10 +74,17 @@ void showAppSuccess(String message, {String? title}) {
   if (!Get.isSnackbarOpen) {
     Get.rawSnackbar(
       titleText: Text(
-        title ?? 'Success',
-        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+        title ?? currentL10n.successTitle,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 14,
+        ),
       ),
-      messageText: Text(message, style: const TextStyle(color: Colors.white, fontSize: 13)),
+      messageText: Text(
+        message,
+        style: const TextStyle(color: Colors.white, fontSize: 13),
+      ),
       backgroundColor: const Color(0xFF2E7D32),
       duration: const Duration(seconds: 3),
       snackPosition: SnackPosition.BOTTOM,

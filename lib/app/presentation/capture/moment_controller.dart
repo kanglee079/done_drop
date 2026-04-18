@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -9,6 +11,7 @@ import 'package:done_drop/app/routes/app_routes.dart';
 import 'package:done_drop/core/constants/app_constants.dart';
 import 'package:done_drop/core/models/moment.dart';
 import 'package:done_drop/core/services/analytics_service.dart';
+import 'package:done_drop/core/services/activity_completion_service.dart';
 import 'package:done_drop/core/services/connectivity_service.dart';
 import 'package:done_drop/core/services/feed_delivery_planner.dart';
 import 'package:done_drop/core/services/media_service.dart';
@@ -18,6 +21,7 @@ import 'package:done_drop/features/auth/presentation/controllers/auth_controller
 import 'package:done_drop/firebase/repositories/activity_repository.dart';
 import 'package:done_drop/firebase/repositories/friend_repository.dart';
 import 'package:done_drop/firebase/repositories/moment_repository.dart';
+import 'package:done_drop/l10n/l10n.dart';
 
 class MomentSubmissionResult {
   const MomentSubmissionResult({
@@ -34,13 +38,23 @@ class MomentSubmissionResult {
 /// The controller owns one capture session at a time and is created by the
 /// capture route binding. Preview and success reuse the same session.
 class MomentController extends GetxController {
-  MomentController();
+  MomentController({
+    MediaService? mediaService,
+    void Function(String path)? warmPreparedUpload,
+    void Function(String path)? discardPreparedUpload,
+  }) : _mediaServiceOverride = mediaService,
+       _warmPreparedUpload = warmPreparedUpload,
+       _discardPreparedUpload = discardPreparedUpload;
 
   MomentRepository get _momentRepo => Get.find<MomentRepository>();
   FriendRepository get _friendRepo => Get.find<FriendRepository>();
   ActivityRepository get _activityRepo => Get.find<ActivityRepository>();
   AuthController get _authController => Get.find<AuthController>();
-  MediaService get _mediaService => MediaService.instance;
+  final MediaService? _mediaServiceOverride;
+  final void Function(String path)? _warmPreparedUpload;
+  final void Function(String path)? _discardPreparedUpload;
+
+  MediaService get _mediaService => _mediaServiceOverride ?? MediaService.instance;
   FeedDeliveryPlanner get _deliveryPlanner => const FeedDeliveryPlanner();
 
   final captionController = TextEditingController();
@@ -69,11 +83,11 @@ class MomentController extends GetxController {
   bool get isProofMoment => _activityId != null;
 
   String get uploadStatusLabel => switch (uploadStage.value) {
-        MediaUploadStage.preparing => 'Preparing image…',
+        MediaUploadStage.preparing => currentL10n.uploadStagePreparingImage,
         MediaUploadStage.uploading =>
-          'Uploading ${(uploadProgress.value * 100).round()}%',
-        MediaUploadStage.finalizing => 'Finalizing moment…',
-        MediaUploadStage.complete => 'Ready',
+          currentL10n.statusUploading((uploadProgress.value * 100).round()),
+        MediaUploadStage.finalizing => currentL10n.uploadStageFinalizingMoment,
+        MediaUploadStage.complete => currentL10n.uploadReady,
       };
 
   void startCaptureSession(Map<String, dynamic>? args) {
@@ -96,30 +110,35 @@ class MomentController extends GetxController {
     final imagePath = args?['imagePath'] as String?;
     if (imagePath != null && imagePath.isNotEmpty) {
       _imagePath = imagePath;
+      _warmUpload(imagePath);
       errorMessage.value = null;
     }
   }
 
   void attachImage(String path) {
+    if (_imagePath != null && _imagePath != path) {
+      _discardUpload(_imagePath!);
+    }
     _imagePath = path;
+    _warmUpload(path);
     errorMessage.value = null;
   }
 
   Future<void> postMoment() async {
     if (_imagePath == null) {
-      errorMessage.value = 'No image selected';
+      errorMessage.value = currentL10n.capturePhotoRequired;
       return;
     }
 
     final uid = _userId;
     if (uid == null) {
-      errorMessage.value = 'You must be signed in';
+      errorMessage.value = currentL10n.authRequiredMessage;
       return;
     }
 
     if (visibility.value == AppConstants.visibilitySelectedFriends &&
         selectedFriendIds.isEmpty) {
-      errorMessage.value = 'Pick at least one buddy before sharing.';
+      errorMessage.value = currentL10n.captureSelectBuddyError;
       return;
     }
 
@@ -128,6 +147,19 @@ class MomentController extends GetxController {
     uploadStage.value = MediaUploadStage.preparing;
     errorMessage.value = null;
 
+    if (isProofMoment) {
+      try {
+        await _ensureProofCompletion(uid);
+      } catch (error, stackTrace) {
+        debugPrint('[MomentController.postMoment] Completion failed: $error');
+        debugPrintStack(stackTrace: stackTrace);
+        isPosting.value = false;
+        uploadStage.value = MediaUploadStage.complete;
+        errorMessage.value = currentL10n.momentPostFailed(error.toString());
+        return;
+      }
+    }
+
     final momentId = 'moment_${DateTime.now().millisecondsSinceEpoch}';
     final now = DateTime.now();
     final postVisibility = visibility.value;
@@ -135,10 +167,12 @@ class MomentController extends GetxController {
     final category = selectedCategory.value.isEmpty
         ? null
         : selectedCategory.value;
-    final activityTitle = await _resolveActivityTitle();
+    final activityTitleFuture = _resolveActivityTitle();
+    final recipientIdsFuture = _resolveRecipientIds(uid, postVisibility);
+    final activityTitle = await activityTitleFuture;
     final ownerDisplayName = _resolveOwnerDisplayName();
     final ownerAvatarUrl = _resolveOwnerAvatarUrl();
-    final recipientIds = await _resolveRecipientIds(uid, postVisibility);
+    final recipientIds = await recipientIdsFuture;
 
     final momentData = {
       'ownerDisplayName': ownerDisplayName,
@@ -221,12 +255,15 @@ class MomentController extends GetxController {
         uploadProgress: 1,
       );
 
-      await _momentRepo.createMoment(moment);
-      await _linkProofMoment(momentId);
+      await Future.wait([
+        _momentRepo.createMoment(moment),
+        _linkProofMoment(momentId),
+      ]);
       await _momentRepo.createFeedDeliveries(
         moment: moment,
         recipientIds: recipientIds,
       );
+      unawaited(_backfillGeneratedThumbnail(momentId: momentId, media: media));
 
       _updateOptimisticMoment(
         momentId,
@@ -240,14 +277,16 @@ class MomentController extends GetxController {
         category: category,
       );
       await _finishSubmission(wasOfflineQueued: false);
-    } catch (error) {
+    } catch (error, stackTrace) {
+      debugPrint('[MomentController.postMoment] Error: $error');
+      debugPrintStack(stackTrace: stackTrace);
       isPosting.value = false;
       uploadStage.value = MediaUploadStage.complete;
       _updateOptimisticMoment(
         momentId,
         syncStatus: MomentSyncStatus.failed,
       );
-      errorMessage.value = 'Failed to post moment: $error';
+      errorMessage.value = currentL10n.momentPostFailed(error.toString());
     }
   }
 
@@ -271,6 +310,9 @@ class MomentController extends GetxController {
   }
 
   void resetComposer() {
+    if (_imagePath != null && _imagePath!.isNotEmpty) {
+      _discardUpload(_imagePath!);
+    }
     captionController.clear();
     visibility.value = AppConstants.visibilityPersonalOnly;
     selectedFriendIds.clear();
@@ -285,6 +327,22 @@ class MomentController extends GetxController {
     _activityInstanceId = null;
     _completionLogId = null;
     _sessionInitialized = false;
+  }
+
+  void _warmUpload(String path) {
+    if (_warmPreparedUpload != null) {
+      _warmPreparedUpload(path);
+      return;
+    }
+    _mediaService.warmMomentUpload(path);
+  }
+
+  void _discardUpload(String path) {
+    if (_discardPreparedUpload != null) {
+      _discardPreparedUpload(path);
+      return;
+    }
+    _mediaService.discardPreparedUpload(path);
   }
 
   Future<void> _queueMomentForSync({
@@ -302,6 +360,34 @@ class MomentController extends GetxController {
       activityId: _activityId,
       activityInstanceId: _activityInstanceId,
       completionLogId: _completionLogId,
+    );
+  }
+
+  Future<void> _backfillGeneratedThumbnail({
+    required String momentId,
+    required MomentMediaMetadata media,
+  }) async {
+    if (!_mediaService.usesServerGeneratedThumbnails ||
+        media.thumbnail.downloadUrl.isNotEmpty) {
+      return;
+    }
+
+    final generatedThumbnail = await _mediaService.waitForGeneratedThumbnail(
+      original: media.original,
+    );
+    if (generatedThumbnail == null) {
+      return;
+    }
+
+    await _momentRepo.updateMomentThumbnail(momentId, generatedThumbnail);
+    await _momentRepo.updateFeedDeliveryThumbnail(
+      momentId,
+      generatedThumbnail.downloadUrl,
+    );
+
+    _updateOptimisticMoment(
+      momentId,
+      media: media.copyWith(thumbnail: generatedThumbnail),
     );
   }
 
@@ -341,13 +427,48 @@ class MomentController extends GetxController {
       instanceId = instance.id;
     }
 
-    if (instanceId != null && _completionLogId != null) {
+    if (instanceId != null) {
       await _activityRepo.linkMomentToInstance(instanceId, momentId);
+    }
+    if (_completionLogId != null) {
       await _activityRepo.updateCompletionLogMomentId(
         _completionLogId!,
         momentId,
       );
     }
+  }
+
+  Future<CompletionResult?> _ensureProofCompletion(String uid) async {
+    if (_activityId == null) return null;
+    if (_activityInstanceId != null && _completionLogId != null) {
+      return null;
+    }
+
+    if (!Get.isRegistered<CompleteHabitUseCase>()) {
+      throw StateError('CompleteHabitUseCase is not registered.');
+    }
+
+    final useCase = Get.find<CompleteHabitUseCase>();
+    final result = await useCase(activityId: _activityId!, userId: uid);
+
+    if (result != null) {
+      _activityInstanceId = result.instance.id;
+      _completionLogId = result.log.id;
+      if (Get.isRegistered<HomeController>()) {
+        Get.find<HomeController>().handleCompletionResult(result);
+      }
+      return result;
+    }
+
+    if (_activityInstanceId == null) {
+      final instance = await _activityRepo.getOrCreateTodayInstance(
+        _activityId!,
+        uid,
+      );
+      _activityInstanceId = instance.id;
+    }
+
+    return null;
   }
 
   Future<void> _finishSubmission({required bool wasOfflineQueued}) async {
@@ -362,8 +483,8 @@ class MomentController extends GetxController {
     );
     if (wasOfflineQueued) {
       Get.snackbar(
-        'Saved for sync',
-        'Will upload when you are back online.',
+        currentL10n.savedForSyncTitle,
+        currentL10n.offlineSyncQueuedMessage,
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: AppColors.inverseSurface,
         colorText: AppColors.inverseOnSurface,
@@ -384,7 +505,8 @@ class MomentController extends GetxController {
       final displayName = Get.find<HomeController>().profile.value?.displayName;
       if (displayName != null && displayName.isNotEmpty) return displayName;
     }
-    return _authController.firebaseUser?.displayName ?? 'DoneDrop member';
+    return _authController.firebaseUser?.displayName ??
+        currentL10n.memberFallbackName;
   }
 
   String? _resolveOwnerAvatarUrl() {
@@ -398,6 +520,14 @@ class MomentController extends GetxController {
   Future<String?> _resolveActivityTitle() async {
     final activityId = _activityId;
     if (activityId == null) return null;
+    if (Get.isRegistered<HomeController>()) {
+      final cached = Get.find<HomeController>().activities.firstWhereOrNull(
+        (activity) => activity.id == activityId,
+      );
+      if (cached != null) {
+        return cached.title;
+      }
+    }
     final activity = await _activityRepo.getActivity(activityId);
     return activity?.title;
   }

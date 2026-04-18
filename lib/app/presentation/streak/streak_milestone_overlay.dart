@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:done_drop/core/models/streak.dart';
 import 'package:done_drop/core/widgets/confetti_overlay.dart';
+import 'package:done_drop/l10n/l10n.dart';
 
 /// Full-screen celebration overlay when a streak milestone is reached.
 class StreakMilestoneOverlay extends StatefulWidget {
@@ -118,7 +119,7 @@ class _StreakMilestoneOverlayState extends State<StreakMilestoneOverlay>
               Center(
                 child: AnimatedBuilder(
                   animation: _scaleController,
-                  builder: (_, __) {
+                  builder: (_, child) {
                     return Transform.scale(
                       scale: _scaleAnimation.value.clamp(0.0, 1.0),
                       child: Transform.rotate(
@@ -167,7 +168,7 @@ class _StreakMilestoneOverlayState extends State<StreakMilestoneOverlay>
     return Column(
       children: [
         Text(
-          '🎉 MILESTONE REACHED!',
+          context.l10n.streakMilestoneReachedTitle,
           style: TextStyle(
             color: m.badgeColor,
             fontSize: 14,
@@ -183,7 +184,7 @@ class _StreakMilestoneOverlayState extends State<StreakMilestoneOverlay>
         ),
         const SizedBox(height: 8),
         Text(
-          m.label,
+          m.localizedLabel(context.l10n),
           style: const TextStyle(
             color: Colors.white,
             fontSize: 28,
@@ -225,7 +226,7 @@ class _StreakMilestoneOverlayState extends State<StreakMilestoneOverlay>
           ),
           const SizedBox(width: 12),
           Text(
-            '${widget.newStreak} days',
+            '${widget.newStreak} ${context.l10n.streakDaysUnit}',
             style: TextStyle(
               color: widget.milestone.badgeColor,
               fontSize: 24,
@@ -247,9 +248,9 @@ class _StreakMilestoneOverlayState extends State<StreakMilestoneOverlay>
           borderRadius: BorderRadius.circular(30),
         ),
       ),
-      child: const Text(
-        'Keep Going!',
-        style: TextStyle(
+      child: Text(
+        context.l10n.streakKeepGoingAction,
+        style: const TextStyle(
           color: Colors.white,
           fontSize: 16,
           fontWeight: FontWeight.w700,
@@ -274,7 +275,7 @@ class _TrophyIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: glowAnimation,
-      builder: (_, __) {
+      builder: (_, child) {
         final glowRadius = 20 + (glowAnimation.value * 20);
         final glowOpacity = 0.3 + (glowAnimation.value * 0.4);
 

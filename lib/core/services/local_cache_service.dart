@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -10,9 +11,10 @@ class LocalCacheService {
   static LocalCacheService? _instance;
   static LocalCacheService get instance => _instance ??= LocalCacheService._();
 
-  static const _actsKey = 'all';
+  static const _activitiesKeyPrefix = 'activities_';
   static const _syncKey = 'last_sync_timestamp';
   static const _todayKeyPrefix = 'instances_';
+  static const _feedKeyPrefix = 'feed_';
 
   Box<String>? _box;
 
@@ -23,14 +25,17 @@ class LocalCacheService {
 
   // ── Activities ────────────────────────────────────────────────────────────
 
-  Future<void> cacheActivities(List<Map<String, dynamic>> activities) async {
-    await _box?.put(_actsKey, jsonEncode(activities));
+  Future<void> cacheActivities(
+    String userId,
+    List<Map<String, dynamic>> activities,
+  ) async {
+    await _box?.put(activitiesKeyForUser(userId), jsonEncode(activities));
     await _markSynced();
   }
 
-  List<Map<String, dynamic>> loadCachedActivities() {
+  List<Map<String, dynamic>> loadCachedActivities(String userId) {
     try {
-      final raw = _box?.get(_actsKey);
+      final raw = _box?.get(activitiesKeyForUser(userId));
       if (raw == null) return [];
       final list = jsonDecode(raw) as List;
       return list.cast<Map<String, dynamic>>();
@@ -41,15 +46,18 @@ class LocalCacheService {
 
   // ── Activity Instances ─────────────────────────────────────────────────────
 
-  Future<void> cacheTodayInstances(List<Map<String, dynamic>> instances) async {
-    final key = _todayKey();
+  Future<void> cacheTodayInstances(
+    String userId,
+    List<Map<String, dynamic>> instances,
+  ) async {
+    final key = todayKeyForUser(userId);
     await _box?.put(key, jsonEncode(instances));
     await _markSynced();
   }
 
-  List<Map<String, dynamic>> loadCachedTodayInstances() {
+  List<Map<String, dynamic>> loadCachedTodayInstances(String userId) {
     try {
-      final raw = _box?.get(_todayKey());
+      final raw = _box?.get(todayKeyForUser(userId));
       if (raw == null) return [];
       final list = jsonDecode(raw) as List;
       return list.cast<Map<String, dynamic>>();
@@ -58,14 +66,49 @@ class LocalCacheService {
     }
   }
 
-  Future<void> invalidateTodayInstances() async {
-    await _box?.delete(_todayKey());
+  Future<void> invalidateTodayInstances(String userId) async {
+    await _box?.delete(todayKeyForUser(userId));
   }
 
-  String _todayKey() {
-    final now = DateTime.now();
-    return '$_todayKeyPrefix${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+  // ── Buddy Feed ────────────────────────────────────────────────────────────
+
+  Future<void> cacheFeedDeliveries(
+    String userId,
+    List<Map<String, dynamic>> deliveries,
+  ) async {
+    await _box?.put(_feedKey(userId), jsonEncode(deliveries));
+    await _markSynced();
   }
+
+  List<Map<String, dynamic>> loadCachedFeedDeliveries(String userId) {
+    try {
+      final raw = _box?.get(_feedKey(userId));
+      if (raw == null) return [];
+      final list = jsonDecode(raw) as List;
+      return list.cast<Map<String, dynamic>>();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<void> invalidateFeedDeliveries(String userId) async {
+    await _box?.delete(_feedKey(userId));
+  }
+
+  @visibleForTesting
+  static String activitiesKeyForUser(String userId) =>
+      '$_activitiesKeyPrefix$userId';
+
+  @visibleForTesting
+  static String todayKeyForUser(
+    String userId, {
+    DateTime? now,
+  }) {
+    final resolvedNow = now ?? DateTime.now();
+    return '$_todayKeyPrefix${userId}_${resolvedNow.year}-${resolvedNow.month.toString().padLeft(2, '0')}-${resolvedNow.day.toString().padLeft(2, '0')}';
+  }
+
+  String _feedKey(String userId) => '$_feedKeyPrefix$userId';
 
   // ── Sync tracking ─────────────────────────────────────────────────────────
 

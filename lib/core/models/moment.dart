@@ -154,8 +154,8 @@ class Moment {
         caption: (map['caption'] as String?) ?? '',
         category: map['category'] as String?,
         completedAt: _parseDateTime(map['completedAt']),
-        createdAt: _parseDateTime(map['createdAt']) ?? DateTime.now(),
-        updatedAt: _parseDateTime(map['updatedAt']) ?? DateTime.now(),
+        createdAt: _parseDateTime(map['createdAt']),
+        updatedAt: _parseDateTime(map['updatedAt']),
         reactionCounts:
             (map['reactionCounts'] as Map<String, dynamic>?)?.map(
                   (k, v) => MapEntry(k, v as int),
@@ -197,7 +197,7 @@ class Moment {
           ),
           thumbnail: MediaMetadata(
             storagePath: '',
-            downloadUrl: delivery.thumbnailUrl,
+            downloadUrl: delivery.previewUrl,
             mimeType: 'image/jpeg',
             width: 0,
             height: 0,
@@ -236,6 +236,26 @@ class MediaMetadata {
     this.momentId,
   });
 
+  MediaMetadata copyWith({
+    String? storagePath,
+    String? downloadUrl,
+    String? mimeType,
+    int? width,
+    int? height,
+    int? bytesUploaded,
+    String? ownerId,
+    String? momentId,
+  }) => MediaMetadata(
+        storagePath: storagePath ?? this.storagePath,
+        downloadUrl: downloadUrl ?? this.downloadUrl,
+        mimeType: mimeType ?? this.mimeType,
+        width: width ?? this.width,
+        height: height ?? this.height,
+        bytesUploaded: bytesUploaded ?? this.bytesUploaded,
+        ownerId: ownerId ?? this.ownerId,
+        momentId: momentId ?? this.momentId,
+      );
+
   Map<String, dynamic> toFirestore() => {
         'storagePath': storagePath,
         'downloadUrl': downloadUrl,
@@ -268,6 +288,25 @@ class MomentMedia {
     required this.original,
     required this.thumbnail,
   });
+
+  String get bestOriginalUrl => original.downloadUrl.isNotEmpty
+      ? original.downloadUrl
+      : thumbnail.downloadUrl;
+
+  String get bestThumbnailUrl => thumbnail.downloadUrl.isNotEmpty
+      ? thumbnail.downloadUrl
+      : original.downloadUrl;
+
+  bool get isGeneratedThumbnailPending =>
+      thumbnail.storagePath.isNotEmpty && thumbnail.downloadUrl.isEmpty;
+
+  MomentMedia copyWith({
+    MediaMetadata? original,
+    MediaMetadata? thumbnail,
+  }) => MomentMedia(
+        original: original ?? this.original,
+        thumbnail: thumbnail ?? this.thumbnail,
+      );
 
   Map<String, dynamic> toFirestore() => {
         'original': original.toFirestore(),
@@ -361,6 +400,23 @@ class Reaction {
         reactionType: map['reactionType'] as String,
         createdAt: DateTime.parse(map['createdAt'] as String),
       );
+}
+
+class MomentReactionSummary {
+  const MomentReactionSummary({
+    this.counts = const {},
+    this.currentUserReaction,
+  });
+
+  final Map<String, int> counts;
+  final String? currentUserReaction;
+
+  int countFor(String reactionType) => counts[reactionType] ?? 0;
+
+  int get totalCount =>
+      counts.values.fold<int>(0, (sum, value) => sum + value);
+
+  bool isActive(String reactionType) => currentUserReaction == reactionType;
 }
 
 /// Task template — recurring tasks user creates

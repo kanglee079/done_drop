@@ -8,6 +8,7 @@ import 'package:done_drop/core/models/user_profile.dart';
 import 'package:done_drop/core/errors/result.dart';
 import 'package:done_drop/core/services/media_service.dart';
 import 'package:done_drop/core/services/analytics_service.dart';
+import 'package:done_drop/l10n/l10n.dart';
 
 /// Controller for the profile screen.
 class ProfileController extends GetxController {
@@ -82,7 +83,7 @@ class ProfileController extends GetxController {
         await _userProfileRepo.updateUserProfile(updated);
       }
     } catch (e) {
-      errorMessage.value = 'Failed to upload avatar';
+      errorMessage.value = currentL10n.uploadAvatarFailed;
     } finally {
       isUploadingAvatar.value = false;
     }
@@ -91,7 +92,7 @@ class ProfileController extends GetxController {
   Future<void> saveProfile() async {
     final name = nameController.text.trim();
     if (name.isEmpty) {
-      errorMessage.value = 'Name cannot be empty';
+      errorMessage.value = currentL10n.profileNameEmpty;
       return;
     }
 
@@ -112,7 +113,7 @@ class ProfileController extends GetxController {
 
     result.fold(
       onSuccess: (_) {
-        successMessage.value = 'Profile saved';
+        successMessage.value = currentL10n.profileSaved;
         AnalyticsService.instance.settingChanged('profile_updated', name);
         Future.delayed(const Duration(seconds: 2), () {
           successMessage.value = null;

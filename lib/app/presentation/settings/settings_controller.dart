@@ -7,8 +7,14 @@ import 'package:done_drop/core/errors/failures.dart';
 import 'package:done_drop/core/errors/result.dart';
 import 'package:done_drop/core/services/account_deletion_service.dart';
 import 'package:done_drop/core/services/analytics_service.dart';
+import 'package:done_drop/core/services/locale_controller.dart';
 import 'package:done_drop/core/services/legal_service.dart';
+import 'package:done_drop/core/services/notification_service.dart';
 import 'package:done_drop/core/services/storage_service.dart';
+import 'package:done_drop/features/auth/repositories/user_profile_repository.dart';
+import 'package:done_drop/l10n/l10n.dart';
+import 'package:done_drop/app/core/widgets/widgets.dart';
+import 'package:done_drop/app/presentation/home/home_controller.dart';
 
 /// Controller for the settings screen.
 /// Manages notification preferences, account settings, and sign-out.
@@ -18,6 +24,9 @@ class SettingsController extends GetxController {
   AuthController get _authController => Get.find<AuthController>();
   AccountDeletionService get _accountDeletionService =>
       Get.find<AccountDeletionService>();
+  UserProfileRepository get _userProfileRepo =>
+      Get.find<UserProfileRepository>();
+  LocaleController get _localeController => Get.find<LocaleController>();
   StorageService get _storage => StorageService.instance;
 
   // Notification preferences
@@ -26,6 +35,10 @@ class SettingsController extends GetxController {
 
   String get userEmail => _authController.firebaseUser?.email ?? '';
   String get buildLabel => 'Version ${AppConstants.appVersion} (build 1)';
+  String get currentLanguageCode => _localeController.currentLanguageCode;
+  String get currentLanguageLabel => _localeController.isVietnamese
+      ? currentL10n.languageVietnamese
+      : currentL10n.languageEnglish;
 
   @override
   void onInit() {
@@ -34,13 +47,24 @@ class SettingsController extends GetxController {
     momentReminders.value = _storage.getBool('pref_moment_reminders') ?? true;
   }
 
-  void toggleMomentReminders(bool value) {
+  Future<void> toggleMomentReminders(bool value) async {
     momentReminders.value = value;
-    _storage.setBool('pref_moment_reminders', value);
+    await _storage.setBool('pref_moment_reminders', value);
     AnalyticsService.instance.settingChanged(
       'moment_reminders',
       value.toString(),
     );
+
+    if (!value) {
+      await NotificationService.instance.cancelAllActivityReminders();
+      return;
+    }
+
+    if (Get.isRegistered<HomeController>()) {
+      await NotificationService.instance.syncActivityReminders(
+        Get.find<HomeController>().activities,
+      );
+    }
   }
 
   Future<void> signOut() async {
@@ -62,24 +86,37 @@ class SettingsController extends GetxController {
     );
   }
 
+  Future<void> changeLanguage(String code) async {
+    await _localeController.setLocaleCode(code);
+
+    final profile = await _authController.ensureCurrentUserProfile();
+    if (profile != null) {
+      final updatedProfile = profile.copyWith(
+        settings: profile.settings.copyWith(preferredLocaleCode: code),
+      );
+      await _userProfileRepo.updateUserProfile(updatedProfile);
+    }
+  }
+
+  /// Initiates soft delete of the account.
+  /// User must confirm by typing the exact phrase, and then re-authenticate.
   Future<void> deleteAccount() async {
     final user = _authController.firebaseUser;
     if (user == null || isDeletingAccount.value) return;
 
+    // Step 1: First confirmation dialog
     final confirmed = await Get.dialog<bool>(
       AlertDialog(
-        title: const Text('Delete account'),
-        content: const Text(
-          'This permanently removes your profile, habits, proof moments, and private buddy data from DoneDrop. Subscription billing, if ever enabled later, must still be cancelled through the app store.',
-        ),
+        title: Text(currentL10n.confirmDeleteAccountTitle),
+        content: Text(currentL10n.confirmDeleteAccountMessage),
         actions: [
           TextButton(
             onPressed: () => Get.back(result: false),
-            child: const Text('Keep account'),
+            child: Text(currentL10n.keepAccountAction),
           ),
           TextButton(
             onPressed: () => Get.back(result: true),
-            child: const Text('Continue'),
+            child: Text(currentL10n.continueAction),
           ),
         ],
       ),
@@ -87,6 +124,20 @@ class SettingsController extends GetxController {
 
     if (confirmed != true) return;
 
+    // Step 2: Require user to type confirmation phrase
+    final typedConfirmed = await ConfirmTypingDialog.show(
+      context: Get.context!,
+      title: currentL10n.confirmDeleteAccountTitle,
+      message: currentL10n.confirmDeleteAccountMessage,
+      hint: currentL10n.confirmDeleteAccountTabHint,
+      placeholder: currentL10n.confirmDeleteAccountPlaceholder,
+      expectedPhrase: currentL10n.confirmDeleteAccountPlaceholder,
+      destructive: true,
+    );
+
+    if (typedConfirmed != true) return;
+
+    // Step 3: Re-authenticate before soft delete
     final reauthResult = await _reauthenticateForDeletion();
     if (reauthResult.isFailure) {
       final failure = reauthResult.fold(
@@ -95,9 +146,9 @@ class SettingsController extends GetxController {
       );
       final message = failure is AppFailure
           ? failure.message
-          : 'Could not verify your account. Please try again.';
+          : currentL10n.verificationRequiredFallback;
       Get.snackbar(
-        'Verification required',
+        currentL10n.verificationRequiredTitle,
         message,
         snackPosition: SnackPosition.BOTTOM,
       );
@@ -107,52 +158,41 @@ class SettingsController extends GetxController {
     isDeletingAccount.value = true;
     AnalyticsService.instance.accountDeletionRequested(_providerLabel());
 
-    final deleteDataResult = await _accountDeletionService.deleteUserData(
+    // Step 4: Schedule soft delete
+    final softDeleteResult = await _accountDeletionService.scheduleSoftDelete(
       user.uid,
     );
-    if (deleteDataResult.isFailure) {
+    if (softDeleteResult.isFailure) {
       isDeletingAccount.value = false;
-      final failure = deleteDataResult.fold(
+      final failure = softDeleteResult.fold(
         onSuccess: (_) => null,
         onFailure: (failure) => failure,
       );
       final message = failure is AppFailure
           ? failure.message
-          : 'Failed to remove account data.';
+          : currentL10n.deleteFailedFallback;
       Get.snackbar(
-        'Delete failed',
+        currentL10n.deleteFailedTitle,
         message,
         snackPosition: SnackPosition.BOTTOM,
       );
       return;
     }
 
-    final authDeleteResult = await _authController.deleteAccount();
-    if (authDeleteResult.isFailure) {
-      isDeletingAccount.value = false;
-      final failure = authDeleteResult.fold(
-        onSuccess: (_) => null,
-        onFailure: (failure) => failure,
-      );
-      final message = failure is AppFailure
-          ? failure.message
-          : 'Account credentials could not be removed.';
-      Get.snackbar(
-        'Delete incomplete',
-        message,
-        snackPosition: SnackPosition.BOTTOM,
-      );
-      return;
-    }
-
-    await _accountDeletionService.clearLocalState();
     isDeletingAccount.value = false;
-    Get.offAllNamed(AppRoutes.signIn);
+
+    // Show success message
     Get.snackbar(
-      'Account deleted',
-      'Your DoneDrop account has been removed from this device.',
+      currentL10n.softDeleteInitiatedTitle,
+      currentL10n.softDeleteInitiatedMessage,
       snackPosition: SnackPosition.BOTTOM,
+      duration: const Duration(seconds: 6),
     );
+
+    // Sign out and redirect
+    await _accountDeletionService.clearSessionState();
+    await AnalyticsService.instance.signOut();
+    await _authController.signOut();
   }
 
   Future<Result<void>> _reauthenticateForDeletion() async {
@@ -180,18 +220,16 @@ class SettingsController extends GetxController {
     if (providerIds.contains('google.com')) {
       final confirmed = await Get.dialog<bool>(
         AlertDialog(
-          title: const Text('Verify with Google'),
-          content: const Text(
-            'To protect your account, continue with Google one more time before deletion.',
-          ),
+          title: Text(currentL10n.verifyWithGoogleTitle),
+          content: Text(currentL10n.verifyWithGoogleMessage),
           actions: [
             TextButton(
               onPressed: () => Get.back(result: false),
-              child: const Text('Cancel'),
+              child: Text(currentL10n.cancelAction),
             ),
             FilledButton(
               onPressed: () => Get.back(result: true),
-              child: const Text('Continue'),
+              child: Text(currentL10n.continueAction),
             ),
           ],
         ),
@@ -205,9 +243,7 @@ class SettingsController extends GetxController {
     }
 
     return Result.failure(
-      AppFailure.unexpected(
-        'This sign-in method is not supported for in-app deletion yet. Sign in again with a supported method and retry.',
-      ),
+      AppFailure.unexpected(currentL10n.unsupportedDeletionMethod),
     );
   }
 
@@ -215,24 +251,24 @@ class SettingsController extends GetxController {
     final controller = TextEditingController();
     final password = await Get.dialog<String>(
       AlertDialog(
-        title: const Text('Confirm your password'),
+        title: Text(currentL10n.confirmPasswordTitle),
         content: TextField(
           controller: controller,
           obscureText: true,
           autofocus: true,
-          decoration: const InputDecoration(
-            labelText: 'Password',
-            hintText: 'Enter your current password',
+          decoration: InputDecoration(
+            labelText: currentL10n.passwordLabel,
+            hintText: currentL10n.currentPasswordHint,
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Get.back<String>(),
-            child: const Text('Cancel'),
+            child: Text(currentL10n.cancelAction),
           ),
           FilledButton(
             onPressed: () => Get.back(result: controller.text),
-            child: const Text('Verify'),
+            child: Text(currentL10n.verifyAction),
           ),
         ],
       ),

@@ -1,0 +1,688 @@
+{
+  "@@locale": "vi",
+  "appName": "DoneDrop",
+  "memberFallbackName": "Thành viên DoneDrop",
+  "greetingFallbackName": "bạn",
+  "authTagline": "Hoàn thành nó. Ghi lại nó.\nChia sẻ khoảnh khắc.",
+  "todayTabTitle": "Hôm nay",
+  "todayTabSubtitle": "Kỷ luật luôn hiện rõ.",
+  "buddyTabTitle": "Buddy",
+  "buddyTabSubtitle": "Khoảnh khắc riêng tư từ nhóm thân thiết của bạn.",
+  "wallTabTitle": "Tường",
+  "wallTabSubtitle": "Kho lưu trữ của bạn, sắp theo từng ký ức.",
+  "meTabTitle": "Tôi",
+  "meTabSubtitle": "Thống kê, nhắc nhở và cài đặt.",
+  "languageLabel": "Ngôn ngữ",
+  "languageEnglish": "English",
+  "languageVietnamese": "Tiếng Việt",
+  "welcomeGetStarted": "Bắt đầu",
+  "welcomeContinue": "Tiếp tục",
+  "welcomeDone": "Xong",
+  "onboardingHeadline": "Tự giữ mình có trách nhiệm.\nHoàn thành thói quen. Chứng minh điều đó.",
+  "onboardingSubtitle": "Tạo thói quen. Hoàn thành. Ghi lại bằng chứng. Chia sẻ riêng tư với những người đồng hành.",
+  "onboardingUseCaseTitle": "BẠN ĐẾN ĐÂY VÌ ĐIỀU GÌ?",
+  "captureProofTitle": "Ghi lại bằng chứng",
+  "captureProofSubtitle": "DoneDrop cần quyền camera để ghi lại khoảnh khắc chứng minh. Ảnh của bạn luôn riêng tư cho tới khi bạn chọn chia sẻ.",
+  "privateByDefault": "Riêng tư mặc định",
+  "privateByDefaultDesc": "Bạn quyết định ai được xem khoảnh khắc của mình.",
+  "secureByDefault": "Bảo mật đầu cuối",
+  "secureByDefaultDesc": "Dữ liệu trách nhiệm của bạn thuộc về bạn.",
+  "gentleRemindersTitle": "Nhắc nhở nhẹ nhàng",
+  "gentleRemindersDesc": "Những lời nhắc tuỳ chọn để hoàn thành thói quen.",
+  "proofOnlyWhenYouChoose": "Chỉ khi thật sự cần",
+  "proofOnlyWhenYouChooseDesc": "Chỉ gắn bằng chứng khi thói quen đó xứng đáng.",
+  "emailLabel": "Email",
+  "emailHint": "ban@example.com",
+  "passwordLabel": "Mật khẩu",
+  "passwordHint": "••••••••",
+  "fullNameLabel": "Họ và tên",
+  "fullNameHint": "Tên của bạn",
+  "confirmPasswordLabel": "Xác nhận mật khẩu",
+  "confirmPasswordHint": "Nhập lại mật khẩu",
+  "createAccountTitle": "Tạo tài khoản",
+  "createAccountSubtitle": "Bắt đầu ghi lại những khoảnh khắc hoàn thành ngay hôm nay.",
+  "signInAction": "Đăng nhập",
+  "signUpAction": "Đăng ký",
+  "createAccountAction": "Tạo tài khoản",
+  "continueWithGoogle": "Tiếp tục với Google",
+  "forgotPasswordAction": "Quên mật khẩu?",
+  "orLabel": "hoặc",
+  "noAccountPrompt": "Chưa có tài khoản? ",
+  "alreadyHaveAccountPrompt": "Đã có tài khoản? ",
+  "termsAgreementPrefix": "Tiếp tục nghĩa là bạn đồng ý với ",
+  "createTermsAgreementPrefix": "Tạo tài khoản nghĩa là bạn đồng ý với ",
+  "termsOfService": "Điều khoản dịch vụ",
+  "privacyPolicy": "Chính sách quyền riêng tư",
+  "andLabel": " và ",
+  "nameRequired": "Vui lòng nhập tên",
+  "nameTooShort": "Tên phải có ít nhất 2 ký tự",
+  "emailRequired": "Vui lòng nhập email",
+  "emailInvalid": "Vui lòng nhập email hợp lệ",
+  "passwordRequired": "Vui lòng nhập mật khẩu",
+  "passwordTooShort": "Mật khẩu phải có ít nhất 6 ký tự",
+  "confirmPasswordRequired": "Vui lòng xác nhận mật khẩu",
+  "confirmPasswordMismatch": "Mật khẩu không khớp",
+  "todayGreeting": "Chào {name}",
+  "@todayGreeting": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "todayIntroTitle": "Giữ hôm nay đơn giản và rõ ràng.",
+  "todayIntroProgress": "{completed} trên {total} thói quen đã hoàn thành cho hôm nay.",
+  "@todayIntroProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "summaryDone": "Xong",
+  "summaryToday": "Hôm nay",
+  "summaryBestStreak": "Chuỗi tốt nhất",
+  "summaryDays": "Ngày",
+  "summaryBuddies": "Buddy",
+  "summaryPrivate": "Riêng tư",
+  "nextUpTitle": "Tiếp theo",
+  "nextUpSubtitle": "Thói quen cần xong trước khi cả ngày trôi đi.",
+  "overdueTitle": "Quá hạn",
+  "overdueSubtitle": "Hoàn tất những việc này trước ngày mai.",
+  "laterTodayTitle": "Phần còn lại hôm nay",
+  "laterTodayEmpty": "Không còn thói quen nào sau ưu tiên kế tiếp.",
+  "laterTodayFilled": "Giữ phần còn lại của ngày thật dễ nhìn.",
+  "capturedTodayTitle": "Đã ghi lại hôm nay",
+  "capturedTodaySubtitle": "Khoảnh khắc bằng chứng và thói quen đã xong trong phiên này.",
+  "weeklyRecapTitle": "Tóm tắt tuần",
+  "weeklyRecapOpen": "Mở",
+  "weeklyRecapSummary": "{count} lần hoàn thành thói quen trong 7 ngày qua.",
+  "@weeklyRecapSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "needNewHabitTitle": "Cần một thói quen mới?",
+  "needNewHabitSubtitle": "Thêm ngay khi tiêu chuẩn vẫn còn rõ.",
+  "addAction": "Thêm",
+  "addHabitTitle": "Thêm thói quen",
+  "addHabitSubtitle": "Giữ nó đủ cụ thể để bạn biết chính xác khi nào là “xong”.",
+  "habitNameHint": "Tên thói quen",
+  "habitCategoryHint": "Nhóm (không bắt buộc)",
+  "habitTimeLabel": "Thời gian",
+  "pickTimeAction": "Chọn giờ",
+  "createHabitAction": "Tạo thói quen",
+  "emptyTodayTitle": "Bắt đầu với một tiêu chuẩn.",
+  "emptyTodaySubtitle": "Tạo thói quen đầu tiên bạn muốn chứng minh với chính mình hôm nay.",
+  "createFirstHabitAction": "Tạo thói quen đầu tiên",
+  "nothingCapturedTitle": "Chưa có gì được ghi lại",
+  "nothingCapturedSubtitle": "Hoàn thành một thói quen và gắn bằng chứng khi nó có ý nghĩa.",
+  "capturedProofAttached": "Đã gắn bằng chứng",
+  "capturedSavedOnly": "Chỉ lưu riêng",
+  "allHabitsHandledTitle": "Mọi thói quen đều xong",
+  "allHabitsHandledSubtitle": "Bạn đã xong cho hôm nay. Hãy ghi bằng chứng nếu đó là một chiến thắng đáng nhớ.",
+  "onlyOneThingLeftTitle": "Chỉ còn một việc",
+  "onlyOneThingLeftSubtitle": "Hoàn tất thói quen chính và bạn sẽ xong cả ngày.",
+  "heroOverdueNow": "Đang quá hạn",
+  "heroNextUp": "Tiếp theo",
+  "heroProofAttached": "Đã gắn bằng chứng",
+  "heroPrivateByDefault": "Riêng tư mặc định",
+  "heroNeedsRecovery": "Cần hoàn lại",
+  "heroOneTapToFinish": "Cần ảnh để hoàn thành",
+  "heroCompletedWithProof": "Hôm nay đã hoàn thành kèm bằng chứng",
+  "heroCompletedToday": "Hôm nay đã hoàn thành",
+  "completeNowAction": "Hoàn thành ngay",
+  "completeWithProofAction": "Hoàn thành bằng ảnh",
+  "proofLabel": "Bằng chứng",
+  "themeSettingsTitle": "Giao diện & cài đặt",
+  "themeSettingsSubtitle": "Tuỳ chọn ứng dụng và điều khiển cá nhân.",
+  "statsSectionTitle": "Thống kê",
+  "statsSectionSubtitle": "Những con số quan trọng lúc này.",
+  "weeklyWinsLabel": "Chiến thắng tuần",
+  "activeHabitsLabel": "Thói quen đang dùng",
+  "remindersSectionTitle": "Nhắc nhở",
+  "remindersSectionSubtitle": "Giữ vòng lặp kỷ luật luôn hiện rõ.",
+  "habitRemindersTitle": "Nhắc nhở thói quen",
+  "habitRemindersSubtitle": "{count} thói quen hiện đang có nhắc giờ.",
+  "@habitRemindersSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "archivedHabitsSectionTitle": "Thói quen lưu trữ",
+  "archivedHabitsSectionSubtitle": "Những tiêu chuẩn bạn tạm dừng chứ không xoá.",
+  "noArchivedHabitsTitle": "Chưa có thói quen lưu trữ",
+  "noArchivedHabitsSubtitle": "Những tiêu chuẩn bạn tạm dừng sẽ hiện ở đây.",
+  "archivedHabitFallback": "Thói quen đã lưu trữ",
+  "restoreAction": "Khôi phục",
+  "themeTitle": "Giao diện",
+  "themeSubtitle": "Đang dùng giao diện hệ thống",
+  "profileTitle": "Hồ sơ",
+  "profileSubtitle": "Tên hiển thị, username, ảnh đại diện",
+  "buddyCircleTitle": "Nhóm buddy",
+  "buddyCircleSubtitle": "Mời, xoá và quản lý những người đồng hành thân thiết",
+  "privacySupportSectionTitle": "Riêng tư & hỗ trợ",
+  "privacySupportSectionSubtitle": "Chính sách, hỗ trợ và thông tin phát hành.",
+  "privacyPolicySubtitle": "Đọc cách DoneDrop xử lý tài khoản và dữ liệu khoảnh khắc của bạn",
+  "termsSubtitle": "Các quy định khi dùng DoneDrop và tính năng buddy riêng tư",
+  "supportTitle": "Hỗ trợ",
+  "supportSubtitle": "Báo lỗi hoặc nhận trợ giúp ngay trong app",
+  "appVersionTitle": "Phiên bản ứng dụng",
+  "accountActionsSectionTitle": "Tác vụ tài khoản",
+  "accountActionsSectionSubtitle": "Đăng xuất, hoặc xoá vĩnh viễn tài khoản này.",
+  "deleteAccountTitle": "Xoá tài khoản",
+  "deleteAccountSubtitle": "Xoá vĩnh viễn hồ sơ, thói quen và khoảnh khắc của bạn",
+  "deleteAccountRemovingSubtitle": "Đang xoá dữ liệu tài khoản...",
+  "signOutAction": "Đăng xuất",
+  "themeSettingsSnackbarTitle": "Cài đặt giao diện",
+  "themeSettingsSnackbarMessage": "Điều khiển giao diện hiện đang theo cài đặt hệ thống của bạn.",
+  "setupTitle": "Thiết lập 3 thói quen đầu tiên",
+  "setupSubtitle": "Cho hôm nay một cấu trúc rõ ràng trước khi vào màn hình chính.",
+  "setupHabitTitle": "Thói quen {index}",
+  "@setupHabitTitle": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "setupHabitPrompt": "Bạn muốn cam kết làm điều gì?",
+  "setupHabitTimePrompt": "Hôm nay nó nên xuất hiện lúc nào?",
+  "setupPrimaryAction": "Bắt đầu ngày của tôi",
+  "setupValidationError": "Hãy tạo đủ 3 thói quen trước khi tiếp tục.",
+  "setupSaveError": "Không thể lưu 3 thói quen đầu tiên. Vui lòng thử lại.",
+  "setupMorningDefault": "Uống nước",
+  "setupMiddayDefault": "Đi bộ 10 phút",
+  "setupEveningDefault": "Đọc 20 trang",
+  "saveAction": "Lưu",
+  "closeAction": "Đóng",
+  "cancelAction": "Huỷ",
+  "continueAction": "Tiếp tục",
+  "deleteAction": "Xoá",
+  "removeAction": "Gỡ",
+  "doneAction": "Xong",
+  "searchAction": "Tìm",
+  "verifyAction": "Xác minh",
+  "genericErrorTitle": "Lỗi",
+  "statusPreviewOnly": "Chỉ xem trước",
+  "statusQueued": "Đã xếp hàng",
+  "statusPreparing": "Đang chuẩn bị",
+  "statusUploading": "Đang tải {progress}%",
+  "@statusUploading": {
+    "placeholders": {
+      "progress": {
+        "type": "int"
+      }
+    }
+  },
+  "statusSyncing": "Đang đồng bộ",
+  "statusFailed": "Thất bại",
+  "statusPosted": "Đã đăng",
+  "uploadStagePreparingImage": "Đang chuẩn bị ảnh…",
+  "uploadStageFinalizingMoment": "Đang hoàn tất khoảnh khắc…",
+  "uploadReady": "Sẵn sàng",
+  "buddyEmptyTitle": "Buddy feed của bạn được thiết kế riêng tư.",
+  "buddyEmptySubtitle": "Mời một vài người thân thiết mà bạn tin tưởng để vòng lặp chứng minh vẫn đủ gần gũi.",
+  "buddyViewWallAction": "Xem tường",
+  "inviteBuddyAction": "Mời buddy",
+  "manageCircleAction": "Quản lý vòng tròn ({count})",
+  "@manageCircleAction": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "wallSectionSubtitle": "Mọi bằng chứng bạn giữ lại, kể cả những khoảnh khắc đã chia sẻ.",
+  "wallLeadFallback": "Một lời hứa đã giữ vào {date}",
+  "@wallLeadFallback": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "wallTileFallback": "Đã lưu vào kho lưu trữ của bạn",
+  "wallEmptyTitle": "Giữ một lời hứa.",
+  "wallEmptySubtitle": "Tường sẽ lớn dần từ đó, từng tiêu chuẩn được giữ lại.",
+  "buddyWallTitle": "Tường của {name}",
+  "@buddyWallTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "buddyWallHeroSubtitle": "{count} khoảnh khắc đã chia sẻ để bạn xem lại.",
+  "@buddyWallHeroSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "buddyWallEmptyTitle": "Chưa có gì được chia sẻ.",
+  "buddyWallEmptySubtitle": "{name} vẫn chưa chia sẻ khoảnh khắc nào với bạn.",
+  "@buddyWallEmptySubtitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "reactionLoveLabel": "Yêu thích",
+  "reactionCelebrateLabel": "Chúc mừng",
+  "reactionInspiringLabel": "Truyền cảm hứng",
+  "friendFeedTitle": "Bảng feed buddy",
+  "markAllReadTooltip": "Đánh dấu tất cả là đã đọc",
+  "feedEmptyTitle": "Chưa có khoảnh khắc nào",
+  "feedEmptySubtitle": "Những khoảnh khắc bạn bè chia sẻ\nsẽ xuất hiện ở đây.",
+  "addFriendsAction": "Thêm buddy",
+  "memoryWallTitle": "Tường ký ức",
+  "memoryWallAllFilter": "Tất cả khoảnh khắc",
+  "memoryWallEmptyTitle": "Chưa có khoảnh khắc nào",
+  "memoryWallEmptySubtitle": "Kho lưu trữ những lời hứa bạn đã giữ\nsẽ xuất hiện ở đây.",
+  "createFirstMomentAction": "Tạo khoảnh khắc đầu tiên",
+  "deleteMomentTitle": "Xoá khoảnh khắc",
+  "deleteMomentMessage": "Bạn có chắc muốn xoá khoảnh khắc này không?",
+  "buddyCrewTitle": "Nhóm buddy",
+  "crewTabLabel": "Nhóm",
+  "crewTabCountLabel": "Nhóm ({count}/{limit})",
+  "@crewTabCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "requestsTabLabel": "Yêu cầu",
+  "noFriendsYetTitle": "Chưa có buddy nào",
+  "noFriendsYetSubtitle": "Thêm vài buddy để giữ trách nhiệm với chính mình.",
+  "addFriendAction": "Thêm buddy",
+  "removeFriendTitle": "Gỡ buddy",
+  "removeFriendMessage": "Gỡ buddy này chứ?",
+  "noPendingRequestsTitle": "Chưa có yêu cầu nào",
+  "noPendingRequestsSubtitle": "Yêu cầu đến và đi sẽ xuất hiện ở đây.",
+  "incomingSectionLabel": "ĐẾN",
+  "sentSectionLabel": "ĐÃ GỬI",
+  "friendRequestIncomingSubtitle": "Muốn kết bạn với bạn",
+  "friendRequestSentSubtitle": "Đã gửi yêu cầu kết bạn",
+  "friendAddedTitle": "Đã thêm buddy",
+  "friendAddedMessage": "{name} giờ đã là buddy của bạn",
+  "@friendAddedMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "friendRemovedTitle": "Đã gỡ buddy",
+  "friendRemovedMessage": "Mối quan hệ buddy đã được gỡ",
+  "addBuddyTitle": "Thêm buddy",
+  "findByUsernameTitle": "Tìm theo username",
+  "findByUsernameSubtitle": "Nhập username của họ để gửi yêu cầu buddy.",
+  "usernameLabel": "Username",
+  "usernameHint": "johndoe",
+  "buddyLimitReachedTitle": "Đã chạm giới hạn buddy",
+  "buddyLimitReachedSubtitle": "Gói miễn phí cho tối đa {limit} buddy. Nâng cấp để thêm nhiều hơn.",
+  "@buddyLimitReachedSubtitle": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "enterUsernameError": "Hãy nhập username",
+  "usernameTooShort": "Username phải có ít nhất 3 ký tự",
+  "ownUsernameError": "Đó là username của chính bạn",
+  "friendCapReachedError": "Bạn đã đạt tối đa {limit} buddy.",
+  "@friendCapReachedError": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "requestSentTitle": "Đã gửi yêu cầu",
+  "requestSentMessage": "Đã gửi yêu cầu kết bạn tới {name}",
+  "@requestSentMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sendBuddyRequestPrompt": "Gửi yêu cầu buddy chứ?",
+  "sendBuddyRequestAction": "Gửi yêu cầu buddy",
+  "requestSentSuccessTitle": "Đã gửi yêu cầu!",
+  "requestSentSuccessMessage": "Đã gửi yêu cầu buddy tới {name}",
+  "@requestSentSuccessMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "addAnotherBuddyAction": "Thêm buddy khác",
+  "chatOpenAction": "Nhắn tin",
+  "chatScreenSubtitle": "Trò chuyện riêng tư với buddy này.",
+  "chatEmptyTitle": "Bắt đầu cuộc trò chuyện",
+  "chatEmptySubtitle": "Giữ liên lạc riêng tư và rõ ràng với buddy này.",
+  "chatInputHint": "Nhắn gì đó...",
+  "chatSendAction": "Gửi",
+  "profileFieldDisplayName": "TÊN HIỂN THỊ",
+  "profileFieldBio": "GIỚI THIỆU",
+  "profileNameHint": "Tên của bạn",
+  "profileBioHint": "Giới thiệu ngắn để bạn bè hiểu thêm về bạn",
+  "dangerZoneLabel": "VÙNG NGUY HIỂM",
+  "notificationSettingsTitle": "Thông báo",
+  "notificationCenterEmptyTitle": "Chưa có thông báo nào.",
+  "notificationCenterEmptySubtitle": "Yêu cầu kết bạn và khoảnh khắc mới từ buddy sẽ hiện ở đây.",
+  "notificationPermissionOffSubtitle": "Cho phép thông báo để app nhắc bạn đúng giờ của từng task.",
+  "notificationExactAlarmOffSubtitle": "Bật báo thức chính xác để Android đẩy nhắc nhở đúng phút trên thiết bị này.",
+  "momentRemindersTitle": "Nhắc ghi khoảnh khắc",
+  "momentRemindersSubtitle": "Nhận một lời nhắc nhẹ mỗi ngày để ghi lại khoảnh khắc của bạn.",
+  "notificationReminderTitle": "Nhắc nhở",
+  "notificationReminderDesc": "Bật hoặc tắt nhắc nhở hằng ngày",
+  "notificationTimeTitle": "Thời gian",
+  "weeklyRecapSettingsTitle": "Tóm tắt tuần",
+  "weeklyRecapSettingsSubtitle": "Nhận bản tóm tắt hằng tuần về các khoảnh khắc của bạn.",
+  "weeklyRecapToggleTitle": "Tóm tắt",
+  "weeklyRecapToggleDesc": "Bật hoặc tắt tóm tắt hằng tuần",
+  "notificationDayTitle": "Ngày",
+  "requestNotificationPermissionAction": "Yêu cầu quyền thông báo",
+  "selectDayTitle": "Chọn ngày",
+  "dayMonShort": "Th 2",
+  "dayTueShort": "Th 3",
+  "dayWedShort": "Th 4",
+  "dayThuShort": "Th 5",
+  "dayFriShort": "Th 6",
+  "daySatShort": "Th 7",
+  "daySunShort": "CN",
+  "settingsArchiveTitle": "Kho lưu trữ",
+  "settingsTitle": "Cài đặt",
+  "settingsSubtitle": "Tinh chỉnh trải nghiệm cá nhân của bạn",
+  "premiumBannerTitle": "DoneDrop Premium",
+  "premiumBannerSubtitle": "Mở khoá thêm buddy và giao diện cao cấp.",
+  "preferencesTitle": "Tuỳ chọn",
+  "habitRemindersSettingTitle": "Nhắc nhở thói quen",
+  "habitRemindersSettingSubtitle": "Những lời nhắc nhẹ mỗi ngày để hoàn thành thói quen",
+  "schedulePreferencesTitle": "Lịch & tuỳ chọn",
+  "schedulePreferencesSubtitle": "Giờ nhắc, ngày recap và nhiều hơn nữa",
+  "privacySharingTitle": "Riêng tư & chia sẻ",
+  "profileSettingsDescFallback": "Chỉnh tên, ảnh đại diện và bio của bạn",
+  "friendsSettingsTitle": "Buddy",
+  "friendsSettingsSubtitle": "Quản lý những người đồng hành của bạn",
+  "visibilitySettingsTitle": "Hiển thị",
+  "visibilitySettingsSubtitle": "Thiết lập hiện tại: Chỉ cá nhân",
+  "signOutTitle": "Đăng xuất",
+  "signOutSubtitle": "Đăng xuất khỏi tài khoản của bạn",
+  "signOutDialogMessage": "Bạn có chắc muốn đăng xuất không?",
+  "profileSaved": "Đã lưu hồ sơ",
+  "uploadAvatarFailed": "Tải ảnh đại diện thất bại",
+  "profileNameEmpty": "Tên không được để trống",
+  "deleteAccountDialogMessage": "Thao tác này sẽ xoá vĩnh viễn hồ sơ, thói quen, khoảnh khắc chứng minh và dữ liệu buddy riêng tư của bạn khỏi DoneDrop. Nếu sau này có tính phí, việc huỷ đăng ký vẫn phải thực hiện qua cửa hàng ứng dụng.",
+  "keepAccountAction": "Giữ tài khoản",
+  "verificationRequiredTitle": "Cần xác minh",
+  "verificationRequiredFallback": "Không thể xác minh tài khoản. Vui lòng thử lại.",
+  "deleteFailedTitle": "Xoá thất bại",
+  "deleteFailedFallback": "Không thể xoá dữ liệu tài khoản.",
+  "deleteIncompleteTitle": "Xoá chưa hoàn tất",
+  "deleteIncompleteFallback": "Không thể xoá thông tin xác thực tài khoản.",
+  "accountDeletedTitle": "Đã xoá tài khoản",
+  "accountDeletedMessage": "Tài khoản DoneDrop của bạn đã được xoá khỏi thiết bị này.",
+  "verifyWithGoogleTitle": "Xác minh bằng Google",
+  "verifyWithGoogleMessage": "Để bảo vệ tài khoản, hãy tiếp tục với Google thêm một lần nữa trước khi xoá.",
+  "unsupportedDeletionMethod": "Phương thức đăng nhập này hiện chưa hỗ trợ xoá tài khoản trong app. Hãy đăng nhập lại bằng một phương thức được hỗ trợ rồi thử lại.",
+  "confirmPasswordTitle": "Xác nhận mật khẩu",
+  "currentPasswordHint": "Nhập mật khẩu hiện tại của bạn",
+  "reportTitle": "Báo cáo",
+  "reportContentTitle": "Báo cáo nội dung",
+  "reportContentSubtitle": "Giúp chúng tôi giữ DoneDrop an toàn. Hãy chọn lý do báo cáo.",
+  "reportAdditionalDetailsHint": "Chi tiết thêm (không bắt buộc)",
+  "submitReportAction": "Gửi báo cáo",
+  "reportSubmittedTitle": "Đã gửi báo cáo",
+  "reportSubmittedMessage": "Cảm ơn bạn đã giúp giữ DoneDrop an toàn. Chúng tôi sẽ xem xét báo cáo của bạn sớm.",
+  "reportReasonRequiredTitle": "Vui lòng chọn một lý do",
+  "reportSubmitFailedTitle": "Gửi báo cáo thất bại",
+  "reportSubmitFailedMessage": "Vui lòng thử lại.",
+  "weeklyRecapLoadFailed": "Không thể tải tóm tắt tuần",
+  "reportReasonInappropriate": "Nội dung không phù hợp",
+  "reportReasonHarassment": "Quấy rối hoặc bắt nạt",
+  "reportReasonSpam": "Spam hoặc gây hiểu lầm",
+  "reportReasonPrivacy": "Lo ngại về quyền riêng tư",
+  "reportReasonOther": "Lý do khác",
+  "forgotPasswordTitle": "Đặt lại mật khẩu",
+  "forgotPasswordSubtitle": "Nhập email của bạn và chúng tôi sẽ gửi liên kết để đặt lại mật khẩu.",
+  "checkYourEmailTitle": "Kiểm tra email",
+  "checkYourEmailMessage": "Chúng tôi đã gửi liên kết đặt lại mật khẩu tới\n{email}.\nHãy kiểm tra hộp thư đến và cả thư rác.",
+  "@checkYourEmailMessage": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "backToSignInAction": "Quay lại đăng nhập",
+  "sendResetLinkAction": "Gửi liên kết đặt lại",
+  "forgotPasswordUnexpectedError": "Đã có lỗi xảy ra. Vui lòng thử lại.",
+  "forgotPasswordUserNotFound": "Không tìm thấy tài khoản với email này.",
+  "forgotPasswordInvalidEmail": "Vui lòng nhập một email hợp lệ.",
+  "forgotPasswordUnableToSend": "Không thể gửi email đặt lại. Vui lòng thử lại.",
+  "premiumHiddenTitle": "Premium bị ẩn trong bản build này",
+  "premiumHiddenMessage": "Billing của store chưa được nối thật, nên subscription vẫn bị tắt cho tới khi mua hàng native sẵn sàng.",
+  "premiumScreenTitle": "Premium sẽ tắt cho tới khi billing là thật",
+  "premiumScreenSubtitle": "Bản build này loại bỏ mọi luồng mua giả. Khi StoreKit và Play Billing được nối thật, giá, restore, gia hạn và huỷ sẽ hiển thị tại đây.",
+  "premiumWhatUnlocksTitle": "Những gì sẽ mở khoá sau này",
+  "premiumWhatUnlocksSubtitle": "Giá, điều khoản dùng thử, restore, thông tin tự gia hạn và liên kết quản lý subscription sẽ chỉ xuất hiện khi native billing hoàn chỉnh.",
+  "premiumBenefitUnlimitedFriendsTitle": "Buddy không giới hạn",
+  "premiumBenefitUnlimitedFriendsDesc": "Kết nối với toàn bộ những người đồng hành của bạn.",
+  "premiumBenefitAdvancedFiltersTitle": "Bộ lọc nâng cao",
+  "premiumBenefitAdvancedFiltersDesc": "Tìm theo tâm trạng, người liên quan hoặc các chủ đề tinh tế.",
+  "premiumBenefitCustomThemesTitle": "Giao diện recap tuỳ chỉnh",
+  "premiumBenefitCustomThemesDesc": "Bố cục giàu chất biên tập dành riêng cho cuốn sổ ký ức của bạn.",
+  "premiumBenefitHighResBackupsTitle": "Sao lưu độ phân giải cao",
+  "premiumBenefitHighResBackupsDesc": "Lưu trữ không giảm chất lượng cho mọi bức ảnh bạn trân trọng.",
+  "premiumUnavailableAction": "Premium chưa khả dụng trong bản build này",
+  "premiumFooterNote": "Premium được cố ý ẩn cho tới khi billing đạt chuẩn store từ đầu đến cuối.",
+  "momentSavedTitle": "Đã lưu khoảnh khắc",
+  "savedForSyncTitle": "Đã lưu để đồng bộ",
+  "proofCapturedMessage": "Thói quen đã hoàn thành. Bằng chứng đã được ghi lại.",
+  "quietProofMessage": "Một bằng chứng nhỏ cho nỗ lực của bạn.",
+  "backToTodayAction": "Quay lại Hôm nay",
+  "openBuddyAction": "Mở Buddy",
+  "capturePhotoRequired": "Chưa chọn ảnh",
+  "authRequiredMessage": "Bạn cần đăng nhập",
+  "captureUnavailableTitle": "Không mở được camera",
+  "captureUnavailableMessage": "Không thể mở camera để chụp bằng chứng. Hãy thử lại.",
+  "captureSelectBuddyError": "Hãy chọn ít nhất một buddy trước khi chia sẻ.",
+  "timeJustNow": "Vừa xong",
+  "timeMinutesAgo": "{count} phút trước",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeHoursAgo": "{count} giờ trước",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeDaysAgo": "{count} ngày trước",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "visibilityCrew": "Nhóm",
+  "visibilityBuddy": "Buddy",
+  "visibilityPrivate": "Riêng tư",
+  "visibilityFriends": "Bạn bè",
+  "visibilitySelected": "Đã chọn",
+  "visibilityPersonal": "Cá nhân",
+  "momentPostFailed": "Đăng khoảnh khắc thất bại: {error}",
+  "@momentPostFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "offlineSyncQueuedMessage": "Sẽ tải lên khi bạn trở lại trực tuyến.",
+  "captureOpeningProofCamera": "Đang mở camera bằng chứng…",
+  "captureProofTitle": "Chụp bằng chứng",
+  "captureMomentTitle": "Chụp khoảnh khắc",
+  "captureSourceCameraTitle": "Camera",
+  "captureSourceCameraSubtitle": "Bằng chứng rõ nhất là ngay lúc này.",
+  "captureSourceGalleryTitle": "Thư viện",
+  "captureSourceGallerySubtitle": "Những chiến thắng gần đây của bạn vẫn đang chờ.",
+  "captureHeroProofBadge": "Hoàn thành + bằng chứng",
+  "captureHeroMomentBadge": "Lưu hoặc chia sẻ sau",
+  "captureHeroProofTitle": "Ghi lại bằng chứng khi chiến thắng còn mới.",
+  "captureHeroMomentTitle": "Thêm ảnh khi khoảnh khắc đó thật sự đáng nhớ.",
+  "captureHeroProofSubtitle": "Thói quen chỉ được tính khi bạn lưu một ảnh thật làm bằng chứng.",
+  "captureHeroMomentSubtitle": "Bạn có thể giữ riêng, gắn vào thói quen sau, hoặc chia sẻ với vòng buddy.",
+  "captureChooseSource": "Chọn nguồn ảnh",
+  "previewProofTitle": "Xem trước bằng chứng",
+  "previewMomentTitle": "Xem trước khoảnh khắc",
+  "postAction": "Đăng",
+  "previewProofBadge": "Bằng chứng thói quen",
+  "previewMomentBadge": "Khoảnh khắc riêng tư",
+  "previewProofSummaryTitle": "Lưu ảnh bằng chứng này sẽ chốt việc hoàn thành thói quen.",
+  "previewMomentSummaryTitle": "Bạn có thể lưu riêng hoặc chia sẻ với một vòng buddy nhỏ.",
+  "previewProofSummarySubtitle": "Chúng tôi sẽ đánh dấu thói quen là đã xong, gắn ảnh này làm bằng chứng và đồng bộ toàn bộ ngay khi có thể.",
+  "previewMomentSummarySubtitle": "Giữ vòng lặp thật đơn giản: chỉ lưu, thêm bằng chứng hoặc chia sẻ riêng tư.",
+  "previewProofCaptionHint": "Bạn vừa hoàn thành điều gì?",
+  "previewMomentCaptionHint": "Vì sao khoảnh khắc này đáng nhớ?",
+  "captionLabel": "Chú thích",
+  "categoryLabel": "Danh mục",
+  "noneLabel": "Không có",
+  "audienceTitle": "Ai sẽ thấy điều này",
+  "audienceOnlyMe": "Chỉ mình tôi",
+  "audienceSharePrivately": "Chia sẻ riêng tư",
+  "audienceCloseCrew": "Nhóm thân thiết",
+  "previewAddBuddyFirst": "Hãy thêm buddy trước để chia sẻ bằng chứng riêng tư.",
+
+  "confirmSignOutTitle": "Xác nhận đăng xuất",
+  "confirmSignOutMessage": "Bạn có chắc muốn đăng xuất khỏi tài khoản không?",
+  "confirmSignOutTabHint": "Nhập để xác nhận",
+  "confirmSignOutPlaceholder": "đăng xuất",
+  "confirmDeleteAccountTitle": "Xoá tài khoản",
+  "confirmDeleteAccountMessage": "Thao tác này sẽ xoá vĩnh viễn tài khoản và toàn bộ dữ liệu liên quan. Không thể hoàn tác.",
+  "confirmDeleteAccountTabHint": "Nhập để xác nhận xoá",
+  "confirmDeleteAccountPlaceholder": "xoá tài khoản của tôi",
+  "confirmFieldRequired": "Trường này không được để trống",
+  "confirmFieldMismatch": "Văn bản không khớp. Vui lòng thử lại.",
+  "softDeleteInitiatedTitle": "Tài khoản đã lên lịch xoá",
+  "softDeleteInitiatedMessage": "Tài khoản của bạn đã được lên lịch xoá. Bạn có 30 ngày để huỷ yêu cầu này bằng cách đăng nhập lại.",
+  "cancelRequestTitle": "Huỷ yêu cầu",
+  "cancelRequestMessage": "Bạn có chắc muốn huỷ yêu cầu này không?",
+  "declineRequestTitle": "Từ chối yêu cầu",
+  "declineRequestMessage": "Bạn có chắc muốn từ chối yêu cầu này không?",
+  "actionSuccess": "Thành công",
+  "savedSuccessfully": "Lưu thành công",
+  "updatedSuccessfully": "Cập nhật thành công",
+  "removedSuccessfully": "Đã xoá thành công",
+  "actionFailed": "Thao tác thất bại",
+  "tryAgainLater": "Vui lòng thử lại sau",
+  "networkError": "Lỗi mạng. Vui lòng kiểm tra kết nối.",
+  "errorTitle": "Lỗi",
+  "successTitle": "Thành công",
+  "leaderboardTitle": "Bảng xếp hạng",
+  "leaderboardPeriodToday": "Hôm nay",
+  "leaderboardPeriodWeek": "Tuần",
+  "leaderboardPeriodMonth": "Tháng",
+  "leaderboardPeriodAll": "Tất cả",
+  "leaderboardDoneLabel": "đã xong",
+  "leaderboardNoFriendsTitle": "Chưa có bạn nào",
+  "leaderboardNoFriendsSubtitle": "Hãy thêm bạn để cùng nhau lên bảng xếp hạng.",
+  "leaderboardDayStreak": "chuỗi {count} ngày",
+  "@leaderboardDayStreak": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "streakJourneyTitle": "Hành trình chuỗi",
+  "streakActivityStreaksTitle": "Chuỗi theo thói quen",
+  "streakNoActivitiesYet": "Chưa có thói quen nào. Hãy tạo một thói quen để bắt đầu chuỗi của bạn!",
+  "streakBestTitle": "Chuỗi tốt nhất của bạn",
+  "streakStartTitle": "Hãy bắt đầu chuỗi của bạn!",
+  "streakBestStatLabel": "Tốt nhất",
+  "streakTotalStatLabel": "Tổng",
+  "streakActiveStatLabel": "Đang chạy",
+  "streakMilestoneRoadmapTitle": "Lộ trình mốc",
+  "streakDaysToGo": "còn {count} ngày",
+  "@streakDaysToGo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "streakLastCompleted": "Lần cuối: {value}",
+  "@streakLastCompleted": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "streakBestShort": "tốt nhất: {count}d",
+  "@streakBestShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "streakTodayShort": "Hôm nay",
+  "streakYesterdayShort": "Hôm qua",
+  "streakDaysAgo": "{count} ngày trước",
+  "@streakDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "streakDaysUnit": "ngày",
+  "streakMilestoneGettingStarted": "Khởi động",
+  "streakMilestoneOneWeek": "Một tuần",
+  "streakMilestoneTwoWeeks": "Hai tuần",
+  "streakMilestoneThreeWeeks": "Ba tuần",
+  "streakMilestoneOneMonth": "Một tháng",
+  "streakMilestoneTwoMonths": "Hai tháng",
+  "streakMilestoneQuarter": "Một quý",
+  "streakMilestoneCentury": "Trăm ngày",
+  "streakMilestoneHalfYear": "Nửa năm",
+  "streakMilestoneOneYear": "Một năm",
+  "streakMilestoneReachedTitle": "Bạn vừa đạt mốc mới!",
+  "streakKeepGoingAction": "Tiếp tục thôi!",
+  "recapTitle": "Tuần của bạn qua từng khoảnh khắc",
+  "recapQuote": "\"Bạn đang xây một cuộc sống đẹp,\\ntừng khoảnh khắc một.\"",
+  "recapMomentsStatLabel": "KHOẢNH KHẮC",
+  "recapDayStreakStatLabel": "CHUỖI NGÀY",
+  "recapNoMomentsYet": "Tuần này bạn chưa có khoảnh khắc nào.",
+  "recapShareTitle": "Sẵn sàng chia sẻ câu chuyện này chưa?",
+  "recapCaptureMomentAction": "Chụp một khoảnh khắc",
+  "recapDisciplineActivitiesTitle": "Các thói quen kỷ luật",
+  "recapTodayLabel": "Hôm nay",
+  "recapYesterdayLabel": "Hôm qua"
+}

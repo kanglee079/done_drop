@@ -8,6 +8,7 @@ class _SettingsTab extends StatelessWidget {
     return Obx(() {
       final homeController = Get.find<HomeController>();
       final settingsController = Get.find<SettingsController>();
+      final l10n = context.l10n;
 
       return ListView(
         padding: const EdgeInsets.fromLTRB(
@@ -19,7 +20,8 @@ class _SettingsTab extends StatelessWidget {
         children: [
           _MeProfileCard(
             displayName:
-                homeController.profile.value?.displayName ?? 'DoneDrop member',
+                homeController.profile.value?.displayName ??
+                l10n.memberFallbackName,
             email: settingsController.userEmail,
             completedToday: homeController.completedToday.value,
             bestStreak: homeController.currentBestStreak.value,
@@ -27,22 +29,22 @@ class _SettingsTab extends StatelessWidget {
           ),
           const SizedBox(height: AppSizes.space20),
           _MeSection(
-            title: 'Stats',
-            subtitle: 'The numbers that matter right now.',
+            title: l10n.statsSectionTitle,
+            subtitle: l10n.statsSectionSubtitle,
           ),
           const SizedBox(height: AppSizes.space12),
           Row(
             children: [
               Expanded(
                 child: _MeStatCard(
-                  label: 'Weekly wins',
+                  label: l10n.weeklyWinsLabel,
                   value: '${homeController.weeklyCompletionCount}',
                 ),
               ),
               const SizedBox(width: AppSizes.space12),
               Expanded(
                 child: _MeStatCard(
-                  label: 'Active habits',
+                  label: l10n.activeHabitsLabel,
                   value: '${homeController.totalHabits}',
                 ),
               ),
@@ -50,31 +52,32 @@ class _SettingsTab extends StatelessWidget {
           ),
           const SizedBox(height: AppSizes.space20),
           _MeSection(
-            title: 'Reminders',
-            subtitle: 'Keep the discipline loop visible.',
+            title: l10n.remindersSectionTitle,
+            subtitle: l10n.remindersSectionSubtitle,
           ),
           const SizedBox(height: AppSizes.space12),
           Obx(
             () => _MeToggleTile(
               icon: Icons.notifications_none_rounded,
-              title: 'Habit reminders',
-              subtitle:
-                  '${homeController.reminderCount} habits currently have reminders.',
+              title: l10n.habitRemindersTitle,
+              subtitle: l10n.habitRemindersSubtitle(
+                homeController.reminderCount,
+              ),
               value: settingsController.momentReminders.value,
               onChanged: settingsController.toggleMomentReminders,
             ),
           ),
           const SizedBox(height: AppSizes.space20),
           _MeSection(
-            title: 'Archived habits',
-            subtitle: 'Standards you have paused, not deleted.',
+            title: l10n.archivedHabitsSectionTitle,
+            subtitle: l10n.archivedHabitsSectionSubtitle,
           ),
           const SizedBox(height: AppSizes.space12),
           if (homeController.archivedActivities.isEmpty)
-            const _MeInfoTile(
+            _MeInfoTile(
               icon: Icons.archive_outlined,
-              title: 'No archived habits',
-              subtitle: 'Standards you pause will show here.',
+              title: l10n.noArchivedHabitsTitle,
+              subtitle: l10n.noArchivedHabitsSubtitle,
             )
           else
             ...homeController.archivedActivities
@@ -86,12 +89,12 @@ class _SettingsTab extends StatelessWidget {
                       key: ValueKey('archived-${activity.id}'),
                       icon: Icons.archive_outlined,
                       title: activity.title,
-                      subtitle: activity.category ?? 'Archived habit',
+                      subtitle: activity.category ?? l10n.archivedHabitFallback,
                       trailing: TextButton(
                         onPressed: () =>
                             homeController.restoreActivity(activity.id),
                         child: Text(
-                          'Restore',
+                          l10n.restoreAction,
                           style: AppTypography.labelMedium(
                             color: AppColors.primary,
                           ),
@@ -101,80 +104,89 @@ class _SettingsTab extends StatelessWidget {
                   ),
                 ),
           const SizedBox(height: AppSizes.space20),
-          const _MeSection(
-            title: 'Theme & settings',
-            subtitle: 'App preferences and personal controls.',
+          _MeSection(
+            title: l10n.themeSettingsTitle,
+            subtitle: l10n.themeSettingsSubtitle,
           ),
           const SizedBox(height: AppSizes.space12),
           _MeLinkTile(
             icon: Icons.palette_outlined,
-            title: 'Theme',
-            subtitle: 'Using system theme',
+            title: l10n.themeTitle,
+            subtitle: l10n.themeSubtitle,
             onTap: () => Get.snackbar(
-              'Theme settings',
-              'Theme controls are currently following your system setting.',
+              l10n.themeSettingsSnackbarTitle,
+              l10n.themeSettingsSnackbarMessage,
               snackPosition: SnackPosition.BOTTOM,
+            ),
+          ),
+          const SizedBox(height: AppSizes.space12),
+          Obx(
+            () => _MeLinkTile(
+              icon: Icons.language_rounded,
+              title: l10n.languageLabel,
+              subtitle: settingsController.currentLanguageLabel,
+              onTap: () => _showLanguageSheet(context, settingsController),
             ),
           ),
           const SizedBox(height: AppSizes.space12),
           _MeLinkTile(
             icon: Icons.person_outline_rounded,
-            title: 'Profile',
-            subtitle: 'Display name, username, avatar',
+            title: l10n.profileTitle,
+            subtitle: l10n.profileSubtitle,
             onTap: () => Get.toNamed(AppRoutes.profile),
           ),
           const SizedBox(height: AppSizes.space12),
           _MeLinkTile(
             icon: Icons.group_outlined,
-            title: 'Buddy circle',
-            subtitle: 'Invite, remove, and manage close accountability friends',
+            title: l10n.buddyCircleTitle,
+            subtitle: l10n.buddyCircleSubtitle,
             onTap: () => Get.toNamed(AppRoutes.friends),
           ),
           const SizedBox(height: AppSizes.space20),
-          const _MeSection(
-            title: 'Privacy & support',
-            subtitle: 'Policies, help, and release details.',
+          _MeSection(
+            title: l10n.privacySupportSectionTitle,
+            subtitle: l10n.privacySupportSectionSubtitle,
           ),
           const SizedBox(height: AppSizes.space12),
           _MeLinkTile(
             icon: Icons.privacy_tip_outlined,
-            title: 'Privacy policy',
-            subtitle: 'Read how DoneDrop handles your account and moment data',
+            title: l10n.privacyPolicy,
+            subtitle: l10n.privacyPolicySubtitle,
             onTap: settingsController.openPrivacyPolicy,
           ),
           const SizedBox(height: AppSizes.space12),
           _MeLinkTile(
             icon: Icons.description_outlined,
-            title: 'Terms of service',
-            subtitle: 'The rules for using DoneDrop and private buddy features',
+            title: l10n.termsOfService,
+            subtitle: l10n.termsSubtitle,
             onTap: settingsController.openTermsOfService,
           ),
           const SizedBox(height: AppSizes.space12),
           _MeLinkTile(
             icon: Icons.support_agent_outlined,
-            title: 'Support',
-            subtitle: 'Report an issue or get help from inside the app',
+            title: l10n.supportTitle,
+            subtitle: l10n.supportSubtitle,
             onTap: settingsController.openSupport,
           ),
           const SizedBox(height: AppSizes.space12),
           _MeInfoTile(
             icon: Icons.info_outline_rounded,
-            title: 'App version',
+            title: l10n.appVersionTitle,
             subtitle: settingsController.buildLabel,
           ),
           const SizedBox(height: AppSizes.space20),
-          const _MeSection(
-            title: 'Account actions',
-            subtitle: 'Sign out, or permanently remove this account.',
+          _MeSection(
+            title: l10n.accountActionsSectionTitle,
+            subtitle: l10n.accountActionsSectionSubtitle,
           ),
           const SizedBox(height: AppSizes.space12),
           Obx(
             () => _MeDangerTile(
               icon: Icons.delete_outline_rounded,
-              title: 'Delete account',
+              title: l10n.deleteAccountTitle,
               subtitle: settingsController.isDeletingAccount.value
-                  ? 'Removing your account data...'
-                  : 'Permanently delete your profile, habits, and moments',
+                  ? l10n.deleteAccountRemovingSubtitle
+                  : l10n.deleteAccountSubtitle,
               onTap: settingsController.isDeletingAccount.value
                   ? null
                   : settingsController.deleteAccount,
@@ -185,9 +197,9 @@ class _SettingsTab extends StatelessWidget {
             () => OutlinedButton.icon(
               onPressed: settingsController.isDeletingAccount.value
                   ? null
-                  : settingsController.signOut,
+                  : () => _showSignOutDialog(context, settingsController),
               icon: const Icon(Icons.logout_rounded),
-              label: const Text('Sign out'),
+              label: Text(l10n.signOutAction),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.error,
                 side: const BorderSide(color: AppColors.error),
@@ -197,6 +209,113 @@ class _SettingsTab extends StatelessWidget {
         ],
       );
     });
+  }
+
+  void _showLanguageSheet(BuildContext context, SettingsController controller) {
+    final l10n = context.l10n;
+
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.fromLTRB(
+          AppSizes.space24,
+          AppSizes.space20,
+          AppSizes.space24,
+          AppSizes.space32,
+        ),
+        decoration: const BoxDecoration(
+          color: AppColors.surfaceContainerLowest,
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(AppSizes.radiusXl),
+          ),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.languageLabel,
+                style: AppTypography.headlineSmall(color: AppColors.onSurface),
+              ),
+              const SizedBox(height: AppSizes.space12),
+              _LanguageOptionTile(
+                label: l10n.languageEnglish,
+                selected: controller.currentLanguageCode == 'en',
+                onTap: () async {
+                  await controller.changeLanguage('en');
+                  Get.back();
+                },
+              ),
+              const SizedBox(height: AppSizes.space8),
+              _LanguageOptionTile(
+                label: l10n.languageVietnamese,
+                selected: controller.currentLanguageCode == 'vi',
+                onTap: () async {
+                  await controller.changeLanguage('vi');
+                  Get.back();
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showSignOutDialog(BuildContext context, SettingsController ctrl) async {
+    final l10n = context.l10n;
+    final confirmed = await ConfirmDialog.show(
+      context: context,
+      title: l10n.confirmSignOutTitle,
+      message: l10n.confirmSignOutMessage,
+      isDestructive: true,
+    );
+
+    if (confirmed) {
+      await ctrl.signOut();
+    }
+  }
+}
+
+class _LanguageOptionTile extends StatelessWidget {
+  const _LanguageOptionTile({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: AppSizes.borderRadiusMd,
+      child: Ink(
+        padding: const EdgeInsets.all(AppSizes.space16),
+        decoration: BoxDecoration(
+          color: selected
+              ? AppColors.primaryFixed
+              : AppColors.surfaceContainerLow,
+          borderRadius: AppSizes.borderRadiusMd,
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: AppTypography.titleMedium(color: AppColors.onSurface),
+              ),
+            ),
+            if (selected)
+              const Icon(Icons.check_rounded, color: AppColors.primary),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -264,9 +383,18 @@ class _MeProfileCard extends StatelessWidget {
           const SizedBox(height: AppSizes.space20),
           Row(
             children: [
-              _ProfileMetric(label: 'Done today', value: '$completedToday'),
-              _ProfileMetric(label: 'Best streak', value: '$bestStreak'),
-              _ProfileMetric(label: 'Buddies', value: '$buddyCount'),
+              _ProfileMetric(
+                label: context.l10n.summaryDone,
+                value: '$completedToday',
+              ),
+              _ProfileMetric(
+                label: context.l10n.summaryBestStreak,
+                value: '$bestStreak',
+              ),
+              _ProfileMetric(
+                label: context.l10n.summaryBuddies,
+                value: '$buddyCount',
+              ),
             ],
           ),
         ],
@@ -335,25 +463,29 @@ class _MeStatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSizes.space16),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
-        borderRadius: AppSizes.borderRadiusLg,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: AppTypography.bodySmall(color: AppColors.onSurfaceVariant),
-          ),
-          const SizedBox(height: AppSizes.space8),
-          Text(
-            value,
-            style: AppTypography.titleLarge(color: AppColors.onSurface),
-          ),
-        ],
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: AppSizes.metricCardMinHeight),
+      child: Container(
+        padding: const EdgeInsets.all(AppSizes.space16),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceContainerLowest,
+          borderRadius: AppSizes.borderRadiusLg,
+          border: Border.all(color: AppColors.outlineVariant),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: AppTypography.bodySmall(color: AppColors.onSurfaceVariant),
+            ),
+            const SizedBox(height: AppSizes.space8),
+            Text(
+              value,
+              style: AppTypography.titleLarge(color: AppColors.onSurface),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -474,6 +606,7 @@ class _MeArchiveTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final trailingChildren = trailing == null ? null : <Widget>[trailing!];
     return Container(
       padding: const EdgeInsets.all(AppSizes.space16),
       decoration: BoxDecoration(
@@ -502,7 +635,7 @@ class _MeArchiveTile extends StatelessWidget {
               ],
             ),
           ),
-          if (trailing case final trailing?) trailing,
+          ...?trailingChildren,
         ],
       ),
     );

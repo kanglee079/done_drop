@@ -2,12 +2,38 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:camera/camera.dart';
 
 import 'package:done_drop/app/core/widgets/widgets.dart';
+import 'package:done_drop/app/presentation/auth/forgot_password_screen.dart';
+import 'package:done_drop/app/presentation/buddy_wall/buddy_wall_controller.dart';
+import 'package:done_drop/app/presentation/buddy_wall/buddy_wall_screen.dart';
+import 'package:done_drop/app/presentation/capture/capture_screen.dart';
 import 'package:done_drop/app/presentation/onboarding/onboarding_screen.dart';
 import 'package:done_drop/app/presentation/premium/premium_screen.dart';
+import 'package:done_drop/app/presentation/capture/moment_controller.dart';
+import 'package:done_drop/core/services/capture_camera_service.dart';
 import 'package:done_drop/features/auth/data/onboarding_service.dart';
 import 'package:done_drop/features/auth/presentation/controllers/onboarding_controller.dart';
+
+class _FakeCaptureCameraService extends CaptureCameraService {
+  @override
+  Future<List<CameraDescription>> warmAvailableCameras() async => const [];
+
+  @override
+  Future<bool> hasMultipleCameras() async => false;
+
+  @override
+  Future<CameraController> createController({
+    CameraLensDirection lensDirection = CameraLensDirection.back,
+    ResolutionPreset resolutionPreset = ResolutionPreset.medium,
+  }) {
+    throw CameraException(
+      'unavailable',
+      'Camera is not available in widget tests.',
+    );
+  }
+}
 
 Future<void> _pumpResponsiveApp(
   WidgetTester tester, {
@@ -93,12 +119,82 @@ void main() {
         size: const Size(320, 640),
         textScale: 1.5,
         child: Scaffold(
-          bottomNavigationBar: DDBottomNavBar(currentIndex: 0, onTap: (_) {}),
+          bottomNavigationBar: DDBottomNavBar(
+            currentIndex: 0,
+            onTap: (_) {},
+            onCaptureTap: () {},
+          ),
         ),
       );
 
       expect(find.byIcon(Icons.today), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
+
+    testWidgets('ForgotPasswordScreen survives phone and tablet widths', (
+      tester,
+    ) async {
+      await _pumpResponsiveApp(
+        tester,
+        size: const Size(320, 640),
+        textScale: 1.2,
+        child: const ForgotPasswordScreen(),
+      );
+      expect(tester.takeException(), isNull);
+
+      await _pumpResponsiveApp(
+        tester,
+        size: const Size(900, 1280),
+        textScale: 1.1,
+        child: const ForgotPasswordScreen(),
+      );
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('CaptureScreen survives small, medium, and large layouts', (
+      tester,
+    ) async {
+      Get.put<MomentController>(MomentController());
+      Get.put<CaptureCameraService>(_FakeCaptureCameraService());
+
+      await _pumpResponsiveApp(
+        tester,
+        size: const Size(320, 640),
+        child: const CaptureScreen(),
+      );
+      expect(tester.takeException(), isNull);
+
+      await _pumpResponsiveApp(
+        tester,
+        size: const Size(412, 915),
+        textScale: 1.2,
+        child: const CaptureScreen(),
+      );
+      expect(tester.takeException(), isNull);
+
+      await _pumpResponsiveApp(
+        tester,
+        size: const Size(1024, 720),
+        textScale: 1.1,
+        child: const CaptureScreen(),
+      );
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets(
+      'BuddyWallScreen survives compact layouts without GetX misuse',
+      (tester) async {
+        Get.put<BuddyWallController>(BuddyWallController(null));
+
+        await _pumpResponsiveApp(
+          tester,
+          size: const Size(320, 640),
+          child: const BuddyWallScreen(),
+        );
+
+        expect(find.byIcon(Icons.photo_library_outlined), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
   });
 }

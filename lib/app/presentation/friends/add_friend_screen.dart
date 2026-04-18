@@ -4,168 +4,172 @@ import 'package:done_drop/core/theme/theme.dart';
 import 'package:done_drop/app/core/widgets/widgets.dart';
 import 'package:done_drop/firebase/repositories/friend_repository.dart';
 import 'package:done_drop/app/presentation/friends/add_friend_controller.dart';
+import 'package:done_drop/l10n/l10n.dart';
 
 class AddFriendScreen extends StatelessWidget {
   const AddFriendScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return GetBuilder<AddFriendController>(
       init: AddFriendController(Get.find<FriendRepository>()),
       builder: (ctrl) {
         final spec = DDResponsiveSpec.of(context);
-        return Scaffold(
-          backgroundColor: AppColors.surface,
-          appBar: AppBar(
+        return DismissKeyboard(
+          child: Scaffold(
             backgroundColor: AppColors.surface,
-            surfaceTintColor: Colors.transparent,
-            elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: AppColors.primary),
-              onPressed: () => Get.back(),
+            appBar: AppBar(
+              backgroundColor: AppColors.surface,
+              surfaceTintColor: Colors.transparent,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back, color: AppColors.primary),
+                onPressed: () => Get.back(),
+              ),
+              title: Text(l10n.addBuddyTitle),
+              centerTitle: true,
             ),
-            title: const Text('Add Buddy'),
-            centerTitle: true,
-          ),
-          body: DDResponsiveScrollBody(
-            maxWidth: 560,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Friend cap indicator
-                Obx(
-                  () => ctrl.isAtCap.value
-                      ? _FriendCapBanner(limit: ctrl.maxFriends)
-                      : const SizedBox.shrink(),
-                ),
-
-                Text(
-                  'Find by Username',
-                  style: TextStyle(
-                    fontFamily: AppTypography.serifFamily,
-                    fontSize: spec.width < 360 ? 24 : 28,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.onSurface,
+            body: DDResponsiveScrollBody(
+              maxWidth: 560,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Friend cap indicator
+                  Obx(
+                    () => ctrl.isAtCap.value
+                        ? _FriendCapBanner(limit: ctrl.maxFriends)
+                        : const SizedBox.shrink(),
                   ),
-                ),
-                const SizedBox(height: AppSizes.space8),
-                Text(
-                  'Enter their username to send a buddy request.',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.onSurfaceVariant,
+
+                  Text(
+                    l10n.findByUsernameTitle,
+                    style: TextStyle(
+                      fontFamily: AppTypography.serifFamily,
+                      fontSize: spec.width < 360 ? 24 : 28,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.onSurface,
+                    ),
                   ),
-                ),
-                const SizedBox(height: AppSizes.space32),
+                  const SizedBox(height: AppSizes.space8),
+                  Text(
+                    l10n.findByUsernameSubtitle,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: AppSizes.space32),
 
-                // Search field
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final useStackedSearch = constraints.maxWidth < 440;
-                    final searchField = Expanded(
-                      child: Obx(
-                        () => DDTextField(
-                          controller: ctrl.searchController,
-                          label: 'Username',
-                          hint: 'johndoe',
-                          prefixIcon: Icons.alternate_email,
-                          keyboardType: TextInputType.text,
-                          textInputAction: TextInputAction.search,
-                          onFieldSubmitted: (_) => ctrl.searchByUsername(),
-                          enabled:
-                              !ctrl.isSearching.value && !ctrl.isAtCap.value,
+                  // Search field
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final useStackedSearch = constraints.maxWidth < 440;
+                      final searchField = Expanded(
+                        child: Obx(
+                          () => DDTextField(
+                            controller: ctrl.searchController,
+                            label: l10n.usernameLabel,
+                            hint: l10n.usernameHint,
+                            prefixIcon: Icons.alternate_email,
+                            keyboardType: TextInputType.text,
+                            textInputAction: TextInputAction.search,
+                            onFieldSubmitted: (_) => ctrl.searchByUsername(),
+                            enabled:
+                                !ctrl.isSearching.value && !ctrl.isAtCap.value,
+                          ),
                         ),
-                      ),
-                    );
-                    final searchButton = Obx(
-                      () => SizedBox(
-                        width: useStackedSearch ? double.infinity : 132,
-                        child: DDPrimaryButton(
-                          label: 'Search',
-                          isLoading: ctrl.isSearching.value,
-                          onPressed:
-                              (ctrl.isSearching.value || ctrl.isAtCap.value)
-                              ? null
-                              : ctrl.searchByUsername,
+                      );
+                      final searchButton = Obx(
+                        () => SizedBox(
+                          width: useStackedSearch ? double.infinity : 132,
+                          child: DDPrimaryButton(
+                            label: l10n.searchAction,
+                            isLoading: ctrl.isSearching.value,
+                            onPressed:
+                                (ctrl.isSearching.value || ctrl.isAtCap.value)
+                                ? null
+                                : ctrl.searchByUsername,
+                          ),
                         ),
-                      ),
-                    );
+                      );
 
-                    if (useStackedSearch) {
-                      return Column(
+                      if (useStackedSearch) {
+                        return Column(
+                          children: [
+                            Row(children: [searchField]),
+                            const SizedBox(height: AppSizes.space12),
+                            searchButton,
+                          ],
+                        );
+                      }
+
+                      return Row(
                         children: [
-                          Row(children: [searchField]),
-                          const SizedBox(height: AppSizes.space12),
+                          searchField,
+                          const SizedBox(width: AppSizes.space12),
                           searchButton,
                         ],
                       );
-                    }
+                    },
+                  ),
 
-                    return Row(
-                      children: [
-                        searchField,
-                        const SizedBox(width: AppSizes.space12),
-                        searchButton,
-                      ],
-                    );
-                  },
-                ),
-
-                // Error
-                Obx(() {
-                  final msg = ctrl.errorMessage.value;
-                  if (msg == null) return const SizedBox(height: 0);
-                  return Padding(
-                    padding: const EdgeInsets.only(top: AppSizes.space12),
-                    child: Container(
-                      padding: const EdgeInsets.all(AppSizes.space12),
-                      decoration: BoxDecoration(
-                        color: AppColors.errorContainer,
-                        borderRadius: AppSizes.borderRadiusMd,
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            color: AppColors.error,
-                            size: 18,
-                          ),
-                          const SizedBox(width: AppSizes.space8),
-                          Expanded(
-                            child: Text(
-                              msg,
-                              style: TextStyle(
-                                color: AppColors.onErrorContainer,
-                                fontSize: 13,
+                  // Error
+                  Obx(() {
+                    final msg = ctrl.errorMessage.value;
+                    if (msg == null) return const SizedBox(height: 0);
+                    return Padding(
+                      padding: const EdgeInsets.only(top: AppSizes.space12),
+                      child: Container(
+                        padding: const EdgeInsets.all(AppSizes.space12),
+                        decoration: BoxDecoration(
+                          color: AppColors.errorContainer,
+                          borderRadius: AppSizes.borderRadiusMd,
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              color: AppColors.error,
+                              size: 18,
+                            ),
+                            const SizedBox(width: AppSizes.space8),
+                            Expanded(
+                              child: Text(
+                                msg,
+                                style: TextStyle(
+                                  color: AppColors.onErrorContainer,
+                                  fontSize: 13,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                }),
-
-                const SizedBox(height: AppSizes.space24),
-
-                // Found user
-                Obx(() {
-                  final user = ctrl.foundUser.value;
-                  if (user == null) return const SizedBox.shrink();
-                  if (ctrl.requestSent.value) {
-                    return _RequestSentCard(
-                      name: user.displayName,
-                      onReset: ctrl.reset,
                     );
-                  }
-                  return _FoundUserCard(
-                    name: user.displayName,
-                    avatarUrl: user.avatarUrl,
-                    onSendRequest: ctrl.sendRequest,
-                    isLoading: ctrl.isSearching.value,
-                  );
-                }),
-              ],
+                  }),
+
+                  const SizedBox(height: AppSizes.space24),
+
+                  // Found user
+                  Obx(() {
+                    final user = ctrl.foundUser.value;
+                    if (user == null) return const SizedBox.shrink();
+                    if (ctrl.requestSent.value) {
+                      return _RequestSentCard(
+                        name: user.displayName,
+                        onReset: ctrl.reset,
+                      );
+                    }
+                    return _FoundUserCard(
+                      name: user.displayName,
+                      avatarUrl: user.avatarUrl,
+                      onSendRequest: ctrl.sendRequest,
+                      isLoading: ctrl.isSearching.value,
+                    );
+                  }),
+                ],
+              ),
             ),
           ),
         );
@@ -181,6 +185,7 @@ class _FriendCapBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Container(
       margin: const EdgeInsets.only(bottom: AppSizes.space16),
       padding: const EdgeInsets.all(AppSizes.space16),
@@ -198,14 +203,14 @@ class _FriendCapBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Buddy Limit Reached',
+                  l10n.buddyLimitReachedTitle,
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     color: AppColors.primary,
                   ),
                 ),
                 Text(
-                  'Free plan allows up to $limit buddies. Upgrade for more.',
+                  l10n.buddyLimitReachedSubtitle(limit),
                   style: TextStyle(
                     fontSize: 12,
                     color: AppColors.onSurfaceVariant,
@@ -235,6 +240,7 @@ class _FoundUserCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Container(
       padding: const EdgeInsets.all(AppSizes.space20),
       decoration: BoxDecoration(
@@ -260,12 +266,12 @@ class _FoundUserCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Send a buddy request?',
+            l10n.sendBuddyRequestPrompt,
             style: TextStyle(fontSize: 13, color: AppColors.onSurfaceVariant),
           ),
           const SizedBox(height: AppSizes.space16),
           DDPrimaryButton(
-            label: 'Send Buddy Request',
+            label: l10n.sendBuddyRequestAction,
             icon: Icons.person_add_alt_1,
             onPressed: isLoading ? null : onSendRequest,
             isExpanded: true,
@@ -284,6 +290,7 @@ class _RequestSentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Container(
       padding: const EdgeInsets.all(AppSizes.space24),
       decoration: BoxDecoration(
@@ -295,7 +302,7 @@ class _RequestSentCard extends StatelessWidget {
           Icon(Icons.check_circle, color: AppColors.primary, size: 56),
           const SizedBox(height: AppSizes.space16),
           Text(
-            'Request Sent!',
+            l10n.requestSentSuccessTitle,
             style: TextStyle(
               fontFamily: AppTypography.serifFamily,
               fontSize: 20,
@@ -305,12 +312,12 @@ class _RequestSentCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Buddy request sent to $name',
+            l10n.requestSentSuccessMessage(name),
             style: TextStyle(fontSize: 14, color: AppColors.onSurfaceVariant),
           ),
           const SizedBox(height: AppSizes.space16),
           DDSecondaryButton(
-            label: 'Add Another Buddy',
+            label: l10n.addAnotherBuddyAction,
             onPressed: onReset,
             isExpanded: true,
           ),

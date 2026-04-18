@@ -4,6 +4,8 @@ import 'package:done_drop/core/theme/theme.dart';
 import 'package:done_drop/core/constants/app_constants.dart';
 import 'package:done_drop/app/core/widgets/widgets.dart';
 import 'package:done_drop/features/auth/presentation/controllers/onboarding_controller.dart';
+import 'package:done_drop/core/services/locale_controller.dart';
+import 'package:done_drop/l10n/l10n.dart';
 
 class OnboardingScreen extends GetView<OnboardingController> {
   const OnboardingScreen({super.key});
@@ -11,13 +13,16 @@ class OnboardingScreen extends GetView<OnboardingController> {
   @override
   Widget build(BuildContext context) {
     final spec = DDResponsiveSpec.of(context);
+    final l10n = context.l10n;
+    final localeController = Get.isRegistered<LocaleController>()
+        ? Get.find<LocaleController>()
+        : null;
 
     return Scaffold(
       backgroundColor: AppColors.surface,
       body: SafeArea(
         child: Column(
           children: [
-            // Page indicator
             Obx(
               () => Padding(
                 padding: spec.pagePadding(
@@ -25,20 +30,45 @@ class OnboardingScreen extends GetView<OnboardingController> {
                   bottom: AppSizes.space20,
                 ),
                 child: Row(
-                  children: List.generate(3, (i) {
-                    return Expanded(
-                      child: Container(
-                        height: 3,
-                        margin: const EdgeInsets.symmetric(horizontal: 2),
-                        decoration: BoxDecoration(
-                          color: i <= controller.currentPage.value
-                              ? AppColors.primary
-                              : AppColors.outlineVariant,
-                          borderRadius: AppSizes.borderRadiusFull,
+                  children: [
+                    Expanded(
+                      child: Row(
+                        children: List.generate(3, (i) {
+                          return Expanded(
+                            child: Container(
+                              height: 3,
+                              margin: const EdgeInsets.symmetric(horizontal: 2),
+                              decoration: BoxDecoration(
+                                color: i <= controller.currentPage.value
+                                    ? AppColors.primary
+                                    : AppColors.outlineVariant,
+                                borderRadius: AppSizes.borderRadiusFull,
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                    ),
+                    if (localeController != null)
+                      PopupMenuButton<String>(
+                        initialValue: localeController.currentLanguageCode,
+                        onSelected: localeController.setLocaleCode,
+                        itemBuilder: (context) => [
+                          PopupMenuItem(
+                            value: 'en',
+                            child: Text(l10n.languageEnglish),
+                          ),
+                          PopupMenuItem(
+                            value: 'vi',
+                            child: Text(l10n.languageVietnamese),
+                          ),
+                        ],
+                        icon: const Icon(
+                          Icons.language_rounded,
+                          color: AppColors.primary,
                         ),
                       ),
-                    );
-                  }),
+                  ],
                 ),
               ),
             ),
@@ -54,7 +84,6 @@ class OnboardingScreen extends GetView<OnboardingController> {
                 ],
               ),
             ),
-            // CTA
             Padding(
               padding: spec.pagePadding(
                 top: AppSizes.space16,
@@ -64,10 +93,10 @@ class OnboardingScreen extends GetView<OnboardingController> {
                 final page = controller.currentPage.value;
                 return DDPrimaryButton(
                   label: page == 0
-                      ? 'Get Started'
+                      ? l10n.welcomeGetStarted
                       : page == 1
-                      ? 'Continue'
-                      : 'Done',
+                      ? l10n.welcomeContinue
+                      : l10n.welcomeDone,
                   onPressed: controller.nextPage,
                   isExpanded: true,
                 );
@@ -86,6 +115,7 @@ class _WelcomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final spec = DDResponsiveSpec.of(context);
+    final l10n = context.l10n;
 
     return DDResponsiveScrollBody(
       maxWidth: 560,
@@ -98,20 +128,20 @@ class _WelcomePage extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'DoneDrop',
+              l10n.appName,
               style: AppTypography.displayLarge(
                 color: AppColors.primary,
               ).copyWith(fontStyle: FontStyle.italic, letterSpacing: -1),
             ),
             const SizedBox(height: AppSizes.space24),
             Text(
-              'Hold yourself accountable.\nComplete your habits. Prove it.',
+              l10n.onboardingHeadline,
               textAlign: TextAlign.center,
               style: AppTypography.headlineMedium(color: AppColors.onSurface),
             ),
             const SizedBox(height: AppSizes.space16),
             Text(
-              'Build habits. Complete them. Capture proof. Share privately with accountability partners.',
+              l10n.onboardingSubtitle,
               textAlign: TextAlign.center,
               style: AppTypography.bodyMedium(
                 color: AppColors.onSurfaceVariant,
@@ -148,6 +178,7 @@ class _UseCasePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final useCases = AppConstants.onboardingUseCases;
     final spec = DDResponsiveSpec.of(context);
+    final l10n = context.l10n;
 
     return DDResponsiveScrollBody(
       maxWidth: 760,
@@ -159,7 +190,7 @@ class _UseCasePage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'WHAT BRINGS YOU HERE?',
+            l10n.onboardingUseCaseTitle,
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,
@@ -245,6 +276,7 @@ class _PermissionsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final spec = DDResponsiveSpec.of(context);
+    final l10n = context.l10n;
 
     return DDResponsiveScrollBody(
       maxWidth: 560,
@@ -271,13 +303,13 @@ class _PermissionsPage extends StatelessWidget {
             ),
             const SizedBox(height: AppSizes.space32),
             Text(
-              'Capture Your Proof',
+              l10n.captureProofTitle,
               style: AppTypography.headlineMedium(color: AppColors.onSurface),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSizes.space16),
             Text(
-              'DoneDrop needs camera access to capture proof moments. Your photos stay private until you choose to share them.',
+              l10n.captureProofSubtitle,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 15,
@@ -286,22 +318,22 @@ class _PermissionsPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSizes.space48),
-            const _PermissionItem(
+            _PermissionItem(
               icon: Icons.visibility_off_outlined,
-              title: 'Private by default',
-              desc: 'You control who sees your proof moments.',
+              title: l10n.privateByDefault,
+              desc: l10n.privateByDefaultDesc,
             ),
             const SizedBox(height: AppSizes.space16),
-            const _PermissionItem(
+            _PermissionItem(
               icon: Icons.lock_outline,
-              title: 'End-to-end secure',
-              desc: 'Your accountability data stays yours.',
+              title: l10n.secureByDefault,
+              desc: l10n.secureByDefaultDesc,
             ),
             const SizedBox(height: AppSizes.space16),
-            const _PermissionItem(
+            _PermissionItem(
               icon: Icons.notifications_outlined,
-              title: 'Gentle reminders',
-              desc: 'Optional nudges to complete your habits.',
+              title: l10n.gentleRemindersTitle,
+              desc: l10n.gentleRemindersDesc,
             ),
           ],
         ),

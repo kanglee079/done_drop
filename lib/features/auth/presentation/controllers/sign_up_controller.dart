@@ -3,12 +3,12 @@ import 'package:get/get.dart';
 import 'package:done_drop/features/auth/repositories/auth_repository.dart';
 import 'package:done_drop/features/auth/repositories/user_profile_repository.dart';
 import 'package:done_drop/app/routes/app_routes.dart';
-import 'package:done_drop/app/presentation/home/home_controller.dart';
 import 'package:done_drop/core/errors/failures.dart';
 import 'package:done_drop/core/errors/result.dart';
 import 'package:done_drop/core/services/analytics_service.dart';
 import 'package:done_drop/core/models/user_profile.dart';
-import 'package:done_drop/core/theme/theme.dart';
+import 'package:done_drop/core/services/locale_controller.dart';
+import 'package:done_drop/l10n/l10n.dart';
 
 class SignUpController extends GetxController {
   SignUpController(this._authRepo, this._userProfileRepo);
@@ -36,40 +36,40 @@ class SignUpController extends GetxController {
 
   String? validateName(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Please enter your name';
+      return currentL10n.nameRequired;
     }
     if (value.trim().length < 2) {
-      return 'Name must be at least 2 characters';
+      return currentL10n.nameTooShort;
     }
     return null;
   }
 
   String? validateEmail(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Please enter your email';
+      return currentL10n.emailRequired;
     }
     if (!GetUtils.isEmail(value)) {
-      return 'Please enter a valid email';
+      return currentL10n.emailInvalid;
     }
     return null;
   }
 
   String? validatePassword(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Please enter a password';
+      return currentL10n.passwordRequired;
     }
     if (value.length < 6) {
-      return 'Password must be at least 6 characters';
+      return currentL10n.passwordTooShort;
     }
     return null;
   }
 
   String? validateConfirmPassword(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Please confirm your password';
+      return currentL10n.confirmPasswordRequired;
     }
     if (value != passwordController.text) {
-      return 'Passwords do not match';
+      return currentL10n.confirmPasswordMismatch;
     }
     return null;
   }
@@ -96,6 +96,7 @@ class SignUpController extends GetxController {
         // Bootstrap user profile in Firestore
         final uid = credential.user?.uid;
         if (uid != null) {
+          final localeCode = Get.find<LocaleController>().currentLanguageCode;
           final profile = UserProfile(
             id: uid,
             displayName: nameController.text.trim(),
@@ -105,21 +106,34 @@ class SignUpController extends GetxController {
             createdAt: DateTime.now(),
             premiumStatus: false,
             blockedUserIds: const [],
-            settings: const UserSettings(),
+            settings: UserSettings(
+              hasCompletedHabitSetup: false,
+              preferredLocaleCode: localeCode,
+            ),
             widgetPreferences: const WidgetPreferences(),
           );
-          await _userProfileRepo.createUserProfile(profile);
+
+          // Retry user profile creation to handle Firestore propagation delay
+          Result<UserProfile>? profileResult;
+          for (var attempt = 0; attempt < 3; attempt++) {
+            profileResult = await _userProfileRepo.createUserProfile(profile);
+            if (profileResult.isSuccess) break;
+            await Future.delayed(Duration(milliseconds: 500 * (attempt + 1)));
+          }
+
+          // Verify profile was created by reading it back
+          if (profileResult?.isSuccess ?? false) {
+            await Future.delayed(const Duration(milliseconds: 300));
+            final verifyResult = await _userProfileRepo.getUserProfile(uid);
+            if (verifyResult.isFailure) {
+              // Last retry if verification fails
+              await _userProfileRepo.createUserProfile(profile);
+              await Future.delayed(const Duration(milliseconds: 500));
+            }
+          }
         }
 
-        // Navigate to home — show "create first activity" dialog if no activities exist.
-        Get.offAllNamed(AppRoutes.home);
-        // Prompt to create first activity after a short delay so HomeScreen is mounted.
-        Future.delayed(const Duration(milliseconds: 800), () {
-          final homeCtrl = Get.isRegistered<HomeController>() ? Get.find<HomeController>() : null;
-          if (homeCtrl != null && homeCtrl.activities.isEmpty) {
-            _showFirstActivityDialog(homeCtrl);
-          }
-        });
+        Get.offAllNamed(AppRoutes.initialSetup);
       },
       onFailure: (failure) {
         final msg = failure is AppFailure
@@ -133,70 +147,6 @@ class SignUpController extends GetxController {
 
   void goToSignIn() {
     Get.back();
-  }
-
-  /// Shows a guided dialog to create the user's first activity after sign-up.
-  void _showFirstActivityDialog(HomeController ctrl) {
-    final titleCtrl = TextEditingController();
-    Get.dialog(
-      AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.celebration, color: AppColors.primary),
-            SizedBox(width: 8),
-            Text('Welcome! 🎉'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Create your first daily activity.\nKeep your streak alive every day!',
-              style: TextStyle(fontSize: 14, color: AppColors.onSurfaceVariant),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: titleCtrl,
-              autofocus: true,
-              textCapitalization: TextCapitalization.sentences,
-              decoration: const InputDecoration(
-                hintText: 'e.g., Morning run, Read 30 pages, Meditate...',
-                labelText: 'Activity name',
-                prefixIcon: Icon(Icons.task_alt),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Skip'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final title = titleCtrl.text.trim();
-              if (title.isNotEmpty) {
-                ctrl.createActivity(title: title);
-                Get.back();
-                Get.snackbar(
-                  'Streak started! 🔥',
-                  'Complete this every day to build your streak.',
-                  snackPosition: SnackPosition.BOTTOM,
-                  duration: const Duration(seconds: 4),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Start'),
-          ),
-        ],
-      ),
-      barrierDismissible: false,
-    );
   }
 
   @override

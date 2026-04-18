@@ -7,6 +7,7 @@ import '../presentation/auth/sign_in_screen.dart';
 import '../presentation/auth/sign_up_screen.dart';
 import '../presentation/auth/forgot_password_screen.dart';
 import '../presentation/auth/forgot_password_binding.dart';
+import '../presentation/setup/initial_habit_setup_binding.dart';
 import '../presentation/home/home_screen.dart';
 import '../presentation/capture/capture_binding.dart';
 import '../presentation/capture/capture_screen.dart';
@@ -17,6 +18,8 @@ import '../presentation/recap/recap_binding.dart';
 import '../presentation/settings/profile_screen.dart';
 import '../presentation/settings/profile_binding.dart';
 import '../presentation/settings/notification_settings_screen.dart';
+import '../presentation/notifications/notification_center_binding.dart';
+import '../presentation/notifications/notification_center_screen.dart';
 import '../presentation/premium/premium_screen.dart';
 import '../presentation/premium/premium_binding.dart';
 import '../presentation/legal/legal_document_screen.dart';
@@ -26,6 +29,10 @@ import '../presentation/friends/friends_screen.dart';
 import '../presentation/friends/friends_binding.dart';
 import '../presentation/friends/add_friend_screen.dart';
 import '../presentation/friends/add_friend_binding.dart';
+import '../presentation/chat/chat_binding.dart';
+import '../presentation/chat/chat_screen.dart';
+import '../presentation/buddy_wall/buddy_wall_binding.dart';
+import '../presentation/buddy_wall/buddy_wall_screen.dart';
 import '../presentation/leaderboard/leaderboard_screen.dart';
 import '../presentation/leaderboard/leaderboard_binding.dart';
 import '../presentation/streak/streak_history_screen.dart';
@@ -34,6 +41,7 @@ import '../presentation/home/home_binding.dart';
 import '../../features/auth/presentation/bindings/sign_in_binding.dart';
 import '../../features/auth/presentation/bindings/sign_up_binding.dart';
 import '../../features/auth/presentation/bindings/onboarding_binding.dart';
+import '../presentation/setup/initial_habit_setup_screen.dart';
 
 /// DoneDrop GetX App Pages
 /// Route definitions with GetX
@@ -80,6 +88,13 @@ class AppPages {
 
     // ── Protected Routes (require AuthGuard) ─────────────────────────────────
     GetPage(
+      name: AppRoutes.initialSetup,
+      page: () => const InitialHabitSetupScreen(),
+      binding: InitialHabitSetupBinding(),
+      middlewares: [AuthGuard()],
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
       name: AppRoutes.home,
       page: () => const HomeScreen(),
       binding: HomeBinding(),
@@ -113,6 +128,13 @@ class AppPages {
       name: AppRoutes.recap,
       page: () => const RecapScreen(),
       binding: RecapBinding(),
+      middlewares: [AuthGuard()],
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: AppRoutes.notifications,
+      page: () => const NotificationCenterScreen(),
+      binding: NotificationCenterBinding(),
       middlewares: [AuthGuard()],
       transition: Transition.rightToLeft,
     ),
@@ -168,6 +190,20 @@ class AppPages {
       name: AppRoutes.addFriend,
       page: () => const AddFriendScreen(),
       binding: AddFriendBinding(),
+      middlewares: [AuthGuard()],
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: AppRoutes.chat,
+      page: () => const ChatScreen(),
+      binding: ChatBinding(),
+      middlewares: [AuthGuard()],
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: AppRoutes.buddyWall,
+      page: () => const BuddyWallScreen(),
+      binding: BuddyWallBinding(),
       middlewares: [AuthGuard()],
       transition: Transition.rightToLeft,
     ),

@@ -9,6 +9,7 @@ import 'package:done_drop/app/presentation/feed/feed_controller.dart';
 import 'package:done_drop/app/presentation/feed/reaction_controller.dart';
 import 'package:done_drop/app/routes/app_routes.dart';
 import 'package:done_drop/core/models/moment.dart';
+import 'package:done_drop/l10n/l10n.dart';
 
 /// DoneDrop Feed Screen — Private friend feed view
 class FeedScreen extends StatelessWidget {
@@ -16,6 +17,7 @@ class FeedScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return GetBuilder<FeedController>(
       init: FeedController(),
       builder: (ctrl) {
@@ -33,7 +35,7 @@ class FeedScreen extends StatelessWidget {
               ),
             ),
             title: Text(
-              'Friend Feed',
+              l10n.friendFeedTitle,
               style: TextStyle(
                 fontFamily: AppTypography.serifFamily,
                 fontSize: 20,
@@ -51,7 +53,7 @@ class FeedScreen extends StatelessWidget {
                           color: AppColors.primary,
                         ),
                         onPressed: ctrl.markAllRead,
-                        tooltip: 'Mark all as read',
+                        tooltip: l10n.markAllReadTooltip,
                       )
                     : const SizedBox.shrink(),
               ),
@@ -75,7 +77,7 @@ class FeedScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: AppSizes.space16),
                     Text(
-                      'No moments yet',
+                      l10n.feedEmptyTitle,
                       style: TextStyle(
                         fontFamily: AppTypography.serifFamily,
                         fontSize: 20,
@@ -85,7 +87,7 @@ class FeedScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Moments shared by your friends\nwill appear here.',
+                      l10n.feedEmptySubtitle,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 14,
@@ -94,7 +96,7 @@ class FeedScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: AppSizes.space24),
                     DDSecondaryButton(
-                      label: 'Add Friends',
+                      label: l10n.addFriendsAction,
                       icon: Icons.person_add,
                       onPressed: () => Get.toNamed(AppRoutes.friends),
                       isExpanded: false,
@@ -137,6 +139,7 @@ class _MomentTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final reactionCtrl = Get.find<ReactionController>();
 
     return Container(
@@ -207,7 +210,7 @@ class _MomentTile extends StatelessWidget {
                   Image.file(File(moment.localPreviewPath!), fit: BoxFit.cover)
                 else
                   CachedNetworkImage(
-                    imageUrl: moment.media.thumbnail.downloadUrl,
+                    imageUrl: moment.media.bestThumbnailUrl,
                     fit: BoxFit.cover,
                     placeholder: (context, url) =>
                         Container(color: AppColors.surfaceContainerHighest),
@@ -270,13 +273,15 @@ class _MomentTile extends StatelessWidget {
                     ),
                     child: Text(
                       switch (moment.syncStatus) {
-                        MomentSyncStatus.queued => 'Queued',
-                        MomentSyncStatus.processing => 'Preparing',
+                        MomentSyncStatus.queued => l10n.statusQueued,
+                        MomentSyncStatus.processing => l10n.statusPreparing,
                         MomentSyncStatus.uploading =>
-                          'Uploading ${(moment.uploadProgress * 100).round()}%',
-                        MomentSyncStatus.finalizing => 'Syncing',
-                        MomentSyncStatus.failed => 'Failed',
-                        MomentSyncStatus.synced => 'Posted',
+                          l10n.statusUploading(
+                            (moment.uploadProgress * 100).round(),
+                          ),
+                        MomentSyncStatus.finalizing => l10n.statusSyncing,
+                        MomentSyncStatus.failed => l10n.statusFailed,
+                        MomentSyncStatus.synced => l10n.statusPosted,
                       },
                       style: const TextStyle(
                         fontSize: 11,
@@ -347,10 +352,11 @@ class _MomentTile extends StatelessWidget {
 
   String _timeAgo(DateTime dt) {
     final diff = DateTime.now().difference(dt);
-    if (diff.inMinutes < 1) return 'just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    final l10n = currentL10n;
+    if (diff.inMinutes < 1) return l10n.timeJustNow;
+    if (diff.inMinutes < 60) return l10n.timeMinutesAgo(diff.inMinutes);
+    if (diff.inHours < 24) return l10n.timeHoursAgo(diff.inHours);
+    if (diff.inDays < 7) return l10n.timeDaysAgo(diff.inDays);
     return '${dt.day}/${dt.month}/${dt.year}';
   }
 }
@@ -363,9 +369,9 @@ class _VisibilityBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (icon, label) = switch (visibility) {
-      'all_friends' => (Icons.people, 'Friends'),
-      'selected_friends' => (Icons.group, 'Selected'),
-      _ => (Icons.lock_outline, 'Personal'),
+      'all_friends' => (Icons.people, context.l10n.visibilityFriends),
+      'selected_friends' => (Icons.group, context.l10n.visibilitySelected),
+      _ => (Icons.lock_outline, context.l10n.visibilityPersonal),
     };
 
     return Row(

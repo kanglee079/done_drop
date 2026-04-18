@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:done_drop/core/models/streak.dart';
 import 'package:done_drop/core/models/activity.dart';
 import 'package:done_drop/core/theme/theme.dart';
@@ -8,6 +9,7 @@ import 'package:done_drop/app/presentation/streak/streak_badge.dart';
 import 'package:done_drop/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:done_drop/firebase/repositories/activity_repository.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:done_drop/l10n/l10n.dart';
 
 class StreakHistoryScreen extends StatelessWidget {
   const StreakHistoryScreen({super.key});
@@ -23,9 +25,9 @@ class StreakHistoryScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back, color: AppColors.primary),
           onPressed: () => Get.back(),
         ),
-        title: const Text(
-          'Streak Journey',
-          style: TextStyle(
+        title: Text(
+          context.l10n.streakJourneyTitle,
+          style: const TextStyle(
             fontFamily: AppTypography.serifFamily,
             fontSize: 22,
             fontWeight: FontWeight.w600,
@@ -122,9 +124,9 @@ class _StreakHistoryContentState extends State<_StreakHistoryContent> {
                   color: AppColors.onSurfaceVariant,
                 ),
                 const SizedBox(width: 8),
-                const Text(
-                  'Activity Streaks',
-                  style: TextStyle(
+                Text(
+                  context.l10n.streakActivityStreaksTitle,
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
                     color: AppColors.onSurface,
@@ -136,13 +138,13 @@ class _StreakHistoryContentState extends State<_StreakHistoryContent> {
         ),
 
         if (_activities.isEmpty)
-          const SliverToBoxAdapter(
+          SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.all(32),
               child: Center(
                 child: Text(
-                  'No activities yet. Create one to start your streak!',
-                  style: TextStyle(color: AppColors.onSurfaceVariant),
+                  context.l10n.streakNoActivitiesYet,
+                  style: const TextStyle(color: AppColors.onSurfaceVariant),
                 ),
               ),
             ),
@@ -198,7 +200,9 @@ class _StreakHeroCard extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Text(
-            bestStreak > 0 ? 'Your Best Streak' : 'Start Your Streak!',
+            bestStreak > 0
+                ? context.l10n.streakBestTitle
+                : context.l10n.streakStartTitle,
             style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w700,
@@ -212,17 +216,17 @@ class _StreakHeroCard extends StatelessWidget {
             runSpacing: 12,
             children: [
               _StatItem(
-                label: 'Best',
-                value: '$bestStreak days',
+                label: context.l10n.streakBestStatLabel,
+                value: '$bestStreak ${context.l10n.streakDaysUnit}',
                 icon: Icons.emoji_events,
               ),
               _StatItem(
-                label: 'Total',
-                value: '$totalDays days',
+                label: context.l10n.streakTotalStatLabel,
+                value: '$totalDays ${context.l10n.streakDaysUnit}',
                 icon: Icons.local_fire_department,
               ),
               _StatItem(
-                label: 'Active',
+                label: context.l10n.streakActiveStatLabel,
                 value: '$activityCount',
                 icon: Icons.check_circle,
               ),
@@ -286,13 +290,17 @@ class _MilestoneRoadmap extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.flag, size: 18, color: AppColors.onSurfaceVariant),
-              SizedBox(width: 8),
+              const Icon(
+                Icons.flag,
+                size: 18,
+                color: AppColors.onSurfaceVariant,
+              ),
+              const SizedBox(width: 8),
               Text(
-                'Milestone Roadmap',
-                style: TextStyle(
+                context.l10n.streakMilestoneRoadmapTitle,
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
                   color: AppColors.onSurface,
@@ -393,7 +401,7 @@ class _MilestoneRow extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          milestone.label,
+                          milestone.localizedLabel(context.l10n),
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
@@ -404,7 +412,9 @@ class _MilestoneRow extends StatelessWidget {
                         ),
                         if (isCurrent)
                           Text(
-                            '${milestone.days - currentStreak} days to go',
+                            context.l10n.streakDaysToGo(
+                              milestone.days - currentStreak,
+                            ),
                             style: TextStyle(
                               fontSize: 11,
                               color: AppColors.onSurfaceVariant,
@@ -481,7 +491,9 @@ class _ActivityStreakCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 if (activity.lastCompletedAt != null)
                   Text(
-                    'Last: ${_formatDate(activity.lastCompletedAt!)}',
+                    context.l10n.streakLastCompleted(
+                      _formatDate(context, activity.lastCompletedAt!),
+                    ),
                     style: const TextStyle(
                       fontSize: 11,
                       color: AppColors.onSurfaceVariant,
@@ -516,7 +528,7 @@ class _ActivityStreakCard extends StatelessWidget {
                 ],
               ),
               Text(
-                'best: ${activity.longestStreak}d',
+                context.l10n.streakBestShort(activity.longestStreak),
                 style: const TextStyle(
                   fontSize: 10,
                   color: AppColors.onSurfaceVariant,
@@ -529,15 +541,20 @@ class _ActivityStreakCard extends StatelessWidget {
     );
   }
 
-  String _formatDate(DateTime dt) {
+  String _formatDate(BuildContext context, DateTime dt) {
     final now = DateTime.now();
     final diff = DateTime(
       now.year,
       now.month,
       now.day,
     ).difference(DateTime(dt.year, dt.month, dt.day)).inDays;
-    if (diff == 0) return 'Today';
-    if (diff == 1) return 'Yesterday';
-    return '$diff days ago';
+    if (diff == 0) return context.l10n.streakTodayShort;
+    if (diff == 1) return context.l10n.streakYesterdayShort;
+    if (diff > 1 && diff < 7) {
+      return context.l10n.streakDaysAgo(diff);
+    }
+    return DateFormat.yMMMd(
+      Localizations.localeOf(context).toLanguageTag(),
+    ).format(dt);
   }
 }

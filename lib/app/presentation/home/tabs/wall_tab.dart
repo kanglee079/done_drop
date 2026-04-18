@@ -51,6 +51,7 @@ class _WallMonthSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final leadMoment = moments.first;
     final trailingMoments = moments.skip(1).toList(growable: false);
+    final l10n = context.l10n;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -83,7 +84,7 @@ class _WallMonthSection extends StatelessWidget {
         ),
         const SizedBox(height: AppSizes.space4),
         Text(
-          'Every proof you kept, including the ones you shared.',
+          l10n.wallSectionSubtitle,
           style: AppTypography.bodySmall(color: AppColors.onSurfaceVariant),
         ),
         const SizedBox(height: AppSizes.space16),
@@ -100,7 +101,9 @@ class _WallMonthSection extends StatelessWidget {
               expandedExtent: 220,
               mainAxisSpacing: AppSizes.space12,
               crossAxisSpacing: AppSizes.space12,
-              childAspectRatio: 1.05,
+              mainAxisExtent: DDResponsiveSpec.of(context).isCompact
+                  ? 204
+                  : 226,
             ),
             itemCount: trailingMoments.length,
             itemBuilder: (context, index) => _WallTileCard(
@@ -121,9 +124,9 @@ class _WallLeadCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final imageUrl = moment.media.original.downloadUrl.isEmpty
-        ? moment.media.thumbnail.downloadUrl
-        : moment.media.original.downloadUrl;
+    final l10n = context.l10n;
+    final locale = Localizations.localeOf(context).languageCode;
+    final imageUrl = moment.media.bestOriginalUrl;
 
     return Container(
       decoration: BoxDecoration(
@@ -136,11 +139,29 @@ class _WallLeadCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           AspectRatio(
-            aspectRatio: 16 / 9,
+            aspectRatio: 1.32,
             child: Stack(
               fit: StackFit.expand,
               children: [
                 _WallMomentImage(moment: moment, imageUrl: imageUrl),
+                Positioned(
+                  right: AppSizes.space12,
+                  top: AppSizes.space12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSizes.space10,
+                      vertical: AppSizes.space6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.42),
+                      borderRadius: AppSizes.borderRadiusFull,
+                    ),
+                    child: Text(
+                      DateFormat('MMM d', locale).format(moment.createdAt),
+                      style: AppTypography.bodySmall(color: Colors.white),
+                    ),
+                  ),
+                ),
                 if (moment.isPendingSync)
                   Positioned(
                     left: AppSizes.space12,
@@ -191,9 +212,18 @@ class _WallLeadCard extends StatelessWidget {
                   const SizedBox(height: AppSizes.space12),
                 Text(
                   moment.caption.isEmpty
-                      ? 'A kept promise from ${DateFormat('MMM d').format(moment.createdAt)}'
+                      ? l10n.wallLeadFallback(
+                          DateFormat('MMM d', locale).format(moment.createdAt),
+                        )
                       : moment.caption,
-                  style: AppTypography.bodyLarge(color: AppColors.onSurface),
+                  style: AppTypography.titleMedium(color: AppColors.onSurface),
+                ),
+                const SizedBox(height: AppSizes.space8),
+                Text(
+                  l10n.wallSectionSubtitle,
+                  style: AppTypography.bodySmall(
+                    color: AppColors.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -211,6 +241,8 @@ class _WallTileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final locale = Localizations.localeOf(context).languageCode;
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLowest,
@@ -218,62 +250,76 @@ class _WallTileCard extends StatelessWidget {
         border: Border.all(color: AppColors.outlineVariant),
       ),
       clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
+        fit: StackFit.expand,
         children: [
-          Expanded(
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                _WallMomentImage(
-                  moment: moment,
-                  imageUrl: moment.media.thumbnail.downloadUrl,
+          _WallMomentImage(
+            moment: moment,
+            imageUrl: moment.media.bestThumbnailUrl,
+          ),
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withValues(alpha: 0.18),
+                    Colors.black.withValues(alpha: 0.78),
+                  ],
+                  stops: const [0.42, 0.64, 1],
                 ),
-                if (moment.isPendingSync)
-                  Positioned(
-                    left: AppSizes.space10,
-                    right: AppSizes.space10,
-                    bottom: AppSizes.space10,
-                    child: ClipRRect(
-                      borderRadius: AppSizes.borderRadiusFull,
-                      child: LinearProgressIndicator(
-                        value: moment.syncStatus == MomentSyncStatus.queued
-                            ? null
-                            : moment.uploadProgress.clamp(0, 1),
-                        minHeight: 6,
-                        backgroundColor: Colors.white.withValues(alpha: 0.28),
-                        valueColor: const AlwaysStoppedAnimation<Color>(
-                          AppColors.onPrimary,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
+              ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(AppSizes.space12),
+          if ((moment.category ?? '').isNotEmpty)
+            Positioned(
+              left: AppSizes.space10,
+              top: AppSizes.space10,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSizes.space8,
+                  vertical: AppSizes.space6,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.42),
+                  borderRadius: AppSizes.borderRadiusFull,
+                ),
+                child: Text(
+                  moment.category!,
+                  style: AppTypography.bodySmall(color: Colors.white),
+                ),
+              ),
+            ),
+          if (moment.isPendingSync)
+            Positioned(
+              left: AppSizes.space10,
+              right: AppSizes.space10,
+              bottom: 58,
+              child: _MomentSyncPill(moment: moment),
+            ),
+          Positioned(
+            left: AppSizes.space12,
+            right: AppSizes.space12,
+            bottom: AppSizes.space12,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  DateFormat('MMM d').format(moment.createdAt),
+                  DateFormat('MMM d', locale).format(moment.createdAt),
                   style: AppTypography.bodySmall(
-                    color: AppColors.onSurfaceVariant,
+                    color: Colors.white.withValues(alpha: 0.88),
                   ),
                 ),
-                if (moment.isPendingSync) ...[
-                  const SizedBox(height: AppSizes.space6),
-                  _MomentSyncPill(moment: moment),
-                ],
                 const SizedBox(height: AppSizes.space4),
                 Text(
                   moment.caption.isEmpty
-                      ? 'Saved to your archive'
+                      ? l10n.wallTileFallback
                       : moment.caption,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTypography.labelMedium(color: AppColors.onSurface),
+                  style: AppTypography.labelLarge(color: Colors.white),
                 ),
               ],
             ),
@@ -292,21 +338,36 @@ class _WallMomentImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final localPreviewPath = moment.localPreviewPath;
-    if (localPreviewPath != null && localPreviewPath.isNotEmpty) {
-      return Image.file(File(localPreviewPath), fit: BoxFit.cover);
-    }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
+        final cacheWidth = (constraints.maxWidth * devicePixelRatio).round();
+        final localPreviewPath = moment.localPreviewPath;
+        if (localPreviewPath != null && localPreviewPath.isNotEmpty) {
+          return Image.file(
+            File(localPreviewPath),
+            fit: BoxFit.cover,
+            cacheWidth: cacheWidth,
+            filterQuality: FilterQuality.low,
+          );
+        }
 
-    return CachedNetworkImage(
-      imageUrl: imageUrl,
-      width: double.infinity,
-      fit: BoxFit.cover,
-      placeholder: (context, url) =>
-          Container(color: AppColors.surfaceContainerHigh),
-      errorWidget: (context, url, error) => Container(
-        color: AppColors.surfaceContainerHigh,
-        child: const Icon(Icons.broken_image_outlined),
-      ),
+        return CachedNetworkImage(
+          imageUrl: imageUrl,
+          width: double.infinity,
+          fit: BoxFit.cover,
+          memCacheWidth: cacheWidth,
+          maxWidthDiskCache: cacheWidth,
+          fadeInDuration: const Duration(milliseconds: 120),
+          fadeOutDuration: Duration.zero,
+          placeholder: (context, url) =>
+              Container(color: AppColors.surfaceContainerHigh),
+          errorWidget: (context, url, error) => Container(
+            color: AppColors.surfaceContainerHigh,
+            child: const Icon(Icons.broken_image_outlined),
+          ),
+        );
+      },
     );
   }
 }
@@ -316,6 +377,7 @@ class _EmptyWallState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppSizes.space24),
@@ -344,13 +406,13 @@ class _EmptyWallState extends StatelessWidget {
               ),
               const SizedBox(height: AppSizes.space16),
               Text(
-                'Keep one promise.',
+                l10n.wallEmptyTitle,
                 textAlign: TextAlign.center,
                 style: AppTypography.headlineSmall(color: AppColors.onSurface),
               ),
               const SizedBox(height: AppSizes.space8),
               Text(
-                'The wall grows from there, one kept standard at a time.',
+                l10n.wallEmptySubtitle,
                 textAlign: TextAlign.center,
                 style: AppTypography.bodyMedium(
                   color: AppColors.onSurfaceVariant,

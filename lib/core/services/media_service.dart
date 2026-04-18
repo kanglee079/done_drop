@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart' show compute;
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
 import 'package:done_drop/core/models/moment.dart'
@@ -83,6 +84,30 @@ class _PreparedMomentImages {
   final int thumbnailHeight;
 }
 
+class _PreparedOriginalImage {
+  const _PreparedOriginalImage({
+    required this.originalBytes,
+    required this.originalWidth,
+    required this.originalHeight,
+  });
+
+  final Uint8List originalBytes;
+  final int originalWidth;
+  final int originalHeight;
+}
+
+class _OriginalImageProcessResult {
+  const _OriginalImageProcessResult({
+    required this.originalBytes,
+    required this.origWidth,
+    required this.origHeight,
+  });
+
+  final Uint8List originalBytes;
+  final int origWidth;
+  final int origHeight;
+}
+
 /// Top-level function that runs in a separate isolate.
 /// Decodes once, resizes twice, encodes twice — all off the main thread.
 _ImageProcessResult _processImageInIsolate(_ImageProcessRequest req) {
@@ -128,6 +153,34 @@ _ImageProcessResult _processImageInIsolate(_ImageProcessRequest req) {
   );
 }
 
+_OriginalImageProcessResult _processOriginalImageInIsolate(
+  _ImageProcessRequest req,
+) {
+  final decoded = img.decodeImage(req.sourceBytes);
+  if (decoded == null) {
+    throw Exception('Failed to decode image');
+  }
+
+  int ow = decoded.width, oh = decoded.height;
+  if (ow > req.maxOriginalWidth || oh > req.maxOriginalHeight) {
+    final r = (req.maxOriginalWidth / ow) < (req.maxOriginalHeight / oh)
+        ? req.maxOriginalWidth / ow
+        : req.maxOriginalHeight / oh;
+    ow = (ow * r).round();
+    oh = (oh * r).round();
+  }
+
+  final originalImage = img.copyResize(decoded, width: ow, height: oh);
+
+  return _OriginalImageProcessResult(
+    originalBytes: Uint8List.fromList(
+      img.encodeJpg(originalImage, quality: req.originalQuality),
+    ),
+    origWidth: originalImage.width,
+    origHeight: originalImage.height,
+  );
+}
+
 /// Service for managing media uploads to Firebase Storage.
 ///
 /// Storage path structure:
@@ -142,16 +195,52 @@ class MediaService {
   static final MediaService instance = MediaService._();
 
   final _storage = FirebaseStorage.instance;
+  final Map<String, Future<_PreparedMomentImages>> _preparedMomentImages = {};
+  final Map<String, Future<_PreparedOriginalImage>> _preparedOriginalImages =
+      {};
 
   static const int _maxOriginalWidth =
-      1080; // 1080p is plenty for mobile social
-  static const int _maxOriginalHeight = 1080;
-  static const int _thumbnailWidth = 400;
+      960; // Optimized for fast mobile upload without visible loss
+  static const int _maxOriginalHeight = 960;
+  static const int _thumbnailWidth = 280;
+  static const int _thumbnailHeight = 420;
   static const int _originalQuality =
-      80; // 80% is visually indistinguishable, much smaller files
-  static const int _thumbQuality = 70;
+      72; // Lower network cost while keeping proof readable
+  static const int _thumbQuality = 56;
   static const int _maxAvatarSizeBytes = 5 * 1024 * 1024; // 5MB
   static const int _maxMomentSizeBytes = 10 * 1024 * 1024; // 10MB
+  static const bool _useServerGeneratedThumbnails = bool.fromEnvironment(
+    'DD_USE_SERVER_THUMBNAILS',
+    defaultValue: false,
+  );
+  static const Duration _generatedThumbnailPollDelay = Duration(
+    milliseconds: 800,
+  );
+  static const int _generatedThumbnailMaxAttempts = 6;
+
+  bool get usesServerGeneratedThumbnails => _useServerGeneratedThumbnails;
+
+  void warmMomentUpload(String localFilePath) {
+    if (localFilePath.isEmpty) return;
+
+    if (_useServerGeneratedThumbnails) {
+      _preparedOriginalImages.putIfAbsent(
+        localFilePath,
+        () => _prepareOriginalMomentImage(localFilePath),
+      );
+      return;
+    }
+
+    _preparedMomentImages.putIfAbsent(
+      localFilePath,
+      () => _prepareMomentImages(localFilePath),
+    );
+  }
+
+  void discardPreparedUpload(String localFilePath) {
+    _preparedMomentImages.remove(localFilePath);
+    _preparedOriginalImages.remove(localFilePath);
+  }
 
   // ── Local Cache ───────────────────────────────────────────────────────────
 
@@ -305,7 +394,16 @@ class MediaService {
       ),
     );
 
-    final prepared = await _prepareMomentImages(localFilePath);
+    if (_useServerGeneratedThumbnails) {
+      return _uploadWithServerGeneratedThumbnail(
+        userId: userId,
+        momentId: momentId,
+        localFilePath: localFilePath,
+        onProgress: onProgress,
+      );
+    }
+
+    final prepared = await _consumePreparedMomentImages(localFilePath);
 
     if (prepared.originalBytes.length > _maxMomentSizeBytes) {
       throw MediaUploadException('Moment image exceeds maximum size of 10MB');
@@ -343,23 +441,25 @@ class MediaService {
     final originalTask = originalRef.putData(prepared.originalBytes, metadata);
     final thumbTask = thumbRef.putData(prepared.thumbBytes, metadata);
 
-    final originalProgressSub = originalTask.snapshotEvents.listen((snapshot) {
+    originalTask.snapshotEvents.listen((snapshot) {
       originalTransferred = snapshot.bytesTransferred;
       emitUploadProgress();
     });
-    final thumbProgressSub = thumbTask.snapshotEvents.listen((snapshot) {
+    thumbTask.snapshotEvents.listen((snapshot) {
       thumbTransferred = snapshot.bytesTransferred;
       emitUploadProgress();
     });
 
     final results = await Future.wait([originalTask, thumbTask]);
-    await originalProgressSub.cancel();
-    await thumbProgressSub.cancel();
 
     final originalSnapshot = results[0];
     final thumbSnapshot = results[1];
-    final originalDownloadUrl = await originalSnapshot.ref.getDownloadURL();
-    final thumbDownloadUrl = await thumbSnapshot.ref.getDownloadURL();
+    final downloadUrls = await Future.wait([
+      originalSnapshot.ref.getDownloadURL(),
+      thumbSnapshot.ref.getDownloadURL(),
+    ]);
+    final originalDownloadUrl = downloadUrls[0];
+    final thumbDownloadUrl = downloadUrls[1];
     onProgress?.call(
       const MomentUploadProgress(
         stage: MediaUploadStage.finalizing,
@@ -403,6 +503,83 @@ class MediaService {
     return media;
   }
 
+  Future<MomentMediaMetadata> _uploadWithServerGeneratedThumbnail({
+    required String userId,
+    required String momentId,
+    required String localFilePath,
+    void Function(MomentUploadProgress progress)? onProgress,
+  }) async {
+    final prepared = await _consumePreparedOriginalImage(localFilePath);
+
+    if (prepared.originalBytes.length > _maxMomentSizeBytes) {
+      throw MediaUploadException('Moment image exceeds maximum size of 10MB');
+    }
+
+    final originalPath = 'moments/$userId/$momentId/original.jpg';
+    final thumbnailPath = _generatedThumbnailPath(originalPath);
+    final originalRef = _storage.ref().child(originalPath);
+    final metadata = SettableMetadata(
+      contentType: 'image/jpeg',
+      cacheControl: 'private, max-age=31536000',
+    );
+
+    final totalBytes = prepared.originalBytes.length;
+
+    final originalTask = originalRef.putData(prepared.originalBytes, metadata);
+    originalTask.snapshotEvents.listen((snapshot) {
+      final transferred = snapshot.bytesTransferred;
+      final progress = totalBytes == 0 ? 0.0 : transferred / totalBytes;
+      onProgress?.call(
+        MomentUploadProgress(
+          stage: MediaUploadStage.uploading,
+          progress: progress.clamp(0, 1),
+          bytesTransferred: transferred,
+          totalBytes: totalBytes,
+        ),
+      );
+    });
+
+    final originalSnapshot = await originalTask;
+    final originalDownloadUrl = await originalSnapshot.ref.getDownloadURL();
+
+    onProgress?.call(
+      const MomentUploadProgress(
+        stage: MediaUploadStage.finalizing,
+        progress: 1,
+      ),
+    );
+
+    unawaited(_cacheLocally(originalPath, prepared.originalBytes));
+
+    final media = MomentMediaMetadata(
+      original: MediaMetadata(
+        storagePath: originalPath,
+        downloadUrl: originalDownloadUrl,
+        mimeType: 'image/jpeg',
+        width: prepared.originalWidth,
+        height: prepared.originalHeight,
+        bytesUploaded: prepared.originalBytes.length,
+        ownerId: userId,
+        momentId: momentId,
+      ),
+      thumbnail: MediaMetadata(
+        storagePath: thumbnailPath,
+        downloadUrl: '',
+        mimeType: 'image/jpeg',
+        width: _thumbnailWidth,
+        height: _thumbnailHeight,
+        bytesUploaded: 0,
+        ownerId: userId,
+        momentId: momentId,
+      ),
+    );
+
+    onProgress?.call(
+      const MomentUploadProgress(stage: MediaUploadStage.complete, progress: 1),
+    );
+    return media;
+  }
+
   /// Delete all images for a moment.
   Future<void> deleteMomentImages(String userId, String momentId) async {
     try {
@@ -417,11 +594,60 @@ class MediaService {
           .child('moments/$userId/$momentId/thumb.jpg')
           .delete();
     } catch (_) {}
+    try {
+      await _storage
+          .ref()
+          .child(
+            _generatedThumbnailPath('moments/$userId/$momentId/original.jpg'),
+          )
+          .delete();
+    } catch (_) {}
+  }
+
+  Future<MediaMetadata?> waitForGeneratedThumbnail({
+    required MediaMetadata original,
+    int maxAttempts = _generatedThumbnailMaxAttempts,
+    Duration pollDelay = _generatedThumbnailPollDelay,
+  }) async {
+    if (!_useServerGeneratedThumbnails) {
+      return null;
+    }
+
+    final thumbnailPath = _generatedThumbnailPath(original.storagePath);
+    final ref = _storage.ref().child(thumbnailPath);
+
+    for (var attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        final downloadUrl = await ref.getDownloadURL();
+        return MediaMetadata(
+          storagePath: thumbnailPath,
+          downloadUrl: downloadUrl,
+          mimeType: 'image/jpeg',
+          width: _thumbnailWidth,
+          height: _thumbnailHeight,
+          bytesUploaded: 0,
+          ownerId: original.ownerId,
+          momentId: original.momentId,
+        );
+      } catch (_) {
+        if (attempt == maxAttempts - 1) return null;
+        await Future<void>.delayed(pollDelay);
+      }
+    }
+
+    return null;
   }
 
   Future<_PreparedMomentImages> _prepareMomentImages(
     String localFilePath,
   ) async {
+    final nativePrepared = await _prepareMomentImagesWithNativeCompression(
+      localFilePath,
+    );
+    if (nativePrepared != null) {
+      return nativePrepared;
+    }
+
     final sourceBytes = await File(localFilePath).readAsBytes();
     final processed = await compute(
       _processImageInIsolate,
@@ -443,6 +669,166 @@ class MediaService {
       thumbnailWidth: processed.thumbWidth,
       thumbnailHeight: processed.thumbHeight,
     );
+  }
+
+  Future<_PreparedOriginalImage> _prepareOriginalMomentImage(
+    String localFilePath,
+  ) async {
+    final nativePrepared = await _prepareOriginalMomentImageWithNativeCompression(
+      localFilePath,
+    );
+    if (nativePrepared != null) {
+      return nativePrepared;
+    }
+
+    final sourceBytes = await File(localFilePath).readAsBytes();
+    final processed = await compute(
+      _processOriginalImageInIsolate,
+      _ImageProcessRequest(
+        sourceBytes: sourceBytes,
+        maxOriginalWidth: _maxOriginalWidth,
+        maxOriginalHeight: _maxOriginalHeight,
+        thumbnailWidth: _thumbnailWidth,
+        originalQuality: _originalQuality,
+        thumbQuality: _thumbQuality,
+      ),
+    );
+
+    return _PreparedOriginalImage(
+      originalBytes: processed.originalBytes,
+      originalWidth: processed.origWidth,
+      originalHeight: processed.origHeight,
+    );
+  }
+
+  Future<_PreparedMomentImages?> _prepareMomentImagesWithNativeCompression(
+    String localFilePath,
+  ) async {
+    if (!(Platform.isAndroid || Platform.isIOS || Platform.isMacOS)) {
+      return null;
+    }
+
+    Future<Uint8List?> compress({
+      required int minWidth,
+      required int minHeight,
+      required int quality,
+      required int inSampleSize,
+    }) async {
+      final bytes = await FlutterImageCompress.compressWithFile(
+        localFilePath,
+        minWidth: minWidth,
+        minHeight: minHeight,
+        quality: quality,
+        inSampleSize: inSampleSize,
+        format: CompressFormat.jpeg,
+        autoCorrectionAngle: true,
+        keepExif: false,
+      );
+      if (bytes == null || bytes.isEmpty) return null;
+      return Uint8List.fromList(bytes);
+    }
+
+    try {
+      final results = await Future.wait([
+        compress(
+          minWidth: _maxOriginalWidth,
+          minHeight: _maxOriginalHeight,
+          quality: _originalQuality,
+          inSampleSize: 1,
+        ),
+        compress(
+          minWidth: _thumbnailWidth,
+          minHeight: _thumbnailHeight,
+          quality: _thumbQuality,
+          inSampleSize: 2,
+        ),
+      ]);
+
+      final originalBytes = results[0];
+      final thumbBytes = results[1];
+      if (originalBytes == null || thumbBytes == null) {
+        return null;
+      }
+
+      final originalImage = img.decodeImage(originalBytes);
+      final thumbImage = img.decodeImage(thumbBytes);
+      if (originalImage == null || thumbImage == null) {
+        return null;
+      }
+
+      return _PreparedMomentImages(
+        originalBytes: originalBytes,
+        thumbBytes: thumbBytes,
+        originalWidth: originalImage.width,
+        originalHeight: originalImage.height,
+        thumbnailWidth: thumbImage.width,
+        thumbnailHeight: thumbImage.height,
+      );
+    } on UnsupportedError {
+      return null;
+    }
+  }
+
+  Future<_PreparedOriginalImage?> _prepareOriginalMomentImageWithNativeCompression(
+    String localFilePath,
+  ) async {
+    if (!(Platform.isAndroid || Platform.isIOS || Platform.isMacOS)) {
+      return null;
+    }
+
+    try {
+      final bytes = await FlutterImageCompress.compressWithFile(
+        localFilePath,
+        minWidth: _maxOriginalWidth,
+        minHeight: _maxOriginalHeight,
+        quality: _originalQuality,
+        inSampleSize: 1,
+        format: CompressFormat.jpeg,
+        autoCorrectionAngle: true,
+        keepExif: false,
+      );
+      if (bytes == null || bytes.isEmpty) {
+        return null;
+      }
+
+      final originalBytes = Uint8List.fromList(bytes);
+      final originalImage = img.decodeImage(originalBytes);
+      if (originalImage == null) {
+        return null;
+      }
+
+      return _PreparedOriginalImage(
+        originalBytes: originalBytes,
+        originalWidth: originalImage.width,
+        originalHeight: originalImage.height,
+      );
+    } on UnsupportedError {
+      return null;
+    }
+  }
+
+  String _generatedThumbnailPath(String originalPath) {
+    final extensionIndex = originalPath.lastIndexOf('.');
+    if (extensionIndex == -1) {
+      return '${originalPath}_${_thumbnailWidth}x$_thumbnailHeight';
+    }
+    final base = originalPath.substring(0, extensionIndex);
+    final extension = originalPath.substring(extensionIndex);
+    return '${base}_${_thumbnailWidth}x$_thumbnailHeight$extension';
+  }
+
+  Future<_PreparedMomentImages> _consumePreparedMomentImages(
+    String localFilePath,
+  ) async {
+    final future = _preparedMomentImages.remove(localFilePath);
+    return future ?? _prepareMomentImages(localFilePath);
+  }
+
+  Future<_PreparedOriginalImage> _consumePreparedOriginalImage(
+    String localFilePath,
+  ) async {
+    final future = _preparedOriginalImages.remove(localFilePath);
+    return future ?? _prepareOriginalMomentImage(localFilePath);
   }
 
   // ── Cache Management ─────────────────────────────────────────────────────

@@ -35,6 +35,8 @@ class FeedDelivery {
   final DateTime createdAt;
   final bool isRead;
 
+  String get previewUrl => thumbnailUrl.isNotEmpty ? thumbnailUrl : originalUrl;
+
   Map<String, dynamic> toFirestore() => {
         'id': id,
         'recipientId': recipientId,

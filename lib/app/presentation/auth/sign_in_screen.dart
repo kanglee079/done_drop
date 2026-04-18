@@ -4,6 +4,8 @@ import 'package:done_drop/core/theme/theme.dart';
 import 'package:done_drop/app/core/widgets/widgets.dart';
 import 'package:done_drop/features/auth/presentation/controllers/sign_in_controller.dart';
 import 'package:done_drop/core/services/legal_service.dart';
+import 'package:done_drop/core/services/locale_controller.dart';
+import 'package:done_drop/l10n/l10n.dart';
 
 class SignInScreen extends GetView<SignInController> {
   const SignInScreen({super.key});
@@ -12,261 +14,294 @@ class SignInScreen extends GetView<SignInController> {
   Widget build(BuildContext context) {
     final showGoogleSignIn = !GetPlatform.isIOS;
     final spec = DDResponsiveSpec.of(context);
+    final l10n = context.l10n;
+    final localeController = Get.isRegistered<LocaleController>()
+        ? Get.find<LocaleController>()
+        : null;
 
-    return Scaffold(
-      backgroundColor: AppColors.surface,
-      body: SafeArea(
-        child: DDResponsiveScrollBody(
-          maxWidth: 520,
-          padding: spec.pagePadding(
-            top: spec.isShort ? AppSizes.space24 : AppSizes.space40,
-            bottom: AppSizes.space24,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SizedBox(height: spec.isShort ? 0 : AppSizes.space24),
-              // Logo & tagline
-              Center(
-                child: Text(
-                  'DoneDrop',
-                  style: TextStyle(
-                    fontFamily: AppTypography.serifFamily,
-                    fontSize: spec.isCompact ? 44 : 48,
-                    fontWeight: FontWeight.w700,
-                    fontStyle: FontStyle.italic,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppSizes.space8),
-              Center(
-                child: Text(
-                  'Complete it. Capture it.\nShare the moment.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.onSurfaceVariant,
-                    height: 1.5,
-                  ),
-                ),
-              ),
-              SizedBox(
-                height: spec.isShort ? AppSizes.space32 : AppSizes.space48,
-              ),
-
-              // Form
-              Form(
-                key: controller.formKey,
-                child: Column(
-                  children: [
-                    Obx(
-                      () => DDTextField(
-                        controller: controller.emailController,
-                        label: 'Email',
-                        hint: 'you@example.com',
-                        keyboardType: TextInputType.emailAddress,
-                        prefixIcon: Icons.email_outlined,
-                        validator: controller.validateEmail,
-                        textInputAction: TextInputAction.next,
-                        enabled: !controller.isLoading.value,
-                      ),
-                    ),
-                    const SizedBox(height: AppSizes.space16),
-                    Obx(
-                      () => DDTextField(
-                        controller: controller.passwordController,
-                        label: 'Password',
-                        hint: '••••••••',
-                        prefixIcon: Icons.lock_outlined,
-                        obscureText: !controller.isPasswordVisible.value,
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            controller.isPasswordVisible.value
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
-                            color: AppColors.onSurfaceVariant,
-                            size: 20,
-                          ),
-                          onPressed: controller.togglePasswordVisibility,
+    return DismissKeyboard(
+      child: Scaffold(
+        backgroundColor: AppColors.surface,
+        body: SafeArea(
+          child: DDResponsiveScrollBody(
+            maxWidth: 520,
+            padding: spec.pagePadding(
+              top: spec.isShort ? AppSizes.space24 : AppSizes.space40,
+              bottom: AppSizes.space24,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (localeController != null)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: PopupMenuButton<String>(
+                      initialValue: localeController.currentLanguageCode,
+                      onSelected: localeController.setLocaleCode,
+                      itemBuilder: (context) => [
+                        PopupMenuItem(
+                          value: 'en',
+                          child: Text(l10n.languageEnglish),
                         ),
-                        validator: controller.validatePassword,
-                        textInputAction: TextInputAction.done,
-                        onFieldSubmitted: (_) => controller.signInWithEmail(),
-                        enabled: !controller.isLoading.value,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Error message
-              Obx(() {
-                final msg = controller.errorMessage.value;
-                if (msg == null) return const SizedBox(height: 0);
-                return Padding(
-                  padding: const EdgeInsets.only(top: AppSizes.space12),
-                  child: Container(
-                    padding: const EdgeInsets.all(AppSizes.space12),
-                    decoration: BoxDecoration(
-                      color: AppColors.errorContainer,
-                      borderRadius: AppSizes.borderRadiusMd,
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.error_outline,
-                          color: AppColors.error,
-                          size: 18,
-                        ),
-                        const SizedBox(width: AppSizes.space8),
-                        Expanded(
-                          child: Text(
-                            msg,
-                            style: TextStyle(
-                              color: AppColors.onErrorContainer,
-                              fontSize: 13,
-                            ),
-                          ),
+                        PopupMenuItem(
+                          value: 'vi',
+                          child: Text(l10n.languageVietnamese),
                         ),
                       ],
-                    ),
-                  ),
-                );
-              }),
-
-              // Forgot password
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: controller.goToForgotPassword,
-                  child: Text(
-                    'Forgot password?',
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: AppSizes.space16),
-
-              // Sign in button
-              Obx(
-                () => DDPrimaryButton(
-                  label: 'Sign In',
-                  onPressed: controller.isLoading.value
-                      ? null
-                      : controller.signInWithEmail,
-                  isLoading: controller.isLoading.value,
-                ),
-              ),
-
-              if (showGoogleSignIn) ...[
-                const SizedBox(height: AppSizes.space24),
-                Row(
-                  children: [
-                    Expanded(child: Divider(color: AppColors.outline)),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSizes.space16,
-                      ),
-                      child: Text(
-                        'or',
-                        style: TextStyle(
-                          color: AppColors.outline,
-                          fontSize: 13,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSizes.space12,
+                          vertical: AppSizes.space8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceContainerLow,
+                          borderRadius: AppSizes.borderRadiusFull,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.language_rounded, size: 18),
+                            const SizedBox(width: AppSizes.space8),
+                            Text(
+                              localeController.isVietnamese
+                                  ? l10n.languageVietnamese
+                                  : l10n.languageEnglish,
+                              style: AppTypography.labelMedium(
+                                color: AppColors.onSurface,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                    Expanded(child: Divider(color: AppColors.outline)),
-                  ],
-                ),
-                const SizedBox(height: AppSizes.space24),
-                Obx(
-                  () => DDSecondaryButton(
-                    label: 'Continue with Google',
-                    icon: Icons.g_mobiledata,
-                    onPressed: controller.isLoading.value
-                        ? null
-                        : controller.signInWithGoogle,
-                    isLoading: controller.isLoading.value,
                   ),
-                ),
-              ],
-
-              const SizedBox(height: AppSizes.space32),
-
-              // Sign up link
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "Don't have an account? ",
+                SizedBox(height: spec.isShort ? 0 : AppSizes.space24),
+                Center(
+                  child: Text(
+                    l10n.appName,
                     style: TextStyle(
-                      color: AppColors.onSurfaceVariant,
-                      fontSize: 13,
+                      fontFamily: AppTypography.serifFamily,
+                      fontSize: spec.isCompact ? 44 : 48,
+                      fontWeight: FontWeight.w700,
+                      fontStyle: FontStyle.italic,
+                      color: AppColors.primary,
                     ),
                   ),
-                  GestureDetector(
-                    onTap: controller.goToSignUp,
+                ),
+                const SizedBox(height: AppSizes.space8),
+                Center(
+                  child: Text(
+                    l10n.authTagline,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppColors.onSurfaceVariant,
+                      height: 1.5,
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: spec.isShort ? AppSizes.space32 : AppSizes.space48,
+                ),
+                Form(
+                  key: controller.formKey,
+                  child: Column(
+                    children: [
+                      Obx(
+                        () => DDTextField(
+                          controller: controller.emailController,
+                          label: l10n.emailLabel,
+                          hint: l10n.emailHint,
+                          keyboardType: TextInputType.emailAddress,
+                          prefixIcon: Icons.email_outlined,
+                          validator: controller.validateEmail,
+                          textInputAction: TextInputAction.next,
+                          enabled: !controller.isBusy,
+                        ),
+                      ),
+                      const SizedBox(height: AppSizes.space16),
+                      Obx(
+                        () => DDTextField(
+                          controller: controller.passwordController,
+                          label: l10n.passwordLabel,
+                          hint: l10n.passwordHint,
+                          prefixIcon: Icons.lock_outlined,
+                          obscureText: !controller.isPasswordVisible.value,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              controller.isPasswordVisible.value
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
+                              color: AppColors.onSurfaceVariant,
+                              size: 20,
+                            ),
+                            onPressed: controller.togglePasswordVisibility,
+                          ),
+                          validator: controller.validatePassword,
+                          textInputAction: TextInputAction.done,
+                          onFieldSubmitted: (_) => controller.signInWithEmail(),
+                          enabled: !controller.isBusy,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Obx(() {
+                  final msg = controller.errorMessage.value;
+                  if (msg == null) return const SizedBox(height: 0);
+                  return Padding(
+                    padding: const EdgeInsets.only(top: AppSizes.space12),
+                    child: Container(
+                      padding: const EdgeInsets.all(AppSizes.space12),
+                      decoration: BoxDecoration(
+                        color: AppColors.errorContainer,
+                        borderRadius: AppSizes.borderRadiusMd,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            color: AppColors.error,
+                            size: 18,
+                          ),
+                          const SizedBox(width: AppSizes.space8),
+                          Expanded(
+                            child: Text(
+                              msg,
+                              style: TextStyle(
+                                color: AppColors.onErrorContainer,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: controller.isBusy
+                        ? null
+                        : controller.goToForgotPassword,
                     child: Text(
-                      'Sign Up',
+                      l10n.forgotPasswordAction,
                       style: TextStyle(
                         color: AppColors.primary,
                         fontSize: 13,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
-                ],
-              ),
-
-              const SizedBox(height: AppSizes.space8),
-
-              // Terms
-              Wrap(
-                alignment: WrapAlignment.center,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  Text(
-                    'By continuing, you agree to our ',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 11, color: AppColors.outline),
+                ),
+                const SizedBox(height: AppSizes.space16),
+                Obx(
+                  () => DDPrimaryButton(
+                    label: l10n.signInAction,
+                    onPressed: controller.isBusy
+                        ? null
+                        : controller.signInWithEmail,
+                    isLoading: controller.isEmailLoading.value,
                   ),
-                  TextButton(
-                    onPressed: LegalService.instance.openTermsOfService,
-                    style: TextButton.styleFrom(
-                      visualDensity: VisualDensity.compact,
-                      minimumSize: Size.zero,
-                      padding: EdgeInsets.zero,
+                ),
+                if (showGoogleSignIn) ...[
+                  const SizedBox(height: AppSizes.space24),
+                  Row(
+                    children: [
+                      Expanded(child: Divider(color: AppColors.outline)),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSizes.space16,
+                        ),
+                        child: Text(
+                          l10n.orLabel,
+                          style: TextStyle(
+                            color: AppColors.outline,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      Expanded(child: Divider(color: AppColors.outline)),
+                    ],
+                  ),
+                  const SizedBox(height: AppSizes.space24),
+                  Obx(
+                    () => DDSecondaryButton(
+                      label: l10n.continueWithGoogle,
+                      icon: Icons.g_mobiledata,
+                      onPressed: controller.isBusy
+                          ? null
+                          : controller.signInWithGoogle,
+                      isLoading: controller.isGoogleLoading.value,
                     ),
-                    child: const Text('Terms of Service'),
-                  ),
-                  Text(
-                    ' and ',
-                    style: TextStyle(fontSize: 11, color: AppColors.outline),
-                  ),
-                  TextButton(
-                    onPressed: LegalService.instance.openPrivacyPolicy,
-                    style: TextButton.styleFrom(
-                      visualDensity: VisualDensity.compact,
-                      minimumSize: Size.zero,
-                      padding: EdgeInsets.zero,
-                    ),
-                    child: const Text('Privacy Policy'),
-                  ),
-                  Text(
-                    '.',
-                    style: TextStyle(fontSize: 11, color: AppColors.outline),
                   ),
                 ],
-              ),
-
-              const SizedBox(height: AppSizes.space32),
-            ],
+                const SizedBox(height: AppSizes.space32),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      l10n.noAccountPrompt,
+                      style: TextStyle(
+                        color: AppColors.onSurfaceVariant,
+                        fontSize: 13,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: controller.isBusy ? null : controller.goToSignUp,
+                      child: Text(
+                        l10n.signUpAction,
+                        style: TextStyle(
+                          color: AppColors.primary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSizes.space8),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Text(
+                      l10n.termsAgreementPrefix,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 11, color: AppColors.outline),
+                    ),
+                    TextButton(
+                      onPressed: LegalService.instance.openTermsOfService,
+                      style: TextButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        minimumSize: Size.zero,
+                        padding: EdgeInsets.zero,
+                      ),
+                      child: Text(l10n.termsOfService),
+                    ),
+                    Text(
+                      l10n.andLabel,
+                      style: TextStyle(fontSize: 11, color: AppColors.outline),
+                    ),
+                    TextButton(
+                      onPressed: LegalService.instance.openPrivacyPolicy,
+                      style: TextButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        minimumSize: Size.zero,
+                        padding: EdgeInsets.zero,
+                      ),
+                      child: Text(l10n.privacyPolicy),
+                    ),
+                    Text(
+                      '.',
+                      style: TextStyle(fontSize: 11, color: AppColors.outline),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSizes.space32),
+              ],
+            ),
           ),
         ),
       ),

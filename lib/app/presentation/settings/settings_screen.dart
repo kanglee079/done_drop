@@ -4,6 +4,7 @@ import 'package:done_drop/core/theme/theme.dart';
 import 'package:done_drop/app/routes/app_routes.dart';
 import 'package:done_drop/app/core/widgets/widgets.dart';
 import 'package:done_drop/app/presentation/settings/settings_controller.dart';
+import 'package:done_drop/l10n/l10n.dart';
 
 /// DoneDrop Settings Screen
 class SettingsScreen extends StatelessWidget {
@@ -11,181 +12,184 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return GetBuilder<SettingsController>(
       init: SettingsController(),
       builder: (ctrl) {
         final spec = DDResponsiveSpec.of(context);
-        return Scaffold(
-          backgroundColor: AppColors.surface,
-          appBar: AppBar(
-            backgroundColor: AppColors.surface.withValues(alpha: 0.85),
-            surfaceTintColor: Colors.transparent,
-            elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: AppColors.primary),
-              onPressed: () => Get.back(),
-            ),
-            title: Text(
-              'The Archive',
-              style: TextStyle(
-                fontFamily: AppTypography.serifFamily,
-                fontSize: 18,
-                fontStyle: FontStyle.italic,
-                color: AppColors.primary,
+        return DismissKeyboard(
+          child: Scaffold(
+            backgroundColor: AppColors.surface,
+            appBar: AppBar(
+              backgroundColor: AppColors.surface.withValues(alpha: 0.85),
+              surfaceTintColor: Colors.transparent,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back, color: AppColors.primary),
+                onPressed: () => Get.back(),
               ),
+              title: Text(
+                l10n.settingsArchiveTitle,
+                style: TextStyle(
+                  fontFamily: AppTypography.serifFamily,
+                  fontSize: 18,
+                  fontStyle: FontStyle.italic,
+                  color: AppColors.primary,
+                ),
+              ),
+              centerTitle: true,
             ),
-            centerTitle: true,
-          ),
-          body: DDResponsiveScrollBody(
-            maxWidth: 640,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Settings',
-                  style: TextStyle(
-                    fontFamily: AppTypography.serifFamily,
-                    fontSize: spec.width < 360 ? 28 : 32,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.onSurface,
-                  ),
-                ),
-                const SizedBox(height: AppSizes.space8),
-                Text(
-                  'Curate your personal experience',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: AppSizes.space32),
-                // Premium banner
-                GestureDetector(
-                  onTap: () => Get.toNamed(AppRoutes.premium),
-                  child: Container(
-                    padding: const EdgeInsets.all(AppSizes.space24),
-                    decoration: BoxDecoration(
-                      gradient: AppColors.primaryGradient,
-                      borderRadius: AppSizes.borderRadiusLg,
+            body: DDResponsiveScrollBody(
+              maxWidth: 640,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.settingsTitle,
+                    style: TextStyle(
+                      fontFamily: AppTypography.serifFamily,
+                      fontSize: spec.width < 360 ? 28 : 32,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.onSurface,
                     ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.auto_awesome,
-                          color: Colors.white,
-                          size: 28,
-                        ),
-                        const SizedBox(width: AppSizes.space16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'DoneDrop Premium',
-                                style: TextStyle(
-                                  fontFamily: AppTypography.serifFamily,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Unlock more friends and premium themes.',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.white70,
-                                ),
-                              ),
-                            ],
+                  ),
+                  const SizedBox(height: AppSizes.space8),
+                  Text(
+                    l10n.settingsSubtitle,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: AppSizes.space32),
+                  // Premium banner
+                  GestureDetector(
+                    onTap: () => Get.toNamed(AppRoutes.premium),
+                    child: Container(
+                      padding: const EdgeInsets.all(AppSizes.space24),
+                      decoration: BoxDecoration(
+                        gradient: AppColors.primaryGradient,
+                        borderRadius: AppSizes.borderRadiusLg,
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.auto_awesome,
+                            color: Colors.white,
+                            size: 28,
                           ),
-                        ),
-                        const Icon(Icons.chevron_right, color: Colors.white),
-                      ],
+                          const SizedBox(width: AppSizes.space16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  l10n.premiumBannerTitle,
+                                  style: TextStyle(
+                                    fontFamily: AppTypography.serifFamily,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  l10n.premiumBannerSubtitle,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.chevron_right, color: Colors.white),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: AppSizes.space32),
-                // Notification settings
-                Text(
-                  'Preferences',
-                  style: TextStyle(
-                    fontFamily: AppTypography.serifFamily,
-                    fontSize: 18,
-                    fontStyle: FontStyle.italic,
-                    color: AppColors.onSurface,
-                  ),
-                ),
-                const SizedBox(height: AppSizes.space16),
-                Obx(
-                  () => _SettingsTile(
-                    title: 'Habit Reminders',
-                    desc: 'Daily gentle nudges to complete your habits',
-                    trailing: Switch(
-                      value: ctrl.momentReminders.value,
-                      onChanged: ctrl.toggleMomentReminders,
-                      activeTrackColor: AppColors.primary,
-                      thumbColor: WidgetStateProperty.all(Colors.white),
+                  const SizedBox(height: AppSizes.space32),
+                  // Notification settings
+                  Text(
+                    l10n.preferencesTitle,
+                    style: TextStyle(
+                      fontFamily: AppTypography.serifFamily,
+                      fontSize: 18,
+                      fontStyle: FontStyle.italic,
+                      color: AppColors.onSurface,
                     ),
                   ),
-                ),
-                _SettingsTile(
-                  title: 'Schedule & Preferences',
-                  desc: 'Reminder time, recap day, and more',
-                  trailing: const Icon(
-                    Icons.chevron_right,
-                    color: AppColors.outline,
+                  const SizedBox(height: AppSizes.space16),
+                  Obx(
+                    () => _SettingsTile(
+                      title: l10n.habitRemindersSettingTitle,
+                      desc: l10n.habitRemindersSettingSubtitle,
+                      trailing: Switch(
+                        value: ctrl.momentReminders.value,
+                        onChanged: ctrl.toggleMomentReminders,
+                        activeTrackColor: AppColors.primary,
+                        thumbColor: WidgetStateProperty.all(Colors.white),
+                      ),
+                    ),
                   ),
-                  onTap: () => Get.toNamed(AppRoutes.notificationSettings),
-                ),
-                const SizedBox(height: AppSizes.space24),
-                Text(
-                  'Privacy & Sharing',
-                  style: TextStyle(
-                    fontFamily: AppTypography.serifFamily,
-                    fontSize: 18,
-                    fontStyle: FontStyle.italic,
-                    color: AppColors.onSurface,
+                  _SettingsTile(
+                    title: l10n.schedulePreferencesTitle,
+                    desc: l10n.schedulePreferencesSubtitle,
+                    trailing: const Icon(
+                      Icons.chevron_right,
+                      color: AppColors.outline,
+                    ),
+                    onTap: () => Get.toNamed(AppRoutes.notificationSettings),
                   ),
-                ),
-                const SizedBox(height: AppSizes.space16),
-                _SettingsTile(
-                  title: 'Profile',
-                  desc: ctrl.userEmail.isNotEmpty
-                      ? ctrl.userEmail
-                      : 'Edit your name, avatar, and bio',
-                  trailing: const Icon(
-                    Icons.chevron_right,
-                    color: AppColors.outline,
+                  const SizedBox(height: AppSizes.space24),
+                  Text(
+                    l10n.privacySharingTitle,
+                    style: TextStyle(
+                      fontFamily: AppTypography.serifFamily,
+                      fontSize: 18,
+                      fontStyle: FontStyle.italic,
+                      color: AppColors.onSurface,
+                    ),
                   ),
-                  onTap: () => Get.toNamed(AppRoutes.profile),
-                ),
-                _SettingsTile(
-                  title: 'Friends',
-                  desc: 'Manage your accountability partners',
-                  trailing: const Icon(
-                    Icons.chevron_right,
-                    color: AppColors.outline,
+                  const SizedBox(height: AppSizes.space16),
+                  _SettingsTile(
+                    title: l10n.profileTitle,
+                    desc: ctrl.userEmail.isNotEmpty
+                        ? ctrl.userEmail
+                        : l10n.profileSettingsDescFallback,
+                    trailing: const Icon(
+                      Icons.chevron_right,
+                      color: AppColors.outline,
+                    ),
+                    onTap: () => Get.toNamed(AppRoutes.profile),
                   ),
-                  onTap: () => Get.toNamed(AppRoutes.friends),
-                ),
-                _SettingsTile(
-                  title: 'Visibility',
-                  desc: 'Current setting: Personal Only',
-                  trailing: const Icon(
-                    Icons.chevron_right,
-                    color: AppColors.outline,
+                  _SettingsTile(
+                    title: l10n.friendsSettingsTitle,
+                    desc: l10n.friendsSettingsSubtitle,
+                    trailing: const Icon(
+                      Icons.chevron_right,
+                      color: AppColors.outline,
+                    ),
+                    onTap: () => Get.toNamed(AppRoutes.friends),
                   ),
-                  onTap: () {},
-                ),
-                _SettingsTile(
-                  title: 'Sign Out',
-                  desc: 'Sign out of your account',
-                  trailing: const Icon(Icons.logout, color: AppColors.outline),
-                  onTap: () => _showSignOutDialog(context, ctrl),
-                ),
-                const SizedBox(height: AppSizes.space48),
-              ],
+                  _SettingsTile(
+                    title: l10n.visibilitySettingsTitle,
+                    desc: l10n.visibilitySettingsSubtitle,
+                    trailing: const Icon(
+                      Icons.chevron_right,
+                      color: AppColors.outline,
+                    ),
+                    onTap: () {},
+                  ),
+                  _SettingsTile(
+                    title: l10n.signOutTitle,
+                    desc: l10n.signOutSubtitle,
+                    trailing: const Icon(Icons.logout, color: AppColors.outline),
+                    onTap: () => _showSignOutDialog(context, ctrl),
+                  ),
+                  const SizedBox(height: AppSizes.space48),
+                ],
+              ),
             ),
           ),
         );
@@ -193,31 +197,18 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  void _showSignOutDialog(BuildContext context, SettingsController ctrl) {
-    showDialog(
+  void _showSignOutDialog(BuildContext context, SettingsController ctrl) async {
+    final l10n = context.l10n;
+    final confirmed = await ConfirmDialog.show(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        title: Text('Sign Out', style: TextStyle(color: AppColors.onSurface)),
-        content: Text(
-          'Are you sure you want to sign out?',
-          style: TextStyle(color: AppColors.onSurfaceVariant),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              ctrl.signOut();
-            },
-            child: Text('Sign Out', style: TextStyle(color: AppColors.error)),
-          ),
-        ],
-      ),
+      title: l10n.confirmSignOutTitle,
+      message: l10n.confirmSignOutMessage,
+      isDestructive: true,
     );
+
+    if (confirmed) {
+      await ctrl.signOut();
+    }
   }
 }
 

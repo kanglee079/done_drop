@@ -21,7 +21,7 @@ service cloud.firestore {
     // Friendship documents use sorted ID format: id1_id2 (id1 < id2 lexicographically).
     // The friendship doc ID is already the concatenation, so we pass it as a single param.
     function friendshipDocExists(friendshipId) {
-      return exists(path('friendships/'+friendshipId));
+      return exists(path('databases/$(database)/documents/friendships/'+friendshipId));
     }
 
     function areFriends(userId1, userId2) {
@@ -30,8 +30,8 @@ service cloud.firestore {
     }
 
     function isMomentOwner(momentId) {
-      return exists(path('moments/'+momentId))
-        && get(path('moments/'+momentId)).data.ownerId == currentUser();
+      return exists(path('databases/$(database)/documents/moments/'+momentId))
+        && get(path('databases/$(database)/documents/moments/'+momentId)).data.ownerId == currentUser();
     }
 
     // Soft cap: Firestore rules don't support aggregate counts.
@@ -48,11 +48,19 @@ service cloud.firestore {
         || areFriends(currentUser(), userId)
       );
 
+      // Allow create for the user's own document with flexible validation
+      // This is more permissive to handle initial setup race conditions
       allow create: if isOwner(userId)
-        && request.resource.data.id == currentUser();
+        && (
+          request.resource.data.id == currentUser()
+          || request.resource.data.id == null
+        );
 
       allow update: if isOwner(userId)
-        && request.resource.data.id == userId;
+        && (
+          request.resource.data.id == userId
+          || request.resource.data.id == null
+        );
 
       allow delete: if isOwner(userId);
 
@@ -203,6 +211,45 @@ service cloud.firestore {
         resource.data.recipientId == currentUser()
         || resource.data.ownerId == currentUser()
       );
+    }
+
+    // ── CHATS ───────────────────────────────────────────────────────────────
+
+    match /chats/{threadId} {
+      allow read: if isAuthenticated()
+        && currentUser() in resource.data.participantIds;
+
+      allow create: if isAuthenticated()
+        && request.resource.data.id == threadId
+        && request.resource.data.participantIds is list
+        && request.resource.data.participantIds.size() == 2
+        && currentUser() in request.resource.data.participantIds
+        && areFriends(
+          request.resource.data.participantIds[0],
+          request.resource.data.participantIds[1]
+        );
+
+      allow update: if isAuthenticated()
+        && currentUser() in resource.data.participantIds
+        && request.resource.data.participantIds == resource.data.participantIds
+        && areFriends(resource.data.participantIds[0], resource.data.participantIds[1]);
+
+      allow delete: if false;
+
+      match /messages/{messageId} {
+        allow read: if isAuthenticated()
+          && exists(path('databases/$(database)/documents/chats/'+threadId))
+          && currentUser() in get(path('databases/$(database)/documents/chats/'+threadId)).data.participantIds;
+
+        allow create: if isAuthenticated()
+          && exists(path('databases/$(database)/documents/chats/'+threadId))
+          && currentUser() in get(path('databases/$(database)/documents/chats/'+threadId)).data.participantIds
+          && request.resource.data.senderId == currentUser()
+          && request.resource.data.threadId == threadId;
+
+        allow update: if false;
+        allow delete: if false;
+      }
     }
 
     // ── WEEKLY RECAPS ───────────────────────────────────────────────────────

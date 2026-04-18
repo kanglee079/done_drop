@@ -4,6 +4,7 @@ import 'package:done_drop/app/presentation/capture/moment_controller.dart';
 import 'package:done_drop/app/presentation/home/navigation_controller.dart';
 import 'package:done_drop/app/routes/app_routes.dart';
 import 'package:done_drop/core/theme/theme.dart';
+import 'package:done_drop/l10n/l10n.dart';
 
 class SuccessScreen extends StatefulWidget {
   const SuccessScreen({super.key});
@@ -49,15 +50,37 @@ class _SuccessScreenState extends State<SuccessScreen>
     if (Get.isRegistered<MomentController>()) {
       Get.find<MomentController>().resetComposer();
     }
-    Get.offAllNamed(AppRoutes.home);
+    _returnToHome();
   }
 
   void _openBuddy() {
     if (Get.isRegistered<MomentController>()) {
       Get.find<MomentController>().resetComposer();
     }
-    Get.offAllNamed(AppRoutes.home);
-    Get.find<NavigationController>().setTab(1);
+    _returnToHome(tabIndex: 1);
+  }
+
+  void _returnToHome({int? tabIndex}) {
+    var foundHome = false;
+    Get.until((route) {
+      final isHome = route.settings.name == AppRoutes.home;
+      if (isHome) {
+        foundHome = true;
+      }
+      return isHome;
+    });
+
+    if (!foundHome) {
+      Get.offAllNamed(AppRoutes.home);
+    }
+
+    if (tabIndex != null) {
+      Future<void>.microtask(() {
+        if (Get.isRegistered<NavigationController>()) {
+          Get.find<NavigationController>().setTab(tabIndex);
+        }
+      });
+    }
   }
 
   @override
@@ -65,6 +88,7 @@ class _SuccessScreenState extends State<SuccessScreen>
     final submission = _submission;
     final isProofMoment = submission?.isProofMoment ?? false;
     final wasOfflineQueued = submission?.wasOfflineQueued ?? false;
+    final l10n = context.l10n;
 
     return Scaffold(
       backgroundColor: AppColors.surface,
@@ -98,7 +122,9 @@ class _SuccessScreenState extends State<SuccessScreen>
                   ),
                   const SizedBox(height: AppSizes.space24),
                   Text(
-                    wasOfflineQueued ? 'Saved for sync' : 'Moment saved',
+                    wasOfflineQueued
+                        ? l10n.savedForSyncTitle
+                        : l10n.momentSavedTitle,
                     textAlign: TextAlign.center,
                     style: AppTypography.headlineSmall(
                       color: AppColors.onSurface,
@@ -107,8 +133,8 @@ class _SuccessScreenState extends State<SuccessScreen>
                   const SizedBox(height: AppSizes.space12),
                   Text(
                     isProofMoment
-                        ? 'Habit completed. Proof captured.'
-                        : 'A quiet proof of your effort.',
+                        ? l10n.proofCapturedMessage
+                        : l10n.quietProofMessage,
                     textAlign: TextAlign.center,
                     style: AppTypography.bodyLarge(
                       color: AppColors.onSurfaceVariant,
@@ -117,13 +143,13 @@ class _SuccessScreenState extends State<SuccessScreen>
                   const SizedBox(height: AppSizes.space32),
                   FilledButton(
                     onPressed: _goHome,
-                    child: const Text('Back to Today'),
+                    child: Text(l10n.backToTodayAction),
                   ),
                   const SizedBox(height: AppSizes.space12),
                   TextButton(
                     onPressed: _openBuddy,
                     child: Text(
-                      'Open Buddy',
+                      l10n.openBuddyAction,
                       style: AppTypography.labelLarge(color: AppColors.primary),
                     ),
                   ),

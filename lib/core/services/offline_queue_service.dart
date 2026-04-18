@@ -92,7 +92,7 @@ class OfflineQueueService extends GetxService implements HabitCompletionQueue {
         localFilePath: localMediaPath,
         storagePath: 'moments/$ownerId/$momentId/original.jpg',
         targetId: momentId,
-        priority: 10,
+        priority: 5,
       ),
     );
   }
@@ -117,7 +117,7 @@ class OfflineQueueService extends GetxService implements HabitCompletionQueue {
           'completedAt': completedAt.toIso8601String(),
         },
         targetId: instanceId,
-        priority: 5,
+        priority: 10,
       ),
     );
   }
@@ -137,9 +137,6 @@ class OfflineQueueService extends GetxService implements HabitCompletionQueue {
         await _db.completeSyncItem(item.id);
       } catch (e) {
         await _db.failSyncItem(item.id, e.toString());
-        if (item.retryCount >= 3) {
-          await _db.completeSyncItem(item.id);
-        }
       }
     }
 

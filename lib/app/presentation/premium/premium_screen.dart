@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:done_drop/app/core/widgets/widgets.dart';
 import 'package:done_drop/core/theme/theme.dart';
 import 'package:done_drop/app/presentation/premium/premium_controller.dart';
+import 'package:done_drop/l10n/l10n.dart';
 
 /// DoneDrop Premium Screen
 class PremiumScreen extends StatelessWidget {
@@ -10,6 +11,7 @@ class PremiumScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return GetBuilder<PremiumController>(
       init: PremiumController(),
       builder: (ctrl) {
@@ -56,7 +58,7 @@ class PremiumScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSizes.space16),
                   Text(
-                    'Premium stays off until billing is real',
+                    l10n.premiumScreenTitle,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontFamily: AppTypography.serifFamily,
@@ -67,7 +69,7 @@ class PremiumScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSizes.space12),
                   Text(
-                    'This build removes fake purchase flows. When StoreKit and Play Billing are wired, pricing, restore, renewal, and cancellation details will appear here.',
+                    l10n.premiumScreenSubtitle,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 15,
@@ -90,14 +92,14 @@ class PremiumScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'What will unlock later',
+                          l10n.premiumWhatUnlocksTitle,
                           style: AppTypography.titleMedium(
                             color: AppColors.onSurface,
                           ),
                         ),
                         const SizedBox(height: AppSizes.space8),
                         Text(
-                          'Pricing, trial terms, restore, auto-renew disclosure, and manage subscription links will only ship together with native billing.',
+                          l10n.premiumWhatUnlocksSubtitle,
                           style: AppTypography.bodyMedium(
                             color: AppColors.onSurfaceVariant,
                           ),
@@ -108,30 +110,29 @@ class PremiumScreen extends StatelessWidget {
                   const SizedBox(height: AppSizes.space32),
                   // Benefits
                   Column(
-                    children: const [
+                    children: [
                       _BenefitItem(
                         icon: Icons.group,
-                        title: 'Unlimited Friends',
-                        desc: 'Connect with all your accountability partners.',
+                        title: l10n.premiumBenefitUnlimitedFriendsTitle,
+                        desc: l10n.premiumBenefitUnlimitedFriendsDesc,
                       ),
-                      SizedBox(height: AppSizes.space16),
+                      const SizedBox(height: AppSizes.space16),
                       _BenefitItem(
                         icon: Icons.filter_alt_outlined,
-                        title: 'Advanced Filters',
-                        desc: 'Search by mood, person, or subtle themes.',
+                        title: l10n.premiumBenefitAdvancedFiltersTitle,
+                        desc: l10n.premiumBenefitAdvancedFiltersDesc,
                       ),
-                      SizedBox(height: AppSizes.space16),
+                      const SizedBox(height: AppSizes.space16),
                       _BenefitItem(
                         icon: Icons.auto_awesome,
-                        title: 'Custom Recap Themes',
-                        desc:
-                            'Exclusive editorial layouts for your memory books.',
+                        title: l10n.premiumBenefitCustomThemesTitle,
+                        desc: l10n.premiumBenefitCustomThemesDesc,
                       ),
-                      SizedBox(height: AppSizes.space16),
+                      const SizedBox(height: AppSizes.space16),
                       _BenefitItem(
                         icon: Icons.high_quality,
-                        title: 'High-Res Backups',
-                        desc: 'Lossless storage for every photo you treasure.',
+                        title: l10n.premiumBenefitHighResBackupsTitle,
+                        desc: l10n.premiumBenefitHighResBackupsDesc,
                       ),
                     ],
                   ),
@@ -152,10 +153,10 @@ class PremiumScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      child: const Center(
+                      child: Center(
                         child: Text(
-                          'Premium unavailable in this build',
-                          style: TextStyle(
+                          l10n.premiumUnavailableAction,
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
@@ -166,7 +167,7 @@ class PremiumScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSizes.space12),
                   Text(
-                    'Premium is intentionally hidden until store-compliant billing is implemented end to end.',
+                    l10n.premiumFooterNote,
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 11, color: AppColors.outline),
                   ),

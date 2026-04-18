@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:done_drop/app/routes/app_routes.dart';
+import 'package:done_drop/l10n/l10n.dart';
 import '../../../core/theme/theme.dart';
 import '../../core/widgets/widgets.dart';
 import '../../../core/models/leaderboard_entry.dart';
@@ -21,9 +23,9 @@ class LeaderboardScreen extends GetView<LeaderboardController> {
           icon: const Icon(Icons.arrow_back, color: AppColors.primary),
           onPressed: () => Get.back(),
         ),
-        title: const Text(
-          'Leaderboard',
-          style: TextStyle(
+        title: Text(
+          context.l10n.leaderboardTitle,
+          style: const TextStyle(
             fontFamily: AppTypography.serifFamily,
             fontStyle: FontStyle.italic,
             fontSize: 18,
@@ -80,7 +82,7 @@ class _PeriodSelector extends GetView<LeaderboardController> {
               borderRadius: AppSizes.borderRadiusFull,
             ),
             child: Text(
-              _periodLabel(period),
+              _periodLabel(context, period),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 12,
@@ -127,7 +129,7 @@ class _PeriodSelector extends GetView<LeaderboardController> {
                           borderRadius: AppSizes.borderRadiusFull,
                         ),
                         child: Text(
-                          _periodLabel(period),
+                          _periodLabel(context, period),
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 12,
@@ -146,11 +148,12 @@ class _PeriodSelector extends GetView<LeaderboardController> {
     });
   }
 
-  String _periodLabel(LeaderboardPeriod p) => switch (p) {
-    LeaderboardPeriod.today => 'Today',
-    LeaderboardPeriod.thisWeek => 'Week',
-    LeaderboardPeriod.thisMonth => 'Month',
-    LeaderboardPeriod.allTime => 'All',
+  String _periodLabel(BuildContext context, LeaderboardPeriod p) =>
+      switch (p) {
+        LeaderboardPeriod.today => context.l10n.leaderboardPeriodToday,
+        LeaderboardPeriod.thisWeek => context.l10n.leaderboardPeriodWeek,
+        LeaderboardPeriod.thisMonth => context.l10n.leaderboardPeriodMonth,
+        LeaderboardPeriod.allTime => context.l10n.leaderboardPeriodAll,
   };
 }
 
@@ -423,7 +426,7 @@ class _LeaderboardRow extends StatelessWidget {
                       ),
                       const SizedBox(width: 2),
                       Text(
-                        '${entry.currentStreak} day streak',
+                        context.l10n.leaderboardDayStreak(entry.currentStreak),
                         style: const TextStyle(
                           fontSize: 11,
                           color: Colors.orange,
@@ -449,9 +452,12 @@ class _LeaderboardRow extends StatelessWidget {
                       : AppColors.onSurface,
                 ),
               ),
-              const Text(
-                'done',
-                style: TextStyle(fontSize: 10, color: AppColors.outline),
+              Text(
+                context.l10n.leaderboardDoneLabel,
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: AppColors.outline,
+                ),
               ),
             ],
           ),
@@ -475,9 +481,9 @@ class _EmptyLeaderboard extends StatelessWidget {
             color: AppColors.outlineVariant,
           ),
           const SizedBox(height: AppSizes.space16),
-          const Text(
-            'No friends yet',
-            style: TextStyle(
+          Text(
+            context.l10n.leaderboardNoFriendsTitle,
+            style: const TextStyle(
               fontFamily: AppTypography.serifFamily,
               fontSize: 22,
               fontWeight: FontWeight.w600,
@@ -485,16 +491,19 @@ class _EmptyLeaderboard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Add friends to compete on the leaderboard.',
+          Text(
+            context.l10n.leaderboardNoFriendsSubtitle,
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 14, color: AppColors.onSurfaceVariant),
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppColors.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: AppSizes.space24),
           OutlinedButton.icon(
-            onPressed: () => Get.toNamed('/friends/add'),
+            onPressed: () => Get.toNamed(AppRoutes.addFriend),
             icon: const Icon(Icons.person_add),
-            label: const Text('Add Friends'),
+            label: Text(context.l10n.addFriendsAction),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.primary,
               side: const BorderSide(color: AppColors.primary),

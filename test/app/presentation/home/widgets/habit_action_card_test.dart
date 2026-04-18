@@ -32,8 +32,7 @@ ActivityInstance _makeInstance({
 
 void main() {
   group('HabitActionCard — hero variant', () {
-    testWidgets('triggers both complete actions on tap', (tester) async {
-      var quickCompleteCount = 0;
+    testWidgets('routes hero action through proof flow', (tester) async {
       var proofCompleteCount = 0;
 
       await tester.pumpWidget(
@@ -46,23 +45,20 @@ void main() {
               actionState: HabitActionState.none,
               isCompleted: false,
               isOverdue: false,
-              onCompleteNow: () async => quickCompleteCount++,
               onCompleteWithProof: () async => proofCompleteCount++,
             ),
           ),
         ),
       );
 
-      await tester.tap(find.byKey(const Key('complete-now-button')).last);
-      await tester.pump();
       await tester.tap(find.byKey(const Key('complete-proof-button')).last);
       await tester.pump();
 
-      expect(quickCompleteCount, 1);
       expect(proofCompleteCount, 1);
+      expect(find.byKey(const Key('complete-now-button')), findsNothing);
     });
 
-    testWidgets('shows loading indicator on quick-complete actionState', (tester) async {
+    testWidgets('shows only proof CTA while incomplete', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -70,18 +66,17 @@ void main() {
               activity: _makeActivity(),
               instance: _makeInstance(),
               variant: HabitCardVariant.hero,
-              actionState: HabitActionState.quickComplete,
+              actionState: HabitActionState.none,
               isCompleted: false,
               isOverdue: false,
-              onCompleteNow: () async {},
               onCompleteWithProof: () async {},
             ),
           ),
         ),
       );
 
-      expect(find.byType(CircularProgressIndicator), findsWidgets);
-      expect(find.text('Complete now'), findsNothing);
+      expect(find.byKey(const Key('complete-now-button')), findsNothing);
+      expect(find.byKey(const Key('complete-proof-button')), findsOneWidget);
     });
 
     testWidgets('shows loading indicator on complete-with-proof actionState', (tester) async {
@@ -95,7 +90,6 @@ void main() {
               actionState: HabitActionState.completeWithProof,
               isCompleted: false,
               isOverdue: false,
-              onCompleteNow: () async {},
               onCompleteWithProof: () async {},
             ),
           ),
@@ -103,7 +97,7 @@ void main() {
       );
 
       expect(find.byType(CircularProgressIndicator), findsWidgets);
-      expect(find.text('Complete + proof'), findsNothing);
+      expect(find.byKey(const Key('complete-proof-button')), findsOneWidget);
     });
 
     testWidgets('shows completed state instead of buttons when isCompleted=true', (tester) async {
@@ -117,7 +111,6 @@ void main() {
               actionState: HabitActionState.none,
               isCompleted: true,
               isOverdue: false,
-              onCompleteNow: () async {},
               onCompleteWithProof: () async {},
             ),
           ),
@@ -144,8 +137,7 @@ void main() {
               actionState: HabitActionState.none,
               isCompleted: false,
               isOverdue: false,
-              onCompleteNow: () async => completeCount++,
-              onCompleteWithProof: () async {},
+              onCompleteWithProof: () async => completeCount++,
             ),
           ),
         ),
@@ -168,7 +160,6 @@ void main() {
               actionState: HabitActionState.quickComplete,
               isCompleted: false,
               isOverdue: false,
-              onCompleteNow: () async {},
               onCompleteWithProof: () async {},
             ),
           ),
@@ -190,7 +181,6 @@ void main() {
               actionState: HabitActionState.completeWithProof,
               isCompleted: false,
               isOverdue: false,
-              onCompleteNow: () async {},
               onCompleteWithProof: () async {},
             ),
           ),
@@ -212,7 +202,6 @@ void main() {
               actionState: HabitActionState.none,
               isCompleted: true,
               isOverdue: false,
-              onCompleteNow: () async {},
               onCompleteWithProof: () async {},
             ),
           ),
@@ -233,7 +222,6 @@ void main() {
               actionState: HabitActionState.none,
               isCompleted: true,
               isOverdue: false,
-              onCompleteNow: () async {},
               onCompleteWithProof: () async {},
             ),
           ),
@@ -243,7 +231,7 @@ void main() {
       expect(find.byIcon(Icons.verified_outlined), findsOneWidget);
     });
 
-    testWidgets('disabled pill does not call onCompleteNow when isCompleted=true', (tester) async {
+    testWidgets('disabled pill does not call proof flow when isCompleted=true', (tester) async {
       var tapCount = 0;
 
       await tester.pumpWidget(
@@ -256,8 +244,7 @@ void main() {
               actionState: HabitActionState.none,
               isCompleted: true,
               isOverdue: false,
-              onCompleteNow: () async => tapCount++,
-              onCompleteWithProof: () async {},
+              onCompleteWithProof: () async => tapCount++,
             ),
           ),
         ),

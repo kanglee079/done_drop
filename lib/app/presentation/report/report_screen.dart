@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:done_drop/core/theme/theme.dart';
 import 'package:done_drop/app/core/widgets/widgets.dart';
 import 'package:done_drop/app/presentation/report/report_controller.dart';
+import 'package:done_drop/l10n/l10n.dart';
 
 /// DoneDrop Report Screen
 class ReportScreen extends StatelessWidget {
@@ -10,6 +11,7 @@ class ReportScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return GetBuilder<ReportController>(
       init: ReportController(),
       builder: (ctrl) {
@@ -18,101 +20,103 @@ class ReportScreen extends StatelessWidget {
         final reportedUserId = args?['reportedUserId'] as String? ?? '';
         final momentId = args?['momentId'] as String?;
 
-        return Scaffold(
-          backgroundColor: AppColors.surface,
-          appBar: AppBar(
+        return DismissKeyboard(
+          child: Scaffold(
             backgroundColor: AppColors.surface,
-            surfaceTintColor: Colors.transparent,
-            elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.close, color: AppColors.primary),
-              onPressed: () => Get.back(),
-            ),
-            title: const Text('Report'),
-            centerTitle: true,
-          ),
-          body: Obx(() {
-            if (ctrl.hasSubmitted.value) {
-              return DDResponsiveScrollBody(
-                maxWidth: 520,
-                child: _SuccessState(onDone: () => Get.back()),
-              );
-            }
-
-            return DDResponsiveScrollBody(
-              maxWidth: 560,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Report Content',
-                    style: TextStyle(
-                      fontFamily: AppTypography.serifFamily,
-                      fontSize: 28,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: AppSizes.space8),
-                  Text(
-                    'Help us keep DoneDrop safe. Select a reason for reporting.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: AppSizes.space32),
-                  ...ctrl.reasons.map(
-                    (reason) => Padding(
-                      padding: const EdgeInsets.only(bottom: AppSizes.space8),
-                      child: _ReasonTile(
-                        label: reason,
-                        isSelected: ctrl.selectedReason.value == reason,
-                        onTap: () => ctrl.selectReason(reason),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: AppSizes.space16),
-                  TextField(
-                    controller: ctrl.additionalDetails,
-                    maxLines: 3,
-                    maxLength: 300,
-                    decoration: InputDecoration(
-                      hintText: 'Additional details (optional)',
-                      hintStyle: TextStyle(
-                        color: AppColors.outline.withValues(alpha: 0.5),
-                      ),
-                      filled: true,
-                      fillColor: AppColors.surfaceContainerHighest,
-                      border: OutlineInputBorder(
-                        borderRadius: AppSizes.borderRadiusMd,
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.all(AppSizes.space16),
-                    ),
-                  ),
-                  const SizedBox(height: AppSizes.space16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ctrl.isSubmitting.value
-                        ? const Center(
-                            child: CircularProgressIndicator(
-                              color: AppColors.primary,
-                            ),
-                          )
-                        : DDPrimaryButton(
-                            label: 'Submit Report',
-                            onPressed: () => ctrl.submitReport(
-                              reportedUserId: reportedUserId,
-                              momentId: momentId,
-                            ),
-                          ),
-                  ),
-                  const SizedBox(height: AppSizes.space24),
-                ],
+            appBar: AppBar(
+              backgroundColor: AppColors.surface,
+              surfaceTintColor: Colors.transparent,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.close, color: AppColors.primary),
+                onPressed: () => Get.back(),
               ),
-            );
-          }),
+              title: Text(l10n.reportTitle),
+              centerTitle: true,
+            ),
+            body: Obx(() {
+              if (ctrl.hasSubmitted.value) {
+                return DDResponsiveScrollBody(
+                  maxWidth: 520,
+                  child: _SuccessState(onDone: () => Get.back()),
+                );
+              }
+
+              return DDResponsiveScrollBody(
+                maxWidth: 560,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.reportContentTitle,
+                      style: TextStyle(
+                        fontFamily: AppTypography.serifFamily,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: AppSizes.space8),
+                    Text(
+                      l10n.reportContentSubtitle,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppColors.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: AppSizes.space32),
+                    ...ctrl.reasons.map(
+                      (reason) => Padding(
+                        padding: const EdgeInsets.only(bottom: AppSizes.space8),
+                        child: _ReasonTile(
+                          label: ctrl.reasonLabel(reason),
+                          isSelected: ctrl.selectedReason.value == reason,
+                          onTap: () => ctrl.selectReason(reason),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSizes.space16),
+                    TextField(
+                      controller: ctrl.additionalDetails,
+                      maxLines: 3,
+                      maxLength: 300,
+                      decoration: InputDecoration(
+                        hintText: l10n.reportAdditionalDetailsHint,
+                        hintStyle: TextStyle(
+                          color: AppColors.outline.withValues(alpha: 0.5),
+                        ),
+                        filled: true,
+                        fillColor: AppColors.surfaceContainerHighest,
+                        border: OutlineInputBorder(
+                          borderRadius: AppSizes.borderRadiusMd,
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.all(AppSizes.space16),
+                      ),
+                    ),
+                    const SizedBox(height: AppSizes.space16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ctrl.isSubmitting.value
+                          ? const Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.primary,
+                              ),
+                            )
+                          : DDPrimaryButton(
+                              label: l10n.submitReportAction,
+                              onPressed: () => ctrl.submitReport(
+                                reportedUserId: reportedUserId,
+                                momentId: momentId,
+                              ),
+                            ),
+                    ),
+                    const SizedBox(height: AppSizes.space24),
+                  ],
+                ),
+              );
+            }),
+          ),
         );
       },
     );
@@ -176,6 +180,7 @@ class _SuccessState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: AppSizes.space32),
@@ -192,7 +197,7 @@ class _SuccessState extends StatelessWidget {
             ),
             const SizedBox(height: AppSizes.space24),
             Text(
-              'Report Submitted',
+              l10n.reportSubmittedTitle,
               style: TextStyle(
                 fontFamily: AppTypography.serifFamily,
                 fontSize: 24,
@@ -202,12 +207,12 @@ class _SuccessState extends StatelessWidget {
             ),
             const SizedBox(height: AppSizes.space8),
             Text(
-              'Thank you for helping keep DoneDrop safe. We will review your report shortly.',
+              l10n.reportSubmittedMessage,
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 14, color: AppColors.onSurfaceVariant),
             ),
             const SizedBox(height: AppSizes.space32),
-            DDPrimaryButton(label: 'Done', onPressed: onDone),
+            DDPrimaryButton(label: l10n.doneAction, onPressed: onDone),
           ],
         ),
       ),

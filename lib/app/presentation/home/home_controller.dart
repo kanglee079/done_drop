@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:done_drop/features/auth/presentation/controllers/auth_controller.dart';
@@ -11,8 +14,11 @@ import 'package:done_drop/core/models/completion_log.dart';
 import 'package:done_drop/app/routes/app_routes.dart';
 import 'package:done_drop/core/services/local_cache_service.dart';
 import 'package:done_drop/core/services/activity_completion_service.dart';
+import 'package:done_drop/core/services/notification_service.dart';
 import 'package:done_drop/core/theme/theme.dart';
 import 'package:done_drop/app/presentation/streak/streak_controller.dart';
+import 'package:done_drop/core/utils/activity_utils.dart';
+import 'package:done_drop/l10n/l10n.dart';
 
 enum HabitActionState { none, quickComplete, completeWithProof }
 
@@ -68,11 +74,30 @@ class HomeController extends GetxController {
   final RxMap<String, HabitActionState> actionStates =
       <String, HabitActionState>{}.obs;
 
+  StreamSubscription<User?>? _authStateSubscription;
+  StreamSubscription<UserProfile?>? _profileSubscription;
+  StreamSubscription<List<Activity>>? _activeActivitiesSubscription;
+  StreamSubscription<List<CompletionLog>>? _completionLogsSubscription;
+  StreamSubscription<List<Activity>>? _archivedActivitiesSubscription;
+  StreamSubscription<List<ActivityInstance>>? _todayInstancesSubscription;
+  StreamSubscription<dynamic>? _friendCountSubscription;
+  String? _boundUserId;
+
   @override
   void onInit() {
     super.onInit();
-    _preloadCache();
     _bindCompletionService();
+    _handleAuthUserChanged(_authController.firebaseUser);
+    _authStateSubscription = _authController.authStateStream.listen(
+      _handleAuthUserChanged,
+    );
+  }
+
+  @override
+  void onClose() {
+    _authStateSubscription?.cancel();
+    _cancelUserSubscriptions();
+    super.onClose();
   }
 
   /// Bind our reactive state to the completion service so it can do
@@ -87,17 +112,68 @@ class HomeController extends GetxController {
     }
   }
 
-  /// Load from local cache first — synchronous, no loading spinner.
-  /// Then stream Firestore data for live updates.
-  Future<void> _preloadCache() async {
+  void _handleAuthUserChanged(User? user) {
+    final uid = user?.uid;
+    if (_boundUserId == uid) return;
+
+    _boundUserId = uid;
+    _cancelUserSubscriptions();
+    _resetState(isLoading: uid != null);
+
+    if (uid == null) return;
+
+    _preloadCache(uid);
+    _watchProfile(uid);
+    _watchActivities(uid);
+    _watchTodayInstances(uid);
+    _watchFriendCount(uid);
+    unawaited(_ensureUpcomingInstances(uid));
+  }
+
+  void _cancelUserSubscriptions() {
+    _profileSubscription?.cancel();
+    _activeActivitiesSubscription?.cancel();
+    _completionLogsSubscription?.cancel();
+    _archivedActivitiesSubscription?.cancel();
+    _todayInstancesSubscription?.cancel();
+    _friendCountSubscription?.cancel();
+
+    _profileSubscription = null;
+    _activeActivitiesSubscription = null;
+    _completionLogsSubscription = null;
+    _archivedActivitiesSubscription = null;
+    _todayInstancesSubscription = null;
+    _friendCountSubscription = null;
+  }
+
+  void _resetState({required bool isLoading}) {
+    profile.value = null;
+    activities.clear();
+    archivedActivities.clear();
+    todayInstances.clear();
+    weekLogs.clear();
+    actionStates.clear();
+    completedToday.value = 0;
+    pendingToday.value = 0;
+    overdueToday.value = 0;
+    currentBestStreak.value = 0;
+    friendCount.value = 0;
+    this.isLoading.value = isLoading;
+  }
+
+  /// Load from local cache first for the current user, then let Firestore
+  /// streams replace it with live state.
+  void _preloadCache(String userId) {
     final cache = LocalCacheService.instance;
-    final cachedActs = cache.loadCachedActivities();
-    final cachedInsts = cache.loadCachedTodayInstances();
+    final cachedActs = cache.loadCachedActivities(userId);
+    final cachedInsts = cache.loadCachedTodayInstances(userId);
 
     if (cachedActs.isNotEmpty) {
-      activities.value = cachedActs
-          .map((m) => Activity.fromFirestore(m))
-          .toList();
+      activities.assignAll(
+        sortActivitiesBySchedule(
+          cachedActs.map((item) => Activity.fromFirestore(item)),
+        ),
+      );
     }
     if (cachedInsts.isNotEmpty) {
       todayInstances.clear();
@@ -109,81 +185,103 @@ class HomeController extends GetxController {
     }
 
     if (cachedActs.isNotEmpty) isLoading.value = false;
-
-    // 2. Stream Firestore data in background
-    _watchProfile();
-    _watchActivities();
-    _watchTodayInstances();
-    _watchFriendCount();
-
-    // 3. Pre-generate future instances
-    _ensureUpcomingInstances();
   }
 
   /// Pre-generate activity instances for today + next 7 days at app startup.
-  Future<void> _ensureUpcomingInstances() async {
-    final uid = _userId;
-    if (uid == null) return;
+  Future<void> _ensureUpcomingInstances(String userId) async {
     try {
-      await _activityRepo.ensureUpcomingInstances(uid, daysAhead: 7);
-    } catch (_) {
+      await _activityRepo.ensureUpcomingInstances(userId, daysAhead: 7);
+    } catch (error, stackTrace) {
+      debugPrint('[_ensureUpcomingInstances] Error: $error');
+      debugPrintStack(stackTrace: stackTrace);
       // Non-critical: instances are created on-demand when accessed anyway
     }
   }
 
-  void _watchFriendCount() {
-    final uid = _userId;
-    if (uid == null) return;
-    _friendRepo.watchFriendships(uid).listen((list) {
-      friendCount.value = list.length;
-    });
+  void _watchFriendCount(String userId) {
+    _friendCountSubscription = _friendRepo.watchFriendships(userId).listen(
+      (list) {
+        friendCount.value = list.length;
+      },
+      onError: (error) {
+        // Non-critical: silently ignore permission errors on first load
+        debugPrint('[_watchFriendCount] Error: $error');
+      },
+    );
   }
 
-  void _watchProfile() {
-    final uid = _userId;
-    if (uid == null) return;
-    _userProfileRepo.watchUserProfile(uid).listen((p) {
-      profile.value = p;
-    });
+  void _watchProfile(String userId) {
+    _profileSubscription = _userProfileRepo.watchUserProfile(userId).listen(
+      (p) {
+        profile.value = p;
+      },
+      onError: (error) {
+        debugPrint('[_watchProfile] Error: $error');
+      },
+    );
   }
 
-  void _watchActivities() {
-    final uid = _userId;
-    if (uid == null) return;
+  void _watchActivities(String userId) {
+    _activeActivitiesSubscription = _activityRepo.watchActiveActivities(userId).listen(
+      (list) async {
+        activities.assignAll(sortActivitiesBySchedule(list));
+        _recalcStats();
+        isLoading.value = false;
+        unawaited(
+          NotificationService.instance.syncActivityReminders(activities),
+        );
+        await LocalCacheService.instance.cacheActivities(
+          userId,
+          activities.map((activity) => activity.toFirestore()).toList(),
+        );
+      },
+      onError: (error) {
+        debugPrint('[_watchActivities] Error: $error');
+        isLoading.value = false;
+      },
+    );
 
-    _activityRepo.watchActiveActivities(uid).listen((list) async {
-      activities.value = list;
-      _recalcStats();
-      isLoading.value = false;
-      // Persist to local cache for next startup
-      await LocalCacheService.instance.cacheActivities(
-        list.map((a) => a.toFirestore()).toList(),
-      );
-    });
+    _completionLogsSubscription = _activityRepo.watchCompletionLogs(
+      userId,
+      limit: 100,
+    ).listen(
+      (logs) {
+        weekLogs.value = logs;
+      },
+      onError: (error) {
+        debugPrint('[_watchCompletionLogs] Error: $error');
+      },
+    );
 
-    _activityRepo.watchCompletionLogs(uid, limit: 100).listen((logs) {
-      weekLogs.value = logs;
-    });
-
-    _activityRepo.watchArchivedActivities(uid).listen((list) {
-      archivedActivities.value = list;
-    });
+    _archivedActivitiesSubscription = _activityRepo.watchArchivedActivities(
+      userId,
+    ).listen(
+      (list) {
+        archivedActivities.value = list;
+      },
+      onError: (error) {
+        debugPrint('[_watchArchivedActivities] Error: $error');
+      },
+    );
   }
 
-  void _watchTodayInstances() {
-    final uid = _userId;
-    if (uid == null) return;
-
-    _activityRepo.watchTodayInstances(uid).listen((instances) async {
-      todayInstances.clear();
-      for (final inst in instances) {
-        todayInstances[inst.activityId] = inst;
-      }
-      _recalcStats();
-      await LocalCacheService.instance.cacheTodayInstances(
-        instances.map((i) => i.toFirestore()).toList(),
-      );
-    });
+  void _watchTodayInstances(String userId) {
+    _todayInstancesSubscription = _activityRepo.watchTodayInstances(userId).listen(
+      (instances) async {
+        todayInstances.clear();
+        for (final inst in instances) {
+          todayInstances[inst.activityId] = inst;
+        }
+        _recalcStats();
+        await LocalCacheService.instance.cacheTodayInstances(
+          userId,
+          instances.map((i) => i.toFirestore()).toList(),
+        );
+      },
+      onError: (error) {
+        debugPrint('[_watchTodayInstances] Error: $error');
+      },
+    );
   }
 
   void _recalcStats() {
@@ -206,7 +304,7 @@ class HomeController extends GetxController {
   String get greetingName {
     final displayName = profile.value?.displayName.trim();
     if (displayName == null || displayName.isEmpty) {
-      return 'you';
+      return currentL10n.greetingFallbackName;
     }
     return displayName.split(' ').first;
   }
@@ -308,38 +406,72 @@ class HomeController extends GetxController {
       createdAt: now,
       updatedAt: now,
     );
+    final today = DateTime(now.year, now.month, now.day);
+    final optimisticInstance = ActivityInstance(
+      id: 'inst_${activity.id}_${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}',
+      activityId: activity.id,
+      ownerId: uid,
+      date: today,
+      status: 'pending',
+      createdAt: now,
+      updatedAt: now,
+    );
 
-    await _activityRepo.createActivity(activity);
-    await _activityRepo.getOrCreateTodayInstance(activity.id, uid);
+    final previousActivities = List<Activity>.from(activities);
+    final previousInstances = Map<String, ActivityInstance>.from(
+      todayInstances,
+    );
+
+    activities.assignAll(
+      sortActivitiesBySchedule(<Activity>[...activities, activity]),
+    );
+    await NotificationService.instance.syncActivityReminders(activities);
+    todayInstances[activity.id] = optimisticInstance;
+    _recalcStats();
+    await LocalCacheService.instance.cacheActivities(
+      uid,
+      activities.map((item) => item.toFirestore()).toList(),
+    );
+    await LocalCacheService.instance.cacheTodayInstances(
+      uid,
+      todayInstances.values.map((item) => item.toFirestore()).toList(),
+    );
+
+    try {
+      await _activityRepo.createActivity(activity);
+      await _activityRepo.getOrCreateTodayInstance(activity.id, uid);
+    } catch (_) {
+      activities.assignAll(previousActivities);
+      await NotificationService.instance.syncActivityReminders(activities);
+      todayInstances
+        ..clear()
+        ..addAll(previousInstances);
+      _recalcStats();
+      await LocalCacheService.instance.cacheActivities(
+        uid,
+        previousActivities.map((item) => item.toFirestore()).toList(),
+      );
+      await LocalCacheService.instance.cacheTodayInstances(
+        uid,
+        previousInstances.values.map((item) => item.toFirestore()).toList(),
+      );
+      rethrow;
+    }
   }
 
-  /// Complete an activity for today.
-  /// Delegates to [CompleteHabitUseCase] for consistent online/offline handling.
-  /// Returns the [CompletionResult] so UI can decide next steps.
-  Future<CompletionResult?> completeActivity(String activityId) async {
-    return _runCompletionAction(
+  /// Proof is mandatory, so both actions route into the capture flow first.
+  Future<void> completeActivity(String activityId) async {
+    await _openProofCapture(
       activityId: activityId,
       actionState: HabitActionState.quickComplete,
-      afterSuccess: (_) async {},
     );
   }
 
-  /// Complete an activity and immediately open camera to capture proof moment.
-  /// Uses the same [CompleteHabitUseCase] as quick-complete, then navigates.
-  Future<CompletionResult?> completeAndOpenCapture(String activityId) async {
-    return _runCompletionAction(
+  /// Open camera flow for proof-first completion.
+  Future<void> completeAndOpenCapture(String activityId) async {
+    await _openProofCapture(
       activityId: activityId,
       actionState: HabitActionState.completeWithProof,
-      afterSuccess: (result) async {
-        await Get.toNamed(
-          AppRoutes.capture,
-          arguments: {
-            'activityId': activityId,
-            'activityInstanceId': result.instance.id,
-            'completionLogId': result.log.id,
-          },
-        );
-      },
     );
   }
 
@@ -364,7 +496,7 @@ class HomeController extends GetxController {
     if (!instance.isCompleted) {
       await _activityRepo.missInstance(instance.id);
       await _activityRepo.resetStreak(activityId);
-      await LocalCacheService.instance.invalidateTodayInstances();
+      await LocalCacheService.instance.invalidateTodayInstances(uid);
     }
   }
 
@@ -373,40 +505,51 @@ class HomeController extends GetxController {
     await _authController.signOut();
   }
 
-  Future<CompletionResult?> _runCompletionAction({
+  Future<void> _openProofCapture({
     required String activityId,
     required HabitActionState actionState,
-    required Future<void> Function(CompletionResult result) afterSuccess,
   }) async {
     final uid = _userId;
-    if (uid == null || isActionBusy(activityId)) return null;
+    if (uid == null || isActionBusy(activityId)) return;
 
     actionStates[activityId] = actionState;
 
     try {
-      final useCase = Get.find<CompleteHabitUseCase>();
-      final result = await useCase(activityId: activityId, userId: uid);
-
-      if (result != null) {
-        _recalcStats();
-        _notifyStreakMilestone(result);
-        await afterSuccess(result);
-      }
-
-      return result;
-    } catch (_) {
+      await Get.toNamed(
+        AppRoutes.capture,
+        arguments: {'activityId': activityId},
+      );
+    } catch (error, stackTrace) {
+      debugPrint('[_openProofCapture] Error: $error');
+      debugPrintStack(stackTrace: stackTrace);
       Get.snackbar(
-        'Completion failed',
-        'Could not complete habit. Please try again.',
+        currentL10n.captureUnavailableTitle,
+        currentL10n.captureUnavailableMessage,
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: AppColors.error,
         colorText: Colors.white,
         duration: const Duration(seconds: 3),
       );
-      return null;
     } finally {
       actionStates.remove(activityId);
     }
+  }
+
+  void handleCompletionResult(CompletionResult result) {
+    _recalcStats();
+    _notifyStreakMilestone(result);
+    Future<void>.microtask(() async {
+      final uid = _userId;
+      if (uid == null) return;
+      await LocalCacheService.instance.cacheActivities(
+        uid,
+        activities.map((activity) => activity.toFirestore()).toList(),
+      );
+      await LocalCacheService.instance.cacheTodayInstances(
+        uid,
+        todayInstances.values.map((instance) => instance.toFirestore()).toList(),
+      );
+    });
   }
 
   void _notifyStreakMilestone(CompletionResult result) {

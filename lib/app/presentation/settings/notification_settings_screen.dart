@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:done_drop/core/theme/theme.dart';
 import 'package:done_drop/app/core/widgets/widgets.dart';
 import 'package:done_drop/app/presentation/settings/notification_controller.dart';
+import 'package:done_drop/l10n/l10n.dart';
 
 /// Screen for configuring notification schedules.
 class NotificationSettingsScreen extends StatelessWidget {
@@ -10,6 +11,7 @@ class NotificationSettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return GetBuilder<NotificationController>(
       init: NotificationController(),
       builder: (ctrl) {
@@ -23,7 +25,7 @@ class NotificationSettingsScreen extends StatelessWidget {
               icon: const Icon(Icons.arrow_back, color: AppColors.primary),
               onPressed: () => Get.back(),
             ),
-            title: const Text('Notifications'),
+            title: Text(l10n.notificationSettingsTitle),
             centerTitle: true,
           ),
           body: DDResponsiveScrollBody(
@@ -32,7 +34,7 @@ class NotificationSettingsScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Moment Reminders',
+                  l10n.momentRemindersTitle,
                   style: TextStyle(
                     fontFamily: AppTypography.serifFamily,
                     fontSize: 18,
@@ -42,7 +44,7 @@ class NotificationSettingsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSizes.space8),
                 Text(
-                  'Get a gentle daily nudge to capture your moment.',
+                  l10n.momentRemindersSubtitle,
                   style: TextStyle(
                     fontSize: 13,
                     color: AppColors.onSurfaceVariant,
@@ -51,8 +53,8 @@ class NotificationSettingsScreen extends StatelessWidget {
                 const SizedBox(height: AppSizes.space16),
                 Obx(
                   () => _SettingsTile(
-                    title: 'Reminder',
-                    desc: 'Toggle daily reminder on/off',
+                    title: l10n.notificationReminderTitle,
+                    desc: l10n.notificationReminderDesc,
                     trailing: Switch(
                       value: ctrl.reminderEnabled.value,
                       onChanged: ctrl.toggleReminderEnabled,
@@ -67,7 +69,7 @@ class NotificationSettingsScreen extends StatelessWidget {
                         ? ctrl.pickReminderTime
                         : null,
                     child: _SettingsTile(
-                      title: 'Time',
+                      title: l10n.notificationTimeTitle,
                       desc: ctrl.reminderTimeLabel,
                       trailing: Icon(
                         Icons.chevron_right,
@@ -80,7 +82,7 @@ class NotificationSettingsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSizes.space32),
                 Text(
-                  'Weekly Recap',
+                  l10n.weeklyRecapSettingsTitle,
                   style: TextStyle(
                     fontFamily: AppTypography.serifFamily,
                     fontSize: 18,
@@ -90,7 +92,7 @@ class NotificationSettingsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSizes.space8),
                 Text(
-                  'Receive a weekly summary of your moments.',
+                  l10n.weeklyRecapSettingsSubtitle,
                   style: TextStyle(
                     fontSize: 13,
                     color: AppColors.onSurfaceVariant,
@@ -99,8 +101,8 @@ class NotificationSettingsScreen extends StatelessWidget {
                 const SizedBox(height: AppSizes.space16),
                 Obx(
                   () => _SettingsTile(
-                    title: 'Recap',
-                    desc: 'Toggle weekly recap on/off',
+                    title: l10n.weeklyRecapToggleTitle,
+                    desc: l10n.weeklyRecapToggleDesc,
                     trailing: Switch(
                       value: ctrl.recapEnabled.value,
                       onChanged: ctrl.toggleRecapEnabled,
@@ -113,7 +115,7 @@ class NotificationSettingsScreen extends StatelessWidget {
                   () => GestureDetector(
                     onTap: ctrl.recapEnabled.value ? ctrl.pickRecapDay : null,
                     child: _SettingsTile(
-                      title: 'Day',
+                      title: l10n.notificationDayTitle,
                       desc: ctrl.recapDayLabel,
                       trailing: Icon(
                         Icons.chevron_right,
@@ -128,7 +130,7 @@ class NotificationSettingsScreen extends StatelessWidget {
                   () => GestureDetector(
                     onTap: ctrl.recapEnabled.value ? ctrl.pickRecapTime : null,
                     child: _SettingsTile(
-                      title: 'Time',
+                      title: l10n.notificationTimeTitle,
                       desc: ctrl.recapTimeLabel,
                       trailing: Icon(
                         Icons.chevron_right,
@@ -146,7 +148,7 @@ class NotificationSettingsScreen extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: ctrl.requestPermissions,
                     icon: const Icon(Icons.notifications_outlined),
-                    label: const Text('Request Notification Permission'),
+                    label: Text(l10n.requestNotificationPermissionAction),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.primary,
                       side: BorderSide(color: AppColors.primary),

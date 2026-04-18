@@ -13,6 +13,7 @@ import 'package:done_drop/core/services/connectivity_service.dart';
 import 'package:done_drop/core/services/offline_queue_service.dart';
 import 'package:done_drop/core/services/local_cache_service.dart';
 import 'package:done_drop/app/presentation/memory_wall/memory_wall_controller.dart';
+import 'package:done_drop/app/presentation/notifications/notification_center_controller.dart';
 import 'package:done_drop/app/presentation/settings/settings_controller.dart';
 
 /// Home screen dependency injection.
@@ -29,8 +30,11 @@ class HomeBinding extends Bindings {
         activityRepository: Get.find<ActivityRepository>(),
         connectivity: Get.find<ConnectivityService>(),
         offlineQueue: Get.find<OfflineQueueService>(),
-        invalidateTodayInstances: () =>
-            LocalCacheService.instance.invalidateTodayInstances(),
+        invalidateTodayInstances: () {
+          final uid = Get.find<AuthController>().firebaseUser?.uid;
+          if (uid == null) return Future<void>.value();
+          return LocalCacheService.instance.invalidateTodayInstances(uid);
+        },
       ),
     );
 
@@ -42,8 +46,10 @@ class HomeBinding extends Bindings {
         Get.find<FriendRepository>(),
       ),
     );
-    Get.lazyPut<FeedController>(
-      () => FeedController(),
+    Get.lazyPut<FeedController>(() => FeedController());
+    Get.lazyPut<NotificationCenterController>(
+      () => NotificationCenterController(),
+      fenix: true,
     );
     Get.lazyPut<MemoryWallController>(
       () => MemoryWallController(Get.find<MomentRepository>()),

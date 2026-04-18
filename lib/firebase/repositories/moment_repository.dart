@@ -10,6 +10,7 @@ class MomentRepository {
   MomentRepository(this._db);
   final FirebaseFirestore _db;
   final FeedDeliveryPlanner _deliveryPlanner = const FeedDeliveryPlanner();
+  static const String _legacyTaskTemplatesCollection = 'task_templates';
 
   CollectionReference<Map<String, dynamic>> get _col =>
       _db.collection(AppConstants.colMoments);
@@ -18,10 +19,13 @@ class MomentRepository {
       _db.collection(AppConstants.colReactions);
 
   CollectionReference<Map<String, dynamic>> get _taskCol =>
-      _db.collection(AppConstants.colTaskTemplates);
+      _db.collection(_legacyTaskTemplatesCollection);
 
   CollectionReference<Map<String, dynamic>> get _feedDeliveryCol =>
       _db.collection(AppConstants.colFeedDeliveries);
+
+  static String reactionDocumentId(String momentId, String userId) =>
+      'reaction_${momentId}_$userId';
 
   // ── Moments ────────────────────────────────────────────────────────────
   Future<Moment?> getMoment(String momentId) async {
@@ -36,6 +40,16 @@ class MomentRepository {
 
   Future<void> updateMoment(Moment moment) async {
     await _col.doc(moment.id).update(moment.toFirestore());
+  }
+
+  Future<void> updateMomentThumbnail(
+    String momentId,
+    MediaMetadata thumbnail,
+  ) async {
+    await _col.doc(momentId).update({
+      'media.thumbnail': thumbnail.toFirestore(),
+      'updatedAt': DateTime.now().toIso8601String(),
+    });
   }
 
   Future<void> deleteMoment(String momentId) async {
@@ -57,6 +71,12 @@ class MomentRepository {
       await FirebaseStorage.instance
           .ref()
           .child('moments/$ownerId/$momentId/thumb.jpg')
+          .delete();
+    } catch (_) {}
+    try {
+      await FirebaseStorage.instance
+          .ref()
+          .child('moments/$ownerId/$momentId/original_280x420.jpg')
           .delete();
     } catch (_) {}
   }
@@ -129,9 +149,45 @@ class MomentRepository {
         );
   }
 
+  Future<List<FeedDelivery>> fetchFeedDeliveriesPage(
+    String userId, {
+    DateTime? startAfterCreatedAt,
+    int limit = 20,
+  }) async {
+    Query<Map<String, dynamic>> query = _feedDeliveryCol
+        .where('recipientId', isEqualTo: userId)
+        .orderBy('createdAt', descending: true)
+        .limit(limit);
+
+    if (startAfterCreatedAt != null) {
+      query = query.startAfter([startAfterCreatedAt.toIso8601String()]);
+    }
+
+    final snap = await query.get();
+    return snap.docs
+        .map((doc) => FeedDelivery.fromFirestore(doc.data()))
+        .toList(growable: false);
+  }
+
   /// Mark a feed delivery as read.
   Future<void> markDeliveryRead(String deliveryId) async {
     await _feedDeliveryCol.doc(deliveryId).update({'isRead': true});
+  }
+
+  Future<void> updateFeedDeliveryThumbnail(
+    String momentId,
+    String thumbnailUrl,
+  ) async {
+    final snap = await _feedDeliveryCol
+        .where('momentId', isEqualTo: momentId)
+        .get();
+    if (snap.docs.isEmpty) return;
+
+    final batch = _db.batch();
+    for (final doc in snap.docs) {
+      batch.update(doc.reference, {'thumbnailUrl': thumbnailUrl});
+    }
+    await batch.commit();
   }
 
   /// Get unread feed delivery count for a user.
@@ -161,12 +217,12 @@ class MomentRepository {
   }
 
   Future<void> removeReaction(String momentId, String userId) async {
-    final snap = await _reactionCol
-        .where('momentId', isEqualTo: momentId)
-        .where('userId', isEqualTo: userId)
-        .get();
-    for (final doc in snap.docs) {
-      await doc.reference.delete();
+    try {
+      await _reactionCol.doc(reactionDocumentId(momentId, userId)).delete();
+    } on FirebaseException catch (error) {
+      if (error.code != 'not-found') {
+        rethrow;
+      }
     }
   }
 
@@ -178,6 +234,32 @@ class MomentRepository {
           (snap) =>
               snap.docs.map((d) => Reaction.fromFirestore(d.data())).toList(),
         );
+  }
+
+  Stream<MomentReactionSummary> watchReactionSummary(
+    String momentId, {
+    required String currentUserId,
+  }) {
+    return watchReactions(momentId).map((reactions) {
+      final counts = <String, int>{};
+      String? currentUserReaction;
+
+      for (final reaction in reactions) {
+        counts.update(
+          reaction.reactionType,
+          (value) => value + 1,
+          ifAbsent: () => 1,
+        );
+        if (reaction.userId == currentUserId) {
+          currentUserReaction = reaction.reactionType;
+        }
+      }
+
+      return MomentReactionSummary(
+        counts: counts,
+        currentUserReaction: currentUserReaction,
+      );
+    });
   }
 
   // ── Task Templates ────────────────────────────────────────────────────

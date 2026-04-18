@@ -92,4 +92,10 @@ class AppSizes {
   // ── Nav Bar (bottom) ───────────────────────────────────────────────────
   static const double navBarBottomPadding = 28.0;
   static const double navBarRadius = 32.0;
+  static const double metricCardMinHeight = 116.0;
+  static const double dockedCaptureOuterSize = 56.0;
+  static const double dockedCaptureInnerSize = 46.0;
+
+  // ── Glass Nav Bar ──────────────────────────────────────────────────────
+  static const double glassNavBarHeight = 68.0;
 }
