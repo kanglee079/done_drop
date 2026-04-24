@@ -21,6 +21,34 @@ class UserProfileRepository {
   Future<Result<String>> uploadAvatar(String uid, String filePath) =>
       _provider.uploadAvatar(uid, filePath);
 
+  Future<Result<String>> generateUniqueUserCode() =>
+      _provider.generateUniqueUserCode();
+
+  Future<Result<void>> syncDiscoveryProfile(
+    UserProfile profile, {
+    String? email,
+  }) => _provider.syncDiscoveryProfile(profile, email: email);
+
+  Future<Result<UserProfile>> ensureUserCode(UserProfile profile) async {
+    final currentCode = profile.userCode?.trim() ?? '';
+    if (currentCode.isNotEmpty) {
+      return Result.success(profile);
+    }
+
+    final codeResult = await generateUniqueUserCode();
+    return await codeResult.fold(
+      onSuccess: (code) async {
+        final updated = profile.copyWith(userCode: code);
+        final updateResult = await updateUserProfile(updated);
+        return updateResult.fold(
+          onSuccess: (_) => Result.success(updated),
+          onFailure: (failure) => Result.failure(failure),
+        );
+      },
+      onFailure: (failure) async => Result.failure(failure),
+    );
+  }
+
   Stream<UserProfile?> watchUserProfile(String uid) =>
       _provider.watchUserProfile(uid);
 

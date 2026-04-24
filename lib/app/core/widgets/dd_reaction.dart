@@ -44,21 +44,24 @@ class _DDAnimatedReactionChipState extends State<DDAnimatedReactionChip>
     );
     _scale = TweenSequence<double>([
       TweenSequenceItem(
-        tween: Tween<double>(begin: 1, end: 1.08).chain(
-          CurveTween(curve: Curves.easeOutCubic),
-        ),
+        tween: Tween<double>(
+          begin: 1,
+          end: 1.08,
+        ).chain(CurveTween(curve: Curves.easeOutCubic)),
         weight: 45,
       ),
       TweenSequenceItem(
-        tween: Tween<double>(begin: 1.08, end: 0.98).chain(
-          CurveTween(curve: Curves.easeInOut),
-        ),
+        tween: Tween<double>(
+          begin: 1.08,
+          end: 0.98,
+        ).chain(CurveTween(curve: Curves.easeInOut)),
         weight: 25,
       ),
       TweenSequenceItem(
-        tween: Tween<double>(begin: 0.98, end: 1).chain(
-          CurveTween(curve: Curves.easeOutBack),
-        ),
+        tween: Tween<double>(
+          begin: 0.98,
+          end: 1,
+        ).chain(CurveTween(curve: Curves.easeOutBack)),
         weight: 30,
       ),
     ]).animate(_controller);
@@ -85,83 +88,116 @@ class _DDAnimatedReactionChipState extends State<DDAnimatedReactionChip>
     final labelStyle = widget.compact
         ? AppTypography.bodySmall(color: AppColors.onSurface)
         : AppTypography.labelMedium(color: AppColors.onSurface);
+    final iconSize = widget.compact ? 16.0 : 18.0;
+    final baseHorizontalPadding = widget.compact
+        ? AppSizes.space10
+        : AppSizes.space12;
+    final baseVerticalPadding = widget.compact
+        ? AppSizes.space8
+        : AppSizes.space10;
 
-    return ScaleTransition(
-      scale: _scale,
-      child: AnimatedOpacity(
-        duration: AppMotion.fast,
-        opacity: widget.isBusy ? 0.72 : 1,
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: AppSizes.borderRadiusFull,
-            onTap: widget.isBusy ? null : widget.onTap,
-            child: AnimatedContainer(
-              duration: AppMotion.fast,
-              curve: AppMotion.standard,
-              padding: EdgeInsets.symmetric(
-                horizontal: widget.compact
-                    ? AppSizes.space10
-                    : AppSizes.space12,
-                vertical: widget.compact ? AppSizes.space8 : AppSizes.space10,
-              ),
-              decoration: BoxDecoration(
-                color: widget.isActive ? activeBackground : idleBackground,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final hasBoundedWidth =
+            constraints.hasBoundedWidth && constraints.maxWidth.isFinite;
+        final maxWidth = hasBoundedWidth
+            ? constraints.maxWidth
+            : double.infinity;
+        final isUltraTight = hasBoundedWidth && maxWidth < iconSize + 8;
+        final isTight = hasBoundedWidth && maxWidth < 44;
+        final showLabel =
+            widget.label.isNotEmpty && (!hasBoundedWidth || maxWidth >= 88);
+        final showCount =
+            widget.count > 0 &&
+            (!hasBoundedWidth || maxWidth >= (showLabel ? 120 : 44));
+
+        if (isUltraTight) {
+          return const SizedBox.shrink();
+        }
+
+        return ScaleTransition(
+          scale: _scale,
+          child: AnimatedOpacity(
+            duration: AppMotion.fast,
+            opacity: widget.isBusy ? 0.72 : 1,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
                 borderRadius: AppSizes.borderRadiusFull,
-                border: Border.all(
-                  color: widget.isActive
-                      ? widget.color.withValues(alpha: 0.22)
-                      : AppColors.outlineVariant,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    widget.icon,
-                    size: widget.compact ? 16 : 18,
-                    color: widget.isActive ? widget.color : AppColors.outline,
+                onTap: widget.isBusy ? null : widget.onTap,
+                child: AnimatedContainer(
+                  duration: AppMotion.fast,
+                  curve: AppMotion.standard,
+                  clipBehavior: Clip.antiAlias,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isTight
+                        ? AppSizes.space4
+                        : baseHorizontalPadding,
+                    vertical: baseVerticalPadding,
                   ),
-                  if (widget.label.isNotEmpty) ...[
-                    const SizedBox(width: AppSizes.space6),
-                    Text(
-                      widget.label,
-                      style: labelStyle.copyWith(
+                  decoration: BoxDecoration(
+                    color: widget.isActive ? activeBackground : idleBackground,
+                    borderRadius: AppSizes.borderRadiusFull,
+                    border: Border.all(
+                      color: widget.isActive
+                          ? widget.color.withValues(alpha: 0.22)
+                          : AppColors.outlineVariant,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        widget.icon,
+                        size: iconSize,
                         color: widget.isActive
                             ? widget.color
-                            : AppColors.onSurfaceVariant,
+                            : AppColors.outline,
                       ),
-                    ),
-                  ],
-                  if (widget.count > 0) ...[
-                    const SizedBox(width: AppSizes.space6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSizes.space6,
-                        vertical: AppSizes.space2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: widget.isActive
-                            ? widget.color.withValues(alpha: 0.18)
-                            : AppColors.surfaceContainerHighest,
-                        borderRadius: AppSizes.borderRadiusFull,
-                      ),
-                      child: Text(
-                        '${widget.count}',
-                        style: AppTypography.bodySmall(
-                          color: widget.isActive
-                              ? widget.color
-                              : AppColors.onSurfaceVariant,
+                      if (showLabel) ...[
+                        const SizedBox(width: AppSizes.space6),
+                        Text(
+                          widget.label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: labelStyle.copyWith(
+                            color: widget.isActive
+                                ? widget.color
+                                : AppColors.onSurfaceVariant,
+                          ),
                         ),
-                      ),
-                    ),
-                  ],
-                ],
+                      ],
+                      if (showCount) ...[
+                        const SizedBox(width: AppSizes.space6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSizes.space6,
+                            vertical: AppSizes.space2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: widget.isActive
+                                ? widget.color.withValues(alpha: 0.18)
+                                : AppColors.surfaceContainerHighest,
+                            borderRadius: AppSizes.borderRadiusFull,
+                          ),
+                          child: Text(
+                            '${widget.count}',
+                            style: AppTypography.bodySmall(
+                              color: widget.isActive
+                                  ? widget.color
+                                  : AppColors.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

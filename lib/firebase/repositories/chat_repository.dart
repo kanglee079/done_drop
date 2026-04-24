@@ -14,10 +14,7 @@ class ChatRepository {
   static String threadIdForUsers(String userId1, String userId2) =>
       Friendship.create(userId1, userId2).id;
 
-  Stream<List<ChatMessage>> watchMessages(
-    String threadId, {
-    int limit = 80,
-  }) {
+  Stream<List<ChatMessage>> watchMessages(String threadId, {int limit = 80}) {
     return _chatCol
         .doc(threadId)
         .collection('messages')
@@ -32,6 +29,20 @@ class ChatRepository {
         });
   }
 
+  Future<void> ensureThread({
+    required String threadId,
+    required List<String> participantIds,
+  }) async {
+    final sortedParticipants = [...participantIds]..sort();
+    final now = DateTime.now();
+    await _chatCol.doc(threadId).set({
+      'id': threadId,
+      'participantIds': sortedParticipants,
+      'createdAt': now.toIso8601String(),
+      'updatedAt': now.toIso8601String(),
+    }, SetOptions(merge: true));
+  }
+
   Future<void> sendTextMessage({
     required String threadId,
     required String senderId,
@@ -44,13 +55,11 @@ class ChatRepository {
     final sortedParticipants = [...participantIds]..sort();
     final now = DateTime.now();
     final threadRef = _chatCol.doc(threadId);
-    final existingThread = await threadRef.get();
-    final existingCreatedAt = existingThread.data()?['createdAt'] as String?;
+    await ensureThread(threadId: threadId, participantIds: sortedParticipants);
 
     await threadRef.set({
       'id': threadId,
       'participantIds': sortedParticipants,
-      'createdAt': existingCreatedAt ?? now.toIso8601String(),
       'updatedAt': now.toIso8601String(),
       'lastMessageText': trimmedText,
       'lastMessageAt': now.toIso8601String(),

@@ -7,6 +7,7 @@ import 'package:done_drop/core/errors/failures.dart';
 import 'package:done_drop/core/errors/result.dart';
 import 'package:done_drop/core/services/account_deletion_service.dart';
 import 'package:done_drop/core/services/analytics_service.dart';
+import 'package:done_drop/core/services/billing_service.dart';
 import 'package:done_drop/core/services/locale_controller.dart';
 import 'package:done_drop/core/services/legal_service.dart';
 import 'package:done_drop/core/services/notification_service.dart';
@@ -15,6 +16,11 @@ import 'package:done_drop/features/auth/repositories/user_profile_repository.dar
 import 'package:done_drop/l10n/l10n.dart';
 import 'package:done_drop/app/core/widgets/widgets.dart';
 import 'package:done_drop/app/presentation/home/home_controller.dart';
+
+const bool _showPremiumPreview = bool.fromEnvironment(
+  'DD_SHOW_PREMIUM_PREVIEW',
+  defaultValue: false,
+);
 
 /// Controller for the settings screen.
 /// Manages notification preferences, account settings, and sign-out.
@@ -27,6 +33,7 @@ class SettingsController extends GetxController {
   UserProfileRepository get _userProfileRepo =>
       Get.find<UserProfileRepository>();
   LocaleController get _localeController => Get.find<LocaleController>();
+  BillingService get _billing => Get.find<BillingService>();
   StorageService get _storage => StorageService.instance;
 
   // Notification preferences
@@ -39,6 +46,37 @@ class SettingsController extends GetxController {
   String get currentLanguageLabel => _localeController.isVietnamese
       ? currentL10n.languageVietnamese
       : currentL10n.languageEnglish;
+  bool get isStoreBillingReady => _billing.isStoreBillingReady;
+  bool get hasPremiumAccess => _billing.hasPremiumAccess;
+  bool get shouldShowPremiumEntry =>
+      _showPremiumPreview ||
+      hasPremiumAccess ||
+      _billing.isStoreBillingReady ||
+      _billing.isLoadingCatalog.value ||
+      _billing.isRestoring.value;
+
+  String get premiumEntryTitle => hasPremiumAccess
+      ? currentL10n.billingPremiumActiveTitle
+      : currentL10n.premiumBannerTitle;
+
+  String get premiumEntrySubtitle {
+    if (_billing.isLoadingCatalog.value || _billing.isRestoring.value) {
+      return currentL10n.billingCheckingSubtitle;
+    }
+    if (hasPremiumAccess) {
+      return currentL10n.billingPremiumActiveSubtitle(
+        _activePlanLabel(),
+      );
+    }
+    if (isStoreBillingReady) {
+      return currentL10n.billingPremiumReadySubtitle;
+    }
+    if (_billing.errorCode.value == 'billing_products_not_found' ||
+        _billing.missingProductIds.isNotEmpty) {
+      return currentL10n.billingCatalogSetupNeededSubtitle;
+    }
+    return currentL10n.billingStoreUnavailableSubtitle;
+  }
 
   @override
   void onInit() {
@@ -97,6 +135,13 @@ class SettingsController extends GetxController {
       await _userProfileRepo.updateUserProfile(updatedProfile);
     }
   }
+
+  String _activePlanLabel() => switch (_billing.activeKind) {
+    PremiumProductKind.monthly => currentL10n.billingMonthlyPlanTitle,
+    PremiumProductKind.yearly => currentL10n.billingYearlyPlanTitle,
+    PremiumProductKind.lifetime => currentL10n.billingLifetimePlanTitle,
+    null => currentL10n.premiumBannerTitle,
+  };
 
   /// Initiates soft delete of the account.
   /// User must confirm by typing the exact phrase, and then re-authenticate.

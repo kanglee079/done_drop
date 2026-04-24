@@ -228,35 +228,34 @@ class _BuddyMomentCard extends StatelessWidget {
   final String? ownerAvatar;
   final String? activityTitle;
 
+  void openBuddyWall() {
+    Get.toNamed(
+      AppRoutes.buddyWall,
+      arguments: {
+        'ownerId': moment.ownerId,
+        'ownerName': ownerName,
+        'ownerAvatarUrl': ownerAvatar,
+      },
+    );
+  }
+
+  void openBuddyChat() {
+    Get.toNamed(
+      AppRoutes.chat,
+      arguments: {
+        'buddyId': moment.ownerId,
+        'buddyName': ownerName,
+        'buddyAvatarUrl': ownerAvatar,
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-    final cardHeight = (screenHeight * 0.68).clamp(360.0, 500.0);
-    final headerHeight = 58.0;
-    final imageHeight = cardHeight * 0.55;
-    final hasCategory = (moment.category ?? '').isNotEmpty;
-
-    void openBuddyWall() {
-      Get.toNamed(
-        AppRoutes.buddyWall,
-        arguments: {
-          'ownerId': moment.ownerId,
-          'ownerName': ownerName,
-          'ownerAvatarUrl': ownerAvatar,
-        },
-      );
-    }
-
-    void openBuddyChat() {
-      Get.toNamed(
-        AppRoutes.chat,
-        arguments: {
-          'buddyId': moment.ownerId,
-          'buddyName': ownerName,
-          'buddyAvatarUrl': ownerAvatar,
-        },
-      );
-    }
+    final cardHeight = (screenHeight * 0.64).clamp(340.0, 500.0);
+    final caption = moment.caption.trim();
+    final category = moment.category?.trim() ?? '';
 
     return Container(
       height: cardHeight,
@@ -267,245 +266,359 @@ class _BuddyMomentCard extends StatelessWidget {
         boxShadow: AppColors.cardShadow,
       ),
       clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: [
-          // Header
-          GestureDetector(
-            onTap: openBuddyWall,
-            child: Container(
-              height: headerHeight,
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 18,
-                    backgroundColor: AppColors.primaryFixed,
-                    backgroundImage: ownerAvatar != null
-                        ? NetworkImage(ownerAvatar!)
-                        : null,
-                    child: ownerAvatar == null
-                        ? Text(
-                            ownerName.characters.first.toUpperCase(),
-                            style: AppTypography.labelMedium(color: AppColors.primary),
-                          )
-                        : null,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          ownerName,
-                          style: AppTypography.labelMedium(color: AppColors.onSurface),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          _formatTime(moment.createdAt),
-                          style: AppTypography.bodySmall(color: AppColors.onSurfaceVariant),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.outline),
-                ],
-              ),
-            ),
-          ),
-          // Image
-          SizedBox(
-            height: imageHeight,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                _MomentImage(moment: moment),
-                // Gradient overlay
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  height: 40,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withValues(alpha: 0.2),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Info section
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Meta chips row
-                  if (activityTitle != null || hasCategory)
-                    Row(
-                      children: [
-                        if (activityTitle != null)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: AppColors.primaryFixed,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.check_circle_outline, size: 12, color: AppColors.primary),
-                                const SizedBox(width: 4),
-                                Text(
-                                  activityTitle!,
-                                  style: AppTypography.bodySmall(color: AppColors.primary),
-                                ),
-                              ],
-                            ),
-                          ),
-                        if (activityTitle != null && hasCategory)
-                          const SizedBox(width: 6),
-                        if (hasCategory)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: AppColors.tertiaryFixed,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.auto_awesome_outlined, size: 12, color: AppColors.tertiary),
-                                const SizedBox(width: 4),
-                                Text(
-                                  moment.category!,
-                                  style: AppTypography.bodySmall(color: AppColors.tertiary),
-                                ),
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
-                  const Spacer(),
-                  // Caption
-                  if (moment.caption.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 6),
-                      child: Text(
-                        moment.caption,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTypography.bodySmall(color: AppColors.onSurface),
-                      ),
-                    ),
-                  // Action row
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return Column(
+            children: [
+              Expanded(
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    _MomentImage(moment: moment),
+                    Positioned.fill(
+                      child: DecoratedBox(
                         decoration: BoxDecoration(
-                          color: AppColors.surfaceContainerLow,
-                          borderRadius: BorderRadius.circular(12),
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withValues(alpha: 0.06),
+                              Colors.black.withValues(alpha: 0.52),
+                            ],
+                            stops: const [0.0, 0.52, 1.0],
+                          ),
                         ),
-                        child: Row(
+                      ),
+                    ),
+                    Positioned(
+                      left: AppSizes.space14,
+                      bottom: AppSizes.space14,
+                      child: GestureDetector(
+                        onTap: openBuddyWall,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSizes.space12,
+                            vertical: AppSizes.space8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.42),
+                            borderRadius: AppSizes.borderRadiusFull,
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.12),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              CircleAvatar(
+                                radius: 14,
+                                backgroundColor: AppColors.primaryFixed,
+                                backgroundImage: ownerAvatar != null
+                                    ? NetworkImage(ownerAvatar!)
+                                    : null,
+                                child: ownerAvatar == null
+                                    ? Text(
+                                        ownerName.characters.first
+                                            .toUpperCase(),
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppColors.primary,
+                                        ),
+                                      )
+                                    : null,
+                              ),
+                              const SizedBox(width: AppSizes.space8),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    ownerName,
+                                    style: AppTypography.labelMedium(
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  Text(
+                                    _formatTime(moment.createdAt),
+                                    style: AppTypography.bodySmall(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.72,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(width: AppSizes.space6),
+                              Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                size: 10,
+                                color: Colors.white.withValues(alpha: 0.72),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (activityTitle != null)
+                      Positioned(
+                        right: AppSizes.space14,
+                        top: AppSizes.space14,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSizes.space10,
+                            vertical: AppSizes.space6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: AppSizes.borderRadiusFull,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.check_circle,
+                                size: 12,
+                                color: AppColors.onPrimary,
+                              ),
+                              const SizedBox(width: AppSizes.space4),
+                              Text(
+                                activityTitle!,
+                                style: AppTypography.labelMedium(
+                                  color: AppColors.onPrimary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    if (moment.isPendingSync)
+                      Positioned(
+                        left: AppSizes.space14,
+                        right: AppSizes.space14,
+                        bottom: AppSizes.space14,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.visibility_outlined, size: 12, color: AppColors.onSurfaceVariant),
-                            const SizedBox(width: 4),
-                            Text(
-                              _visibilityLabel(context),
-                              style: AppTypography.bodySmall(color: AppColors.onSurfaceVariant),
+                            ClipRRect(
+                              borderRadius: AppSizes.borderRadiusFull,
+                              child: LinearProgressIndicator(
+                                value:
+                                    moment.syncStatus == MomentSyncStatus.queued
+                                    ? null
+                                    : moment.uploadProgress.clamp(0, 1),
+                                minHeight: 4,
+                                backgroundColor: Colors.white.withValues(
+                                  alpha: 0.28,
+                                ),
+                                valueColor: const AlwaysStoppedAnimation<Color>(
+                                  AppColors.onPrimary,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: AppSizes.space6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSizes.space10,
+                                vertical: AppSizes.space4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.52),
+                                borderRadius: AppSizes.borderRadiusFull,
+                              ),
+                              child: Text(
+                                _syncStatusLabel(context),
+                                style: AppTypography.labelSmall(
+                                  color: Colors.white.withValues(alpha: 0.88),
+                                ),
+                              ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(width: 6),
-                      if (!moment.isPendingSync) ...[
-                        GestureDetector(
-                          onTap: openBuddyChat,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: AppColors.surfaceContainerLow,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.chat_bubble_outline_rounded, size: 12, color: AppColors.onSurfaceVariant),
-                                const SizedBox(width: 4),
-                                Text(
-                                  context.l10n.chatOpenAction,
-                                  style: AppTypography.bodySmall(color: AppColors.onSurfaceVariant),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        GestureDetector(
-                          onTap: openBuddyWall,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: AppColors.surfaceContainerLow,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.photo_library_outlined, size: 12, color: AppColors.onSurfaceVariant),
-                                const SizedBox(width: 4),
-                                Text(
-                                  context.l10n.buddyViewWallAction,
-                                  style: AppTypography.bodySmall(color: AppColors.onSurfaceVariant),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ] else
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: AppColors.surfaceContainerHigh,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            context.l10n.statusQueued,
-                            style: AppTypography.bodySmall(color: AppColors.onSurface),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  // Reactions
-                  _BuddyReactionBar(
-                    moment: moment,
-                    compact: true,
-                    showLabels: false,
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ),
-        ],
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(
+                  AppSizes.space14,
+                  AppSizes.space12,
+                  AppSizes.space14,
+                  AppSizes.space14,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceContainerLowest,
+                  border: Border(
+                    top: BorderSide(color: AppColors.outlineVariant),
+                  ),
+                ),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final useStackedFooter = constraints.maxWidth < 430;
+
+                    Widget buildFooterChip({
+                      required IconData icon,
+                      required String label,
+                      VoidCallback? onTap,
+                    }) {
+                      final chip = Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSizes.space10,
+                          vertical: AppSizes.space6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceContainerLow,
+                          borderRadius: AppSizes.borderRadiusFull,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              icon,
+                              size: 12,
+                              color: AppColors.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              label,
+                              style: AppTypography.bodySmall(
+                                color: AppColors.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+
+                      if (onTap == null) {
+                        return chip;
+                      }
+
+                      return GestureDetector(onTap: onTap, child: chip);
+                    }
+
+                    final metaCluster = Wrap(
+                      spacing: AppSizes.space6,
+                      runSpacing: AppSizes.space6,
+                      children: [
+                        buildFooterChip(
+                          icon: _visibilityIcon(moment.visibility),
+                          label: _visibilityLabel(moment.visibility, context),
+                        ),
+                        if (category.isNotEmpty)
+                          buildFooterChip(
+                            icon: Icons.auto_awesome_outlined,
+                            label: category,
+                          ),
+                      ],
+                    );
+
+                    final actionCluster = Wrap(
+                      spacing: AppSizes.space6,
+                      runSpacing: AppSizes.space6,
+                      children: [
+                        if (!moment.isPendingSync) ...[
+                          buildFooterChip(
+                            icon: Icons.chat_bubble_outline_rounded,
+                            label: context.l10n.chatOpenAction,
+                            onTap: openBuddyChat,
+                          ),
+                          buildFooterChip(
+                            icon: Icons.photo_library_outlined,
+                            label: context.l10n.buddyViewWallAction,
+                            onTap: openBuddyWall,
+                          ),
+                        ] else
+                          buildFooterChip(
+                            icon: Icons.cloud_upload_outlined,
+                            label: _syncStatusLabel(context),
+                          ),
+                      ],
+                    );
+
+                    final reactionBar = ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: useStackedFooter
+                            ? constraints.maxWidth
+                            : constraints.maxWidth * 0.38,
+                      ),
+                      child: Align(
+                        alignment: useStackedFooter
+                            ? Alignment.centerLeft
+                            : Alignment.centerRight,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: useStackedFooter
+                              ? Alignment.centerLeft
+                              : Alignment.centerRight,
+                          child: _BuddyReactionBar(
+                            moment: moment,
+                            compact: true,
+                            showLabels: false,
+                          ),
+                        ),
+                      ),
+                    );
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (caption.isNotEmpty) ...[
+                          Text(
+                            caption,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.bodySmall(
+                              color: AppColors.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: AppSizes.space12),
+                        ],
+                        metaCluster,
+                        const SizedBox(height: AppSizes.space10),
+                        if (useStackedFooter) ...[
+                          actionCluster,
+                          const SizedBox(height: AppSizes.space10),
+                          reactionBar,
+                        ] else
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Expanded(child: actionCluster),
+                              const SizedBox(width: AppSizes.space12),
+                              reactionBar,
+                            ],
+                          ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 
-  String _visibilityLabel(BuildContext context) {
-    switch (moment.visibility) {
+  IconData _visibilityIcon(String visibility) {
+    switch (visibility) {
+      case 'all_friends':
+        return Icons.groups_outlined;
+      case 'selected_friends':
+        return Icons.person_outline;
+      default:
+        return Icons.lock_outline;
+    }
+  }
+
+  String _visibilityLabel(String visibility, BuildContext context) {
+    switch (visibility) {
       case 'all_friends':
         return context.l10n.visibilityCrew;
       case 'selected_friends':
@@ -515,13 +628,36 @@ class _BuddyMomentCard extends StatelessWidget {
     }
   }
 
+  String _syncStatusLabel(BuildContext context) {
+    final l10n = context.l10n;
+    switch (moment.syncStatus) {
+      case MomentSyncStatus.queued:
+        return l10n.statusQueued;
+      case MomentSyncStatus.processing:
+        return l10n.statusPreparing;
+      case MomentSyncStatus.uploading:
+        return l10n.statusUploading((moment.uploadProgress * 100).round());
+      case MomentSyncStatus.finalizing:
+        return l10n.statusSyncing;
+      case MomentSyncStatus.failed:
+        return l10n.statusFailed;
+      case MomentSyncStatus.synced:
+        return l10n.statusPosted;
+    }
+  }
+
   String _formatTime(DateTime createdAt) {
     final difference = DateTime.now().difference(createdAt);
     final l10n = currentL10n;
     if (difference.inMinutes < 1) return l10n.timeJustNow;
-    if (difference.inHours < 1) return l10n.timeMinutesAgo(difference.inMinutes);
+    if (difference.inHours < 1) {
+      return l10n.timeMinutesAgo(difference.inMinutes);
+    }
     if (difference.inDays < 1) return l10n.timeHoursAgo(difference.inHours);
-    return DateFormat('MMM d', resolveSupportedLocale(null).languageCode).format(createdAt);
+    return DateFormat(
+      'MMM d',
+      resolveSupportedLocale(null).languageCode,
+    ).format(createdAt);
   }
 }
 
@@ -605,48 +741,6 @@ class _MomentImage extends StatelessWidget {
         );
       },
     );
-  }
-}
-
-class _MomentSyncPill extends StatelessWidget {
-  const _MomentSyncPill({required this.moment});
-
-  final Moment moment;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSizes.space10,
-        vertical: AppSizes.space6,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerHigh,
-        borderRadius: AppSizes.borderRadiusFull,
-      ),
-      child: Text(
-        _syncLabel(context, moment),
-        style: AppTypography.bodySmall(color: AppColors.onSurface),
-      ),
-    );
-  }
-}
-
-String _syncLabel(BuildContext context, Moment moment) {
-  final l10n = context.l10n;
-  switch (moment.syncStatus) {
-    case MomentSyncStatus.queued:
-      return l10n.statusQueued;
-    case MomentSyncStatus.processing:
-      return l10n.statusPreparing;
-    case MomentSyncStatus.uploading:
-      return l10n.statusUploading((moment.uploadProgress * 100).round());
-    case MomentSyncStatus.finalizing:
-      return l10n.statusSyncing;
-    case MomentSyncStatus.failed:
-      return l10n.statusFailed;
-    case MomentSyncStatus.synced:
-      return l10n.statusPosted;
   }
 }
 

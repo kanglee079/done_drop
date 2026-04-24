@@ -1,0 +1,114 @@
+# Fastlane for DoneDrop Play Console management
+# Usage:
+#   fastlane upload_to_play        # Upload AAB to internal testing
+#   fastlane create_products       # Create IAP products
+#   fastlane setup_store_listing   # Upload store assets
+#   fastlane full_release          # All of the above
+
+default_platform(:android)
+
+platform :android do
+  desc "Upload AAB to internal testing track"
+  lane :upload_to_play do
+    gradle(
+      task: "bundle",
+      build_type: "Release",
+      project_dir: "android"
+    )
+
+    upload_to_play_store(
+      track: "internal",
+      aab: "build/app/outputs/bundle/release/app-release.aab",
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      skip_metadata: true,
+      version_name: ENV["VERSION_NAME"] || "1.0.0",
+      version_code: ENV["VERSION_CODE"] || "1"
+    )
+  end
+
+  desc "Create IAP products (subscriptions + one-time)"
+  lane :create_products do
+    # Monthly subscription
+    create_in_app_product(
+      package_name: "com.donedrop.app",
+      product_id: "dd_premium_monthly",
+      product_type: "subscription",
+      default_price: "1.99",
+      prices: {
+        "US" => { "price" => 1.99, "currency" => "USD" },
+        "VN" => { "price" => 45000, "currency" => "VND" },
+      },
+      subscription_period: "P1M",
+      subscription_free_trial_period: "P0D",
+      metadata: {
+        en_US: { title: "Premium Monthly", description: "Unlock unlimited buddies and premium features for $1.99/month" }
+      }
+    )
+
+    # Yearly subscription
+    create_in_app_product(
+      package_name: "com.donedrop.app",
+      product_id: "dd_premium_yearly",
+      product_type: "subscription",
+      default_price: "9.99",
+      prices: {
+        "US" => { "price" => 9.99, "currency" => "USD" },
+        "VN" => { "price" => 229000, "currency" => "VND" },
+      },
+      subscription_period: "P1Y",
+      subscription_free_trial_period: "P0D",
+      metadata: {
+        en_US: { title: "Premium Yearly", description: "Unlock unlimited buddies and premium features for $9.99/year (save 58%)" }
+      }
+    )
+
+    # Lifetime one-time
+    create_in_app_product(
+      package_name: "com.donedrop.app",
+      product_id: "dd_premium_lifetime",
+      product_type: "inapp",
+      default_price: "29.99",
+      prices: {
+        "US" => { "price" => 29.99, "currency" => "USD" },
+        "VN" => { "price" => 699000, "currency" => "VND" },
+      },
+      metadata: {
+        en_US: { title: "Premium Lifetime", description: "One-time purchase: unlock unlimited buddies forever" }
+      }
+    )
+  end
+
+  desc "Upload store listing (icon, feature graphic, screenshots)"
+  lane :upload_store_listing do
+    upload_to_play_store(
+      package_name: "com.donedrop.app",
+      track: "internal",
+      skip_upload_apk: true,
+      skip_upload_aab: true,
+      metadata_path: "fastlane/metadata",
+      images_path: "fastlane/images",
+      screenshots_path: "fastlane/screenshots"
+    )
+  end
+
+  desc "Full release: upload AAB + products"
+  lane :full_release do
+    upload_to_play
+    create_products
+  end
+
+  desc "Promote from internal to production"
+  lane :promote_to_production do
+    upload_to_play_store(
+      package_name: "com.donedrop.app",
+      track: "production",
+      skip_upload_apk: true,
+      skip_upload_aab: true,
+      skip_images: true,
+      skip_screenshots: true,
+      skip_metadata: true,
+      version_codes_to_retain: [ENV["VERSION_CODE"] || "1"]
+    )
+  end
+end

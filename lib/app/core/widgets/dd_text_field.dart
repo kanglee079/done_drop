@@ -20,7 +20,9 @@ class DDTextField extends StatelessWidget {
     this.maxLength,
     this.autofocus = false,
     this.autocorrect,
+    this.enableSuggestions,
     this.textCapitalization,
+    this.autofillHints,
   });
 
   final TextEditingController? controller;
@@ -39,7 +41,9 @@ class DDTextField extends StatelessWidget {
   final int? maxLength;
   final bool autofocus;
   final bool? autocorrect;
+  final bool? enableSuggestions;
   final TextCapitalization? textCapitalization;
+  final Iterable<String>? autofillHints;
 
   @override
   Widget build(BuildContext context) {
@@ -70,11 +74,10 @@ class DDTextField extends StatelessWidget {
           maxLength: maxLength,
           autofocus: autofocus,
           autocorrect: autocorrect ?? true,
+          enableSuggestions: enableSuggestions ?? true,
           textCapitalization: textCapitalization ?? TextCapitalization.none,
-          style: const TextStyle(
-            fontSize: 15,
-            color: AppColors.onSurface,
-          ),
+          autofillHints: autofillHints,
+          style: const TextStyle(fontSize: 15, color: AppColors.onSurface),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(
@@ -103,7 +106,10 @@ class DDTextField extends StatelessWidget {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: AppSizes.borderRadiusMd,
-              borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+              borderSide: const BorderSide(
+                color: AppColors.primary,
+                width: 1.5,
+              ),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: AppSizes.borderRadiusMd,

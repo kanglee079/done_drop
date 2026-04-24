@@ -29,40 +29,87 @@ class FriendRepository {
   CollectionReference<Map<String, dynamic>> get _usersCol =>
       _db.collection(AppConstants.colUsers);
 
+  CollectionReference<Map<String, dynamic>> get _userDirectoryCol =>
+      _db.collection(AppConstants.colUserDirectory);
+
+  CollectionReference<Map<String, dynamic>> get _userCodeLookupCol =>
+      _db.collection(AppConstants.colUserCodeLookup);
+
+  CollectionReference<Map<String, dynamic>> get _userUsernameLookupCol =>
+      _db.collection(AppConstants.colUserUsernameLookup);
+
+  CollectionReference<Map<String, dynamic>> get _userEmailLookupCol =>
+      _db.collection(AppConstants.colUserEmailLookup);
+
   // ── Friendships ────────────────────────────────────────────────────────
 
   /// Watch all friendships for a user.
   Stream<List<Friendship>> watchFriendships(String userId) {
-    return _friendshipsCol
-        .where('userId1', isEqualTo: userId)
-        .snapshots()
-        .asyncMap((snap1) async {
-          final secondSnap = await _friendshipsCol
-              .where('userId2', isEqualTo: userId)
-              .get();
-          final all = <Friendship>[];
-          for (final d in snap1.docs) {
-            all.add(Friendship.fromFirestore(d.data()));
-          }
-          for (final d in secondSnap.docs) {
-            all.add(Friendship.fromFirestore(d.data()));
-          }
-          all.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-          return all;
-        });
+    late final StreamController<List<Friendship>> controller;
+    StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? firstSub;
+    StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? secondSub;
+    List<Friendship> firstHalf = const <Friendship>[];
+    List<Friendship> secondHalf = const <Friendship>[];
+
+    void emitCombined() {
+      if (controller.isClosed) return;
+      final combined = <Friendship>[...firstHalf, ...secondHalf]
+        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      controller.add(combined);
+    }
+
+    controller = StreamController<List<Friendship>>(
+      onListen: () {
+        firstSub = _friendshipsCol
+            .where('userId1', isEqualTo: userId)
+            .snapshots()
+            .listen((snap) {
+              firstHalf = snap.docs
+                  .map((doc) => Friendship.fromFirestore(doc.data()))
+                  .toList(growable: false);
+              emitCombined();
+            }, onError: controller.addError);
+
+        secondSub = _friendshipsCol
+            .where('userId2', isEqualTo: userId)
+            .snapshots()
+            .listen((snap) {
+              secondHalf = snap.docs
+                  .map((doc) => Friendship.fromFirestore(doc.data()))
+                  .toList(growable: false);
+              emitCombined();
+            }, onError: controller.addError);
+      },
+      onCancel: () async {
+        await firstSub?.cancel();
+        await secondSub?.cancel();
+      },
+    );
+
+    return controller.stream;
   }
 
   /// Get count of accepted friends.
   Future<int> getFriendCount(String userId) async {
-    final snap1 = await _friendshipsCol.where('userId1', isEqualTo: userId).count().get();
-    final snap2 = await _friendshipsCol.where('userId2', isEqualTo: userId).count().get();
+    final snap1 = await _friendshipsCol
+        .where('userId1', isEqualTo: userId)
+        .count()
+        .get();
+    final snap2 = await _friendshipsCol
+        .where('userId2', isEqualTo: userId)
+        .count()
+        .get();
     return (snap1.count ?? 0) + (snap2.count ?? 0);
   }
 
   /// Get all accepted friendships for a user (one-shot, not a stream).
   Future<List<Friendship>> getFriends(String userId) async {
-    final snap1 = await _friendshipsCol.where('userId1', isEqualTo: userId).get();
-    final snap2 = await _friendshipsCol.where('userId2', isEqualTo: userId).get();
+    final snap1 = await _friendshipsCol
+        .where('userId1', isEqualTo: userId)
+        .get();
+    final snap2 = await _friendshipsCol
+        .where('userId2', isEqualTo: userId)
+        .get();
     final all = <Friendship>[];
     for (final d in snap1.docs) {
       all.add(Friendship.fromFirestore(d.data()));
@@ -76,6 +123,12 @@ class FriendRepository {
 
   /// Check if user can add more friends (under cap).
   Future<bool> canAddFriend(String userId) async {
+    final profileDoc = await _usersCol.doc(userId).get();
+    final isPremium = profileDoc.data()?['premiumStatus'] == true;
+    if (isPremium) {
+      return true;
+    }
+
     final count = await getFriendCount(userId);
     return count < maxFriendsFree;
   }
@@ -85,6 +138,22 @@ class FriendRepository {
     final doc = await _usersCol.doc(friendId).get();
     if (!doc.exists) return null;
     return UserProfile.fromFirestore(doc.data()!);
+  }
+
+  /// Get a lightweight public profile for pending friend requests.
+  Future<UserProfile?> getRequestPreviewProfile(String userId) async {
+    try {
+      final doc = await _userDirectoryCol.doc(userId).get();
+      if (!doc.exists || doc.data() == null) {
+        return null;
+      }
+      return UserProfile.fromFirestore(doc.data()!);
+    } on FirebaseException catch (e) {
+      if (e.code == 'permission-denied') {
+        return null;
+      }
+      rethrow;
+    }
   }
 
   // ── Friend Requests ──────────────────────────────────────────────────
@@ -97,90 +166,208 @@ class FriendRepository {
     String? senderAvatarUrl,
     String? message,
   }) async {
-    if (senderId == receiverId) {
-      return Result.failure(AppFailure.unexpected('Cannot send friend request to yourself'));
+    try {
+      if (senderId == receiverId) {
+        return Result.failure(
+          AppFailure.unexpected(
+            'Cannot send friend request to yourself',
+            'friend_request_self',
+          ),
+        );
+      }
+
+      final receiverDoc = await _userDirectoryCol.doc(receiverId).get();
+      if (!receiverDoc.exists || receiverDoc.data() == null) {
+        return Result.failure(
+          AppFailure.notFound(
+            'No user found with this ID',
+            'friend_request_user_not_found',
+          ),
+        );
+      }
+
+      final friendship = Friendship.create(senderId, receiverId);
+      final existingFriendship = await _friendshipsCol
+          .where('userId1', isEqualTo: friendship.userId1)
+          .where('userId2', isEqualTo: friendship.userId2)
+          .limit(1)
+          .get();
+      if (existingFriendship.docs.isNotEmpty) {
+        return Result.failure(
+          AppFailure.conflict(
+            'You are already friends',
+            'friend_request_already_friends',
+          ),
+        );
+      }
+
+      // Enforce friend cap for sender
+      final canAdd = await canAddFriend(senderId);
+      if (!canAdd) {
+        return Result.failure(
+          AppFailure.forbidden(
+            'You have reached the maximum of $maxFriendsFree friends on the free plan. Upgrade to add more.',
+            'friend_cap_reached',
+          ),
+        );
+      }
+
+      // Check for existing request
+      final existing = await _requestsCol
+          .where('senderId', isEqualTo: senderId)
+          .where('receiverId', isEqualTo: receiverId)
+          .where('status', whereIn: ['pending', 'accepted'])
+          .get();
+
+      if (existing.docs.isNotEmpty) {
+        return Result.failure(
+          AppFailure.conflict(
+            'Friend request already exists',
+            'friend_request_exists',
+          ),
+        );
+      }
+
+      final reverse = await _requestsCol
+          .where('senderId', isEqualTo: receiverId)
+          .where('receiverId', isEqualTo: senderId)
+          .where('status', whereIn: ['pending', 'accepted'])
+          .get();
+
+      if (reverse.docs.isNotEmpty) {
+        return Result.failure(
+          AppFailure.conflict(
+            'Friend request already exists',
+            'friend_request_exists',
+          ),
+        );
+      }
+
+      var resolvedSenderDisplayName = senderDisplayName.trim();
+      if (resolvedSenderDisplayName.isEmpty) {
+        final senderDoc = await _usersCol.doc(senderId).get();
+        final senderData = senderDoc.data();
+        final profileName =
+            (senderData?['displayName'] as String?)?.trim() ?? '';
+        if (profileName.isNotEmpty) {
+          resolvedSenderDisplayName = profileName;
+        }
+      }
+
+      final id = _requestsCol.doc().id;
+      final request = FriendRequest(
+        id: id,
+        senderId: senderId,
+        receiverId: receiverId,
+        status: 'pending',
+        createdAt: DateTime.now(),
+        senderDisplayName: resolvedSenderDisplayName.isEmpty
+            ? null
+            : resolvedSenderDisplayName,
+        senderAvatarUrl: senderAvatarUrl,
+        message: message,
+      );
+
+      await _requestsCol.doc(id).set(request.toFirestore());
+      return Result.success(request);
+    } on FirebaseException catch (e) {
+      if (e.code == 'permission-denied') {
+        return Result.failure(
+          AppFailure.forbidden(
+            e.message ?? 'Permission denied.',
+            'friend_request_permission_denied',
+          ),
+        );
+      }
+      return Result.failure(
+        AppFailure.unexpected(
+          e.message ?? e.toString(),
+          'friend_request_unexpected',
+        ),
+      );
+    } catch (e) {
+      return Result.failure(
+        AppFailure.unexpected(e.toString(), 'friend_request_unexpected'),
+      );
     }
-
-    // Enforce friend cap for sender
-    final canAdd = await canAddFriend(senderId);
-    if (!canAdd) {
-      return Result.failure(AppFailure.forbidden(
-          'You have reached the maximum of $maxFriendsFree friends on the free plan. Upgrade to add more.'));
-    }
-
-    // Check for existing request
-    final existing = await _requestsCol
-        .where('senderId', isEqualTo: senderId)
-        .where('receiverId', isEqualTo: receiverId)
-        .where('status', whereIn: ['pending', 'accepted'])
-        .get();
-
-    if (existing.docs.isNotEmpty) {
-      return Result.failure(AppFailure.conflict('Friend request already exists'));
-    }
-
-    final reverse = await _requestsCol
-        .where('senderId', isEqualTo: receiverId)
-        .where('receiverId', isEqualTo: senderId)
-        .where('status', whereIn: ['pending', 'accepted'])
-        .get();
-
-    if (reverse.docs.isNotEmpty) {
-      return Result.failure(AppFailure.conflict('Friend request already exists'));
-    }
-
-    final id = _requestsCol.doc().id;
-    final request = FriendRequest(
-      id: id,
-      senderId: senderId,
-      receiverId: receiverId,
-      status: 'pending',
-      createdAt: DateTime.now(),
-      senderDisplayName: senderDisplayName,
-      senderAvatarUrl: senderAvatarUrl,
-      message: message,
-    );
-
-    await _requestsCol.doc(id).set(request.toFirestore());
-    return Result.success(request);
   }
 
   /// Accept a pending friend request. Creates a Friendship document.
   Future<Result<FriendRequest>> acceptRequest(String requestId) async {
-    final doc = await _requestsCol.doc(requestId).get();
-    if (!doc.exists) {
-      return Result.failure(AppFailure.notFound('Request not found'));
+    try {
+      final requestRef = _requestsCol.doc(requestId);
+      final doc = await requestRef.get();
+      if (!doc.exists || doc.data() == null) {
+        return Result.failure(
+          AppFailure.notFound('Request not found', 'friend_request_not_found'),
+        );
+      }
+
+      final request = FriendRequest.fromFirestore(doc.data()!);
+      if (request.isAccepted) {
+        return Result.success(request);
+      }
+      if (!request.isPending) {
+        return Result.failure(
+          AppFailure.conflict(
+            'Request is no longer pending.',
+            'friend_request_not_pending',
+          ),
+        );
+      }
+
+      final friendship = Friendship.create(
+        request.senderId,
+        request.receiverId,
+      );
+      final friendshipRef = _friendshipsCol.doc(friendship.id);
+      final existingFriendship = await _friendshipsCol
+          .where('userId1', isEqualTo: friendship.userId1)
+          .where('userId2', isEqualTo: friendship.userId2)
+          .limit(1)
+          .get();
+      final friendshipExists = existingFriendship.docs.isNotEmpty;
+      if (friendshipExists) {
+        await requestRef.update({'status': 'accepted'});
+        return Result.success(request.copyWith(status: 'accepted'));
+      }
+
+      final receiverCanAdd = await canAddFriend(request.receiverId);
+      if (!receiverCanAdd) {
+        return Result.failure(
+          AppFailure.forbidden(
+            'You have reached the maximum of $maxFriendsFree friends. Remove a friend to accept new ones.',
+            'friend_cap_reached',
+          ),
+        );
+      }
+
+      final batch = _db.batch();
+      batch.update(requestRef, {'status': 'accepted'});
+      batch.set(friendshipRef, friendship.toFirestore());
+      await batch.commit();
+
+      return Result.success(request.copyWith(status: 'accepted'));
+    } on FirebaseException catch (e) {
+      if (e.code == 'permission-denied') {
+        return Result.failure(
+          AppFailure.forbidden(
+            e.message ?? 'Permission denied.',
+            'friend_accept_permission_denied',
+          ),
+        );
+      }
+      return Result.failure(
+        AppFailure.unexpected(
+          e.message ?? e.toString(),
+          'friend_accept_unexpected',
+        ),
+      );
+    } catch (e) {
+      return Result.failure(
+        AppFailure.unexpected(e.toString(), 'friend_accept_unexpected'),
+      );
     }
-
-    final request = FriendRequest.fromFirestore(doc.data()!);
-    if (!request.isPending) {
-      return Result.failure(AppFailure.unexpected('Request is not pending'));
-    }
-
-    // Enforce cap on both sides: sender (who gets a new friend) and receiver (who also gets a new friend)
-    final senderId = request.senderId;
-    final receiverId = request.receiverId;
-
-    final senderCanAdd = await canAddFriend(senderId);
-    if (!senderCanAdd) {
-      return Result.failure(AppFailure.forbidden(
-          '${request.senderDisplayName ?? 'This user'} has reached the maximum of $maxFriendsFree friends.'));
-    }
-
-    final receiverCanAdd = await canAddFriend(receiverId);
-    if (!receiverCanAdd) {
-      return Result.failure(AppFailure.forbidden(
-          'You have reached the maximum of $maxFriendsFree friends. Remove a friend to accept new ones.'));
-    }
-
-    // Update request to accepted
-    await _requestsCol.doc(requestId).update({'status': 'accepted'});
-
-    // Create friendship document (idempotent: sender and receiver both use same doc)
-    final friendship = Friendship.create(request.senderId, request.receiverId);
-    await _friendshipsCol.doc(friendship.id).set(friendship.toFirestore());
-
-    return Result.success(request.copyWith(status: 'accepted'));
   }
 
   /// Decline a pending friend request.
@@ -188,8 +375,25 @@ class FriendRepository {
     try {
       await _requestsCol.doc(requestId).update({'status': 'declined'});
       return Result.success(null);
+    } on FirebaseException catch (e) {
+      if (e.code == 'permission-denied') {
+        return Result.failure(
+          AppFailure.forbidden(
+            e.message ?? 'Permission denied.',
+            'friend_decline_permission_denied',
+          ),
+        );
+      }
+      return Result.failure(
+        AppFailure.unexpected(
+          e.message ?? e.toString(),
+          'friend_decline_unexpected',
+        ),
+      );
     } catch (e) {
-      return Result.failure(AppFailure.unexpected(e.toString()));
+      return Result.failure(
+        AppFailure.unexpected(e.toString(), 'friend_decline_unexpected'),
+      );
     }
   }
 
@@ -198,13 +402,33 @@ class FriendRepository {
     try {
       await _requestsCol.doc(requestId).update({'status': 'cancelled'});
       return Result.success(null);
+    } on FirebaseException catch (e) {
+      if (e.code == 'permission-denied') {
+        return Result.failure(
+          AppFailure.forbidden(
+            e.message ?? 'Permission denied.',
+            'friend_cancel_permission_denied',
+          ),
+        );
+      }
+      return Result.failure(
+        AppFailure.unexpected(
+          e.message ?? e.toString(),
+          'friend_cancel_unexpected',
+        ),
+      );
     } catch (e) {
-      return Result.failure(AppFailure.unexpected(e.toString()));
+      return Result.failure(
+        AppFailure.unexpected(e.toString(), 'friend_cancel_unexpected'),
+      );
     }
   }
 
   /// Remove a friendship and cancel related requests.
-  Future<Result<void>> removeFriend(String friendshipId, String currentUserId) async {
+  Future<Result<void>> removeFriend(
+    String friendshipId,
+    String currentUserId,
+  ) async {
     final friendshipDoc = await _friendshipsCol.doc(friendshipId).get();
     if (!friendshipDoc.exists) {
       return Result.failure(AppFailure.notFound('Friendship not found'));
@@ -284,14 +508,42 @@ class FriendRepository {
   /// Search by userCode (6-char unique ID for QR/ID sharing).
   Future<Result<UserProfile>> findUserByCode(String code) async {
     try {
-      final snap = await _usersCol
-          .where('userCode', isEqualTo: code.toUpperCase().trim())
-          .limit(1)
-          .get();
-      if (snap.docs.isEmpty) {
-        return Result.failure(AppFailure.notFound('No user found with this code'));
+      final normalizedCode = code.toUpperCase().trim();
+      final lookup = await _userCodeLookupCol.doc(normalizedCode).get();
+      final userId = lookup.data()?['userId'] as String?;
+      if (!lookup.exists || userId == null || userId.isEmpty) {
+        return Result.failure(
+          AppFailure.notFound(
+            'No user found with this code',
+            'friend_code_not_found',
+          ),
+        );
       }
-      return Result.success(UserProfile.fromFirestore(snap.docs.first.data()));
+      return _findDirectoryUserById(
+        userId,
+        notFoundMessage: 'No user found with this code',
+      );
+    } catch (e) {
+      return Result.failure(AppFailure.unexpected(e.toString()));
+    }
+  }
+
+  /// Search by the document ID / canonical user ID.
+  Future<Result<UserProfile>> findUserById(String userId) async {
+    try {
+      final trimmedUserId = userId.trim();
+      if (trimmedUserId.isEmpty) {
+        return Result.failure(
+          AppFailure.notFound(
+            'No user found with this ID',
+            'friend_id_not_found',
+          ),
+        );
+      }
+      return _findDirectoryUserById(
+        trimmedUserId,
+        notFoundMessage: 'No user found with this ID',
+      );
     } catch (e) {
       return Result.failure(AppFailure.unexpected(e.toString()));
     }
@@ -300,14 +552,21 @@ class FriendRepository {
   /// Search by username (preferred over email for privacy).
   Future<Result<UserProfile>> findUserByUsername(String username) async {
     try {
-      final snap = await _usersCol
-          .where('username', isEqualTo: username.toLowerCase().trim())
-          .limit(1)
-          .get();
-      if (snap.docs.isEmpty) {
-        return Result.failure(AppFailure.notFound('No user found with this username'));
+      final normalizedUsername = username.toLowerCase().trim();
+      final lookup = await _userUsernameLookupCol.doc(normalizedUsername).get();
+      final userId = lookup.data()?['userId'] as String?;
+      if (!lookup.exists || userId == null || userId.isEmpty) {
+        return Result.failure(
+          AppFailure.notFound(
+            'No user found with this username',
+            'friend_username_not_found',
+          ),
+        );
       }
-      return Result.success(UserProfile.fromFirestore(snap.docs.first.data()));
+      return _findDirectoryUserById(
+        userId,
+        notFoundMessage: 'No user found with this username',
+      );
     } catch (e) {
       return Result.failure(AppFailure.unexpected(e.toString()));
     }
@@ -316,16 +575,41 @@ class FriendRepository {
   /// Search by email (still available but less preferred).
   Future<Result<UserProfile>> findUserByEmail(String email) async {
     try {
-      final snap = await _usersCol
-          .where('email', isEqualTo: email.toLowerCase().trim())
-          .limit(1)
-          .get();
-      if (snap.docs.isEmpty) {
-        return Result.failure(AppFailure.notFound('No user found with this email'));
+      final normalizedEmail = email.toLowerCase().trim();
+      final lookup = await _userEmailLookupCol.doc(normalizedEmail).get();
+      final userId = lookup.data()?['userId'] as String?;
+      if (!lookup.exists || userId == null || userId.isEmpty) {
+        return Result.failure(
+          AppFailure.notFound(
+            'No user found with this email',
+            'friend_email_not_found',
+          ),
+        );
       }
-      return Result.success(UserProfile.fromFirestore(snap.docs.first.data()));
+      return _findDirectoryUserById(
+        userId,
+        notFoundMessage: 'No user found with this email',
+      );
     } catch (e) {
       return Result.failure(AppFailure.unexpected(e.toString()));
     }
+  }
+
+  Future<Result<UserProfile>> _findDirectoryUserById(
+    String userId, {
+    required String notFoundMessage,
+  }) async {
+    final doc = await _userDirectoryCol.doc(userId).get();
+    if (!doc.exists || doc.data() == null) {
+      final code = switch (notFoundMessage) {
+        'No user found with this code' => 'friend_code_not_found',
+        'No user found with this ID' => 'friend_id_not_found',
+        'No user found with this username' => 'friend_username_not_found',
+        'No user found with this email' => 'friend_email_not_found',
+        _ => null,
+      };
+      return Result.failure(AppFailure.notFound(notFoundMessage, code));
+    }
+    return Result.success(UserProfile.fromFirestore(doc.data()!));
   }
 }

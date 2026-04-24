@@ -62,6 +62,36 @@ class ActivityRepository implements HabitCompletionRepository {
     });
   }
 
+  Future<void> deleteActivity(String activityId, String ownerId) async {
+    final activityRef = _activityCol.doc(activityId);
+    final instanceSnap = await _instanceCol
+        .where('ownerId', isEqualTo: ownerId)
+        .where('activityId', isEqualTo: activityId)
+        .get();
+    final logSnap = await _logCol
+        .where('ownerId', isEqualTo: ownerId)
+        .where('activityId', isEqualTo: activityId)
+        .get();
+
+    final refs = <DocumentReference<Map<String, dynamic>>>[
+      activityRef,
+      ...instanceSnap.docs.map((doc) => doc.reference),
+      ...logSnap.docs.map((doc) => doc.reference),
+    ];
+
+    const batchSize = 400;
+    for (var start = 0; start < refs.length; start += batchSize) {
+      final end = (start + batchSize > refs.length)
+          ? refs.length
+          : start + batchSize;
+      final batch = _db.batch();
+      for (final ref in refs.sublist(start, end)) {
+        batch.delete(ref);
+      }
+      await batch.commit();
+    }
+  }
+
   Future<void> archiveActivity(String activityId) async {
     await _activityCol.doc(activityId).update({
       'isArchived': true,

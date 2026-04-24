@@ -97,7 +97,10 @@ class MomentRepository {
   }
 
   /// Owner archive moments include all moments the user created, regardless of visibility.
-  Stream<List<Moment>> watchOwnerArchiveMoments(String userId, {int limit = 50}) {
+  Stream<List<Moment>> watchOwnerArchiveMoments(
+    String userId, {
+    int limit = 50,
+  }) {
     return _col
         .where('ownerId', isEqualTo: userId)
         .where('isDeleted', isEqualTo: false)
@@ -105,7 +108,8 @@ class MomentRepository {
         .limit(limit)
         .snapshots(includeMetadataChanges: true)
         .map(
-          (snap) => snap.docs.map((d) => Moment.fromFirestore(d.data())).toList(),
+          (snap) =>
+              snap.docs.map((d) => Moment.fromFirestore(d.data())).toList(),
         );
   }
 
@@ -146,6 +150,39 @@ class MomentRepository {
           (snap) => snap.docs
               .map((d) => FeedDelivery.fromFirestore(d.data()))
               .toList(),
+        );
+  }
+
+  Stream<List<Moment>> watchVisibleBuddyMoments({
+    required List<String> ownerIds,
+    required String viewerId,
+    int limit = 50,
+  }) {
+    final uniqueOwnerIds =
+        ownerIds.where((id) => id.isNotEmpty).toSet().toList()..sort();
+    if (uniqueOwnerIds.isEmpty) {
+      return Stream<List<Moment>>.value(const <Moment>[]);
+    }
+
+    final effectiveOwnerIds = uniqueOwnerIds.take(10).toList(growable: false);
+
+    return _col
+        .where('ownerId', whereIn: effectiveOwnerIds)
+        .where('visibility', isEqualTo: AppConstants.visibilityAllFriends)
+        .where('isDeleted', isEqualTo: false)
+        .orderBy('createdAt', descending: true)
+        .limit(limit)
+        .snapshots(includeMetadataChanges: true)
+        .map(
+          (snap) => snap.docs
+              .map((doc) => Moment.fromFirestore(doc.data()))
+              .where(
+                (moment) => _isMomentVisibleToViewer(
+                  moment: moment,
+                  viewerId: viewerId,
+                ),
+              )
+              .toList(growable: false),
         );
   }
 
@@ -209,6 +246,20 @@ class MomentRepository {
       batch.delete(d.reference);
     }
     await batch.commit();
+  }
+
+  bool _isMomentVisibleToViewer({
+    required Moment moment,
+    required String viewerId,
+  }) {
+    switch (moment.visibility) {
+      case AppConstants.visibilityAllFriends:
+        return true;
+      case AppConstants.visibilitySelectedFriends:
+        return moment.selectedFriendIds.contains(viewerId);
+      default:
+        return false;
+    }
   }
 
   // ── Reactions ─────────────────────────────────────────────────────────

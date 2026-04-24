@@ -126,16 +126,20 @@ class LocalDatabaseService {
   /// Watch pending count as a stream. Emits current count immediately, then on changes.
   Stream<int> watchPendingCount() {
     final controller = StreamController<int>.broadcast();
+    StreamSubscription<BoxEvent>? watchSubscription;
     // Emit current count immediately
     controller.add(
       _syncBox.values.where((item) => item.status == 'pending').length,
     );
     // Then emit on changes
-    _syncBox.watch().listen((_) {
+    watchSubscription = _syncBox.watch().listen((_) {
       controller.add(
         _syncBox.values.where((item) => item.status == 'pending').length,
       );
     });
+    controller.onCancel = () async {
+      await watchSubscription?.cancel();
+    };
     return controller.stream;
   }
 }

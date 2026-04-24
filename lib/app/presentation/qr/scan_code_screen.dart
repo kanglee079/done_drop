@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:done_drop/app/routes/app_routes.dart';
+import 'package:done_drop/app/presentation/qr/qr_invite_parser.dart';
 import 'package:done_drop/core/theme/theme.dart';
 import 'package:done_drop/l10n/l10n.dart';
 
@@ -39,34 +40,36 @@ class _ScanCodeScreenState extends State<ScanCodeScreen> {
 
     _isProcessing = true;
 
-    // Parse QR data: donedrop://add?code=XXXXXX
-    String? code;
-    if (raw.startsWith('donedrop://add?code=')) {
-      code = raw.substring('donedrop://add?code='.length);
-    } else if (raw.length == 6) {
-      // Plain 6-char code
-      code = raw.toUpperCase();
-    } else {
-      code = raw.toUpperCase();
-    }
+    // Stop scanner immediately to prevent duplicate processing
+    await _scannerController.stop();
 
-    if (code.isEmpty) {
+    // Check if widget is still mounted before navigating
+    if (!mounted) return;
+
+    final invite = parseQrInvite(raw);
+
+    if (invite == null || (!invite.hasUid && !invite.hasCode)) {
       Get.snackbar(
         context.l10n.invalidCodeError,
-        '',
+        context.l10n.scanCodeInvalidSubtitle,
         snackPosition: SnackPosition.BOTTOM,
       );
       _isProcessing = false;
+      _lastScanned = null;
+      // Restart scanner so user can try again
+      await _scannerController.start();
       return;
     }
 
-    // Stop scanner
-    await _scannerController.stop();
-
-    // Navigate to add friend with code pre-filled
+    // Navigate to add friend with parsed invite data.
     Get.offNamed(
       AppRoutes.addFriend,
-      arguments: {'prefillCode': code},
+      arguments: {
+        if (invite.code != null) 'prefillCode': invite.code,
+        if (invite.uid != null) 'prefillUid': invite.uid,
+        if (invite.name != null) 'prefillName': invite.name,
+        'autoSend': true,
+      },
     );
   }
 
@@ -111,6 +114,18 @@ class _ScanCodeScreenState extends State<ScanCodeScreen> {
           MobileScanner(
             controller: _scannerController,
             onDetect: _onDetect,
+            placeholderBuilder: (context) => const ColoredBox(
+              color: Colors.black,
+              child: Center(
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            errorBuilder: (context, error) {
+              return _ScannerErrorState(message: _errorMessage(context, error));
+            },
           ),
 
           // Overlay with cutout
@@ -137,15 +152,73 @@ class _ScanCodeScreenState extends State<ScanCodeScreen> {
                 child: Text(
                   l10n.scanCodeSubtitle,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(color: Colors.white, fontSize: 14),
                 ),
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  String _errorMessage(BuildContext context, MobileScannerException error) {
+    final l10n = context.l10n;
+
+    switch (error.errorCode) {
+      case MobileScannerErrorCode.permissionDenied:
+        return l10n.scanCameraPermissionMessage;
+      case MobileScannerErrorCode.unsupported:
+        return l10n.scanCameraUnsupportedMessage;
+      default:
+        return l10n.scanCameraFailedMessage;
+    }
+  }
+}
+
+class _ScannerErrorState extends StatelessWidget {
+  const _ScannerErrorState({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: Colors.black,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSizes.space24),
+          child: Container(
+            padding: const EdgeInsets.all(AppSizes.space20),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.08),
+              borderRadius: AppSizes.borderRadiusLg,
+              border: Border.all(color: Colors.white24),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.qr_code_scanner_rounded,
+                  color: Colors.white,
+                  size: 34,
+                ),
+                const SizedBox(height: AppSizes.space12),
+                Text(
+                  context.l10n.scanCodeTitle,
+                  textAlign: TextAlign.center,
+                  style: AppTypography.titleMedium(color: Colors.white),
+                ),
+                const SizedBox(height: AppSizes.space8),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.white70, height: 1.5),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

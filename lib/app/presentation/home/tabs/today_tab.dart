@@ -22,140 +22,155 @@ class _TodayContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final nextHabit = controller.nextUpHabit;
-    final spec = DDResponsiveSpec.of(context);
-    final l10n = context.l10n;
+    return Obx(() {
+      final nextHabit = controller.nextUpHabit;
+      final spec = DDResponsiveSpec.of(context);
+      final l10n = context.l10n;
 
-    return CustomScrollView(
-      physics: const BouncingScrollPhysics(),
-      slivers: [
-        SliverPadding(
-          padding: spec.pagePadding(
-            top: AppSizes.space12,
-            bottom: AppSizes.space32,
-          ),
-          sliver: SliverList.list(
-            children: [
-              _TodayIntro(controller: controller),
-              const SizedBox(height: AppSizes.space20),
-              _TodaySummaryRow(controller: controller),
-              const SizedBox(height: AppSizes.space20),
-              if (nextHabit != null) ...[
+      return CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          SliverPadding(
+            padding: spec.pagePadding(
+              top: AppSizes.space12,
+              bottom: AppSizes.space32,
+            ),
+            sliver: SliverList.list(
+              children: [
+                _TodayIntro(controller: controller),
+                const SizedBox(height: AppSizes.space20),
+                _TodaySummaryRow(controller: controller),
+                const SizedBox(height: AppSizes.space20),
+                if (nextHabit != null) ...[
+                  _SectionHeading(
+                    title: l10n.nextUpTitle,
+                    subtitle: l10n.nextUpSubtitle,
+                  ),
+                  const SizedBox(height: AppSizes.space12),
+                  HabitActionCard(
+                    key: ValueKey('next-up-${nextHabit.id}'),
+                    activity: nextHabit,
+                    instance: controller.getInstance(nextHabit.id),
+                    variant: HabitCardVariant.hero,
+                    actionState: controller.actionStateFor(nextHabit.id),
+                    isCompleted: controller.isCompletedToday(nextHabit.id),
+                    isOverdue: controller.isOverdue(nextHabit.id),
+                    onCompleteWithProof: () =>
+                        controller.completeAndOpenCapture(nextHabit.id),
+                    onEdit: () => _showHabitSheet(context, activity: nextHabit),
+                    onArchive: () => _archiveHabit(context, nextHabit),
+                    onDelete: () => _deleteHabit(context, nextHabit),
+                  ),
+                  const SizedBox(height: AppSizes.space24),
+                ],
+                if (controller.overdueActivities.isNotEmpty) ...[
+                  _SectionHeading(
+                    title: l10n.overdueTitle,
+                    subtitle: l10n.overdueSubtitle,
+                    trailing: '${controller.overdueActivities.length}',
+                  ),
+                  const SizedBox(height: AppSizes.space12),
+                  ...controller.overdueActivities.map(
+                    (activity) => Padding(
+                      padding: const EdgeInsets.only(bottom: AppSizes.space12),
+                      child: HabitActionCard(
+                        key: ValueKey('overdue-${activity.id}'),
+                        activity: activity,
+                        instance: controller.getInstance(activity.id),
+                        variant: HabitCardVariant.content,
+                        actionState: controller.actionStateFor(activity.id),
+                        isCompleted: controller.isCompletedToday(activity.id),
+                        isOverdue: true,
+                        onCompleteWithProof: () =>
+                            controller.completeAndOpenCapture(activity.id),
+                        onEdit: () =>
+                            _showHabitSheet(context, activity: activity),
+                        onArchive: () => _archiveHabit(context, activity),
+                        onDelete: () => _deleteHabit(context, activity),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSizes.space12),
+                ],
                 _SectionHeading(
-                  title: l10n.nextUpTitle,
-                  subtitle: l10n.nextUpSubtitle,
+                  title: l10n.laterTodayTitle,
+                  subtitle: controller.laterTodayHabits.isEmpty
+                      ? l10n.laterTodayEmpty
+                      : l10n.laterTodayFilled,
+                  trailing: controller.laterTodayHabits.isEmpty
+                      ? null
+                      : '${controller.laterTodayHabits.length}',
                 ),
                 const SizedBox(height: AppSizes.space12),
-                HabitActionCard(
-                  key: ValueKey('next-up-${nextHabit.id}'),
-                  activity: nextHabit,
-                  instance: controller.getInstance(nextHabit.id),
-                  variant: HabitCardVariant.hero,
-                  actionState: controller.actionStateFor(nextHabit.id),
-                  isCompleted: controller.isCompletedToday(nextHabit.id),
-                  isOverdue: controller.isOverdue(nextHabit.id),
-                  onCompleteWithProof: () =>
-                      controller.completeAndOpenCapture(nextHabit.id),
-                ),
+                if (controller.activities.isEmpty)
+                  _EmptyTodayState(
+                    onCreateHabit: () => _showHabitSheet(context),
+                  )
+                else if (controller.laterTodayHabits.isEmpty)
+                  _UtilityMessageCard(
+                    icon: Icons.done_all_outlined,
+                    title: nextHabit == null
+                        ? l10n.allHabitsHandledTitle
+                        : l10n.onlyOneThingLeftTitle,
+                    subtitle: nextHabit == null
+                        ? l10n.allHabitsHandledSubtitle
+                        : l10n.onlyOneThingLeftSubtitle,
+                  )
+                else
+                  ...controller.laterTodayHabits.map(
+                    (activity) => Padding(
+                      padding: const EdgeInsets.only(bottom: AppSizes.space12),
+                      child: HabitActionCard(
+                        key: ValueKey('later-${activity.id}'),
+                        activity: activity,
+                        instance: controller.getInstance(activity.id),
+                        variant: HabitCardVariant.content,
+                        actionState: controller.actionStateFor(activity.id),
+                        isCompleted: false,
+                        isOverdue: false,
+                        onCompleteWithProof: () =>
+                            controller.completeAndOpenCapture(activity.id),
+                        onEdit: () =>
+                            _showHabitSheet(context, activity: activity),
+                        onArchive: () => _archiveHabit(context, activity),
+                        onDelete: () => _deleteHabit(context, activity),
+                      ),
+                    ),
+                  ),
                 const SizedBox(height: AppSizes.space24),
-              ],
-              if (controller.overdueActivities.isNotEmpty) ...[
                 _SectionHeading(
-                  title: l10n.overdueTitle,
-                  subtitle: l10n.overdueSubtitle,
-                  trailing: '${controller.overdueActivities.length}',
+                  title: l10n.capturedTodayTitle,
+                  subtitle: l10n.capturedTodaySubtitle,
                 ),
                 const SizedBox(height: AppSizes.space12),
-                ...controller.overdueActivities.map(
-                  (activity) => Padding(
-                    padding: const EdgeInsets.only(bottom: AppSizes.space12),
-                    child: HabitActionCard(
-                      key: ValueKey('overdue-${activity.id}'),
-                      activity: activity,
-                      instance: controller.getInstance(activity.id),
-                      variant: HabitCardVariant.content,
-                      actionState: controller.actionStateFor(activity.id),
-                      isCompleted: controller.isCompletedToday(activity.id),
-                      isOverdue: true,
-                      onCompleteWithProof: () =>
-                          controller.completeAndOpenCapture(activity.id),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppSizes.space12),
+                _CapturedTodayStrip(controller: controller),
+                const SizedBox(height: AppSizes.space24),
+                _WeeklyRecapTeaser(controller: controller),
+                const SizedBox(height: AppSizes.space24),
+                _CreateHabitCard(onCreateHabit: () => _showHabitSheet(context)),
+                const SizedBox(height: 120),
               ],
-              _SectionHeading(
-                title: l10n.laterTodayTitle,
-                subtitle: controller.laterTodayHabits.isEmpty
-                    ? l10n.laterTodayEmpty
-                    : l10n.laterTodayFilled,
-                trailing: controller.laterTodayHabits.isEmpty
-                    ? null
-                    : '${controller.laterTodayHabits.length}',
-              ),
-              const SizedBox(height: AppSizes.space12),
-              if (controller.activities.isEmpty)
-                _EmptyTodayState(
-                  onCreateHabit: () => _showCreateHabitSheet(context),
-                )
-              else if (controller.laterTodayHabits.isEmpty)
-                _UtilityMessageCard(
-                  icon: Icons.done_all_outlined,
-                  title: nextHabit == null
-                      ? l10n.allHabitsHandledTitle
-                      : l10n.onlyOneThingLeftTitle,
-                  subtitle: nextHabit == null
-                      ? l10n.allHabitsHandledSubtitle
-                      : l10n.onlyOneThingLeftSubtitle,
-                )
-              else
-                ...controller.laterTodayHabits.map(
-                  (activity) => Padding(
-                    padding: const EdgeInsets.only(bottom: AppSizes.space12),
-                    child: HabitActionCard(
-                      key: ValueKey('later-${activity.id}'),
-                      activity: activity,
-                      instance: controller.getInstance(activity.id),
-                      variant: HabitCardVariant.content,
-                      actionState: controller.actionStateFor(activity.id),
-                      isCompleted: false,
-                      isOverdue: false,
-                      onCompleteWithProof: () =>
-                          controller.completeAndOpenCapture(activity.id),
-                    ),
-                  ),
-                ),
-              const SizedBox(height: AppSizes.space24),
-              _SectionHeading(
-                title: l10n.capturedTodayTitle,
-                subtitle: l10n.capturedTodaySubtitle,
-              ),
-              const SizedBox(height: AppSizes.space12),
-              _CapturedTodayStrip(controller: controller),
-              const SizedBox(height: AppSizes.space24),
-              _WeeklyRecapTeaser(controller: controller),
-              const SizedBox(height: AppSizes.space24),
-              _CreateHabitCard(
-                onCreateHabit: () => _showCreateHabitSheet(context),
-              ),
-              const SizedBox(height: 120),
-            ],
+            ),
           ),
-        ),
-      ],
-    );
+        ],
+      );
+    });
   }
 
-  void _showCreateHabitSheet(BuildContext context) {
+  Future<void> _showHabitSheet(
+    BuildContext context, {
+    Activity? activity,
+  }) async {
     final titleController = TextEditingController();
     final categoryController = TextEditingController();
     final l10n = context.l10n;
-    var selectedTime = TimeOfDay(
-      hour: (DateTime.now().hour + 1) % 24,
-      minute: 0,
-    );
+    titleController.text = activity?.title ?? '';
+    categoryController.text = activity?.category ?? '';
+    var selectedTime = parseReminderTime(activity?.reminderTime);
+    var isSaving = false;
+    String? formError;
 
-    Get.bottomSheet(
+    await Get.bottomSheet<void>(
       StatefulBuilder(
         builder: (context, setState) => Container(
           padding: const EdgeInsets.fromLTRB(
@@ -177,14 +192,16 @@ class _TodayContent extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  l10n.addHabitTitle,
+                  activity == null ? l10n.addHabitTitle : l10n.editHabitTitle,
                   style: AppTypography.headlineSmall(
                     color: AppColors.onSurface,
                   ),
                 ),
                 const SizedBox(height: AppSizes.space8),
                 Text(
-                  l10n.addHabitSubtitle,
+                  activity == null
+                      ? l10n.addHabitSubtitle
+                      : l10n.editHabitSubtitle,
                   style: AppTypography.bodySmall(
                     color: AppColors.onSurfaceVariant,
                   ),
@@ -193,12 +210,14 @@ class _TodayContent extends StatelessWidget {
                 TextField(
                   controller: titleController,
                   textCapitalization: TextCapitalization.sentences,
+                  enabled: !isSaving,
                   decoration: InputDecoration(hintText: l10n.habitNameHint),
                 ),
                 const SizedBox(height: AppSizes.space12),
                 TextField(
                   controller: categoryController,
                   textCapitalization: TextCapitalization.words,
+                  enabled: !isSaving,
                   decoration: InputDecoration(hintText: l10n.habitCategoryHint),
                 ),
                 const SizedBox(height: AppSizes.space16),
@@ -210,14 +229,16 @@ class _TodayContent extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSizes.space8),
                 OutlinedButton.icon(
-                  onPressed: () async {
-                    final picked = await showTimePicker(
-                      context: context,
-                      initialTime: selectedTime,
-                    );
-                    if (picked == null) return;
-                    setState(() => selectedTime = picked);
-                  },
+                  onPressed: isSaving
+                      ? null
+                      : () async {
+                          final picked = await showTimePicker(
+                            context: context,
+                            initialTime: selectedTime,
+                          );
+                          if (picked == null) return;
+                          setState(() => selectedTime = picked);
+                        },
                   icon: const Icon(Icons.schedule_rounded),
                   label: Text(
                     MaterialLocalizations.of(context).formatTimeOfDay(
@@ -226,29 +247,91 @@ class _TodayContent extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (formError != null) ...[
+                  const SizedBox(height: AppSizes.space16),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(AppSizes.space12),
+                    decoration: BoxDecoration(
+                      color: AppColors.errorContainer.withValues(alpha: 0.45),
+                      borderRadius: AppSizes.borderRadiusMd,
+                    ),
+                    child: Text(
+                      formError!,
+                      style: AppTypography.bodySmall(color: AppColors.error),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: AppSizes.space20),
                 FilledButton(
-                  onPressed: () async {
-                    final title = titleController.text.trim();
-                    if (title.isEmpty) return;
-                    try {
-                      await controller.createActivity(
-                        title: title,
-                        category: categoryController.text.trim().isEmpty
-                            ? null
-                            : categoryController.text.trim(),
-                        reminderTime: _formatTimeValue(selectedTime),
-                      );
-                      Get.back();
-                    } catch (_) {
-                      Get.snackbar(
-                        l10n.addHabitTitle,
-                        l10n.setupSaveError,
-                        snackPosition: SnackPosition.BOTTOM,
-                      );
-                    }
-                  },
-                  child: Text(l10n.createHabitAction),
+                  onPressed: isSaving
+                      ? null
+                      : () async {
+                          final title = titleController.text.trim();
+                          if (title.isEmpty) {
+                            setState(
+                              () => formError = l10n.habitNameRequiredError,
+                            );
+                            return;
+                          }
+
+                          setState(() {
+                            isSaving = true;
+                            formError = null;
+                          });
+
+                          try {
+                            if (activity == null) {
+                              await controller.createActivity(
+                                title: title,
+                                category: categoryController.text.trim().isEmpty
+                                    ? null
+                                    : categoryController.text.trim(),
+                                reminderTime: _formatTimeValue(selectedTime),
+                              );
+                            } else {
+                              await controller.updateActivity(
+                                activityId: activity.id,
+                                title: title,
+                                category: categoryController.text.trim().isEmpty
+                                    ? null
+                                    : categoryController.text.trim(),
+                                reminderTime: _formatTimeValue(selectedTime),
+                              );
+                            }
+                            Get.back<void>();
+                            Get.snackbar(
+                              activity == null
+                                  ? l10n.addHabitTitle
+                                  : l10n.editHabitTitle,
+                              activity == null
+                                  ? l10n.habitCreatedMessage
+                                  : l10n.habitUpdatedMessage,
+                              snackPosition: SnackPosition.BOTTOM,
+                            );
+                          } catch (_) {
+                            setState(() {
+                              formError = activity == null
+                                  ? l10n.habitCreateFailedMessage
+                                  : l10n.habitUpdateFailedMessage;
+                              isSaving = false;
+                            });
+                          }
+                        },
+                  child: isSaving
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.onPrimary,
+                          ),
+                        )
+                      : Text(
+                          activity == null
+                              ? l10n.createHabitAction
+                              : l10n.saveAction,
+                        ),
                 ),
               ],
             ),
@@ -257,6 +340,81 @@ class _TodayContent extends StatelessWidget {
       ),
       isScrollControlled: true,
     );
+    titleController.dispose();
+    categoryController.dispose();
+  }
+
+  Future<void> _archiveHabit(BuildContext context, Activity activity) async {
+    final l10n = context.l10n;
+    final confirmed = await Get.dialog<bool>(
+      AlertDialog(
+        title: Text(l10n.archiveHabitTitle),
+        content: Text(l10n.archiveHabitMessage(activity.title)),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: Text(l10n.cancelAction),
+          ),
+          FilledButton.tonal(
+            onPressed: () => Get.back(result: true),
+            child: Text(l10n.archiveAction),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    try {
+      await controller.archiveActivity(activity.id);
+      Get.snackbar(
+        l10n.archiveHabitTitle,
+        l10n.habitArchivedMessage,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (_) {
+      Get.snackbar(
+        l10n.archiveHabitTitle,
+        l10n.habitArchiveFailedMessage,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
+  }
+
+  Future<void> _deleteHabit(BuildContext context, Activity activity) async {
+    final l10n = context.l10n;
+    final confirmed = await Get.dialog<bool>(
+      AlertDialog(
+        title: Text(l10n.deleteHabitTitle),
+        content: Text(l10n.deleteHabitMessage(activity.title)),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: Text(l10n.cancelAction),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            onPressed: () => Get.back(result: true),
+            child: Text(l10n.deleteAction),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    try {
+      await controller.deleteActivity(activity.id);
+      Get.snackbar(
+        l10n.deleteHabitTitle,
+        l10n.habitDeletedMessage,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (_) {
+      Get.snackbar(
+        l10n.deleteHabitTitle,
+        l10n.habitDeleteFailedMessage,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
   }
 }
 
@@ -430,7 +588,9 @@ class _SummaryStatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: AppSizes.metricCardMinHeight),
+      constraints: const BoxConstraints(
+        minHeight: AppSizes.metricCardMinHeight,
+      ),
       child: Container(
         padding: const EdgeInsets.all(AppSizes.space16),
         decoration: BoxDecoration(

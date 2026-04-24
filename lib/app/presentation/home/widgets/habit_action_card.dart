@@ -18,6 +18,9 @@ class HabitActionCard extends StatelessWidget {
     required this.isCompleted,
     required this.isOverdue,
     this.onCompleteWithProof,
+    this.onEdit,
+    this.onArchive,
+    this.onDelete,
   });
 
   final Activity activity;
@@ -27,6 +30,9 @@ class HabitActionCard extends StatelessWidget {
   final bool isCompleted;
   final bool isOverdue;
   final Future<void> Function()? onCompleteWithProof;
+  final Future<void> Function()? onEdit;
+  final Future<void> Function()? onArchive;
+  final Future<void> Function()? onDelete;
 
   bool get hasProof => (instance?.momentId ?? '').isNotEmpty;
 
@@ -40,6 +46,9 @@ class HabitActionCard extends StatelessWidget {
         hasProof: hasProof,
         actionState: actionState,
         onCompleteWithProof: onCompleteWithProof,
+        onEdit: onEdit,
+        onArchive: onArchive,
+        onDelete: onDelete,
       );
     }
 
@@ -50,6 +59,9 @@ class HabitActionCard extends StatelessWidget {
       hasProof: hasProof,
       actionState: actionState,
       onCompleteWithProof: onCompleteWithProof,
+      onEdit: onEdit,
+      onArchive: onArchive,
+      onDelete: onDelete,
     );
   }
 }
@@ -62,6 +74,9 @@ class _HeroHabitCard extends StatelessWidget {
     required this.hasProof,
     required this.actionState,
     required this.onCompleteWithProof,
+    required this.onEdit,
+    required this.onArchive,
+    required this.onDelete,
   });
 
   final Activity activity;
@@ -70,6 +85,9 @@ class _HeroHabitCard extends StatelessWidget {
   final bool hasProof;
   final HabitActionState actionState;
   final Future<void> Function()? onCompleteWithProof;
+  final Future<void> Function()? onEdit;
+  final Future<void> Function()? onArchive;
+  final Future<void> Function()? onDelete;
 
   bool get _isBusy => actionState != HabitActionState.none;
 
@@ -118,11 +136,30 @@ class _HeroHabitCard extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _HeroHeadline(
-                      activity: activity,
-                      isCompleted: isCompleted,
-                      isOverdue: isOverdue,
-                      compact: true,
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: _HeroHeadline(
+                            activity: activity,
+                            isCompleted: isCompleted,
+                            isOverdue: isOverdue,
+                            compact: true,
+                          ),
+                        ),
+                        const SizedBox(width: AppSizes.space8),
+                        _HabitManagementMenu(
+                          onEdit: onEdit,
+                          onArchive: onArchive,
+                          onDelete: onDelete,
+                          foregroundColor: isCompleted
+                              ? AppColors.onSurfaceVariant
+                              : AppColors.onPrimary,
+                          backgroundColor: isCompleted
+                              ? AppColors.surfaceContainerHigh
+                              : AppColors.onPrimary.withValues(alpha: 0.12),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: AppSizes.space12),
                     _StreakBadge(
@@ -144,6 +181,19 @@ class _HeroHabitCard extends StatelessWidget {
                         compact: false,
                       ),
                     ),
+                    const SizedBox(width: AppSizes.space8),
+                    _HabitManagementMenu(
+                      onEdit: onEdit,
+                      onArchive: onArchive,
+                      onDelete: onDelete,
+                      foregroundColor: isCompleted
+                          ? AppColors.onSurfaceVariant
+                          : AppColors.onPrimary,
+                      backgroundColor: isCompleted
+                          ? AppColors.surfaceContainerHigh
+                          : AppColors.onPrimary.withValues(alpha: 0.12),
+                    ),
+                    const SizedBox(width: AppSizes.space8),
                     _StreakBadge(
                       streak: activity.currentStreak,
                       isCompleted: isCompleted,
@@ -330,6 +380,9 @@ class _ContentHabitCard extends StatelessWidget {
     required this.hasProof,
     required this.actionState,
     required this.onCompleteWithProof,
+    required this.onEdit,
+    required this.onArchive,
+    required this.onDelete,
   });
 
   final Activity activity;
@@ -338,6 +391,9 @@ class _ContentHabitCard extends StatelessWidget {
   final bool hasProof;
   final HabitActionState actionState;
   final Future<void> Function()? onCompleteWithProof;
+  final Future<void> Function()? onEdit;
+  final Future<void> Function()? onArchive;
+  final Future<void> Function()? onDelete;
 
   bool get _isBusy => actionState != HabitActionState.none;
 
@@ -429,6 +485,14 @@ class _ContentHabitCard extends StatelessWidget {
                           isCompleted: isCompleted,
                           isInverted: false,
                         ),
+                        const SizedBox(width: AppSizes.space8),
+                        _HabitManagementMenu(
+                          onEdit: onEdit,
+                          onArchive: onArchive,
+                          onDelete: onDelete,
+                          foregroundColor: AppColors.onSurfaceVariant,
+                          backgroundColor: AppColors.surfaceContainerHighest,
+                        ),
                       ],
                     ),
                     if (!isCompleted) ...[
@@ -449,7 +513,9 @@ class _ContentHabitCard extends StatelessWidget {
                     _CompletionPill(
                       isCompleted: isCompleted,
                       isBusy: _isBusy,
-                      onTap: isCompleted || _isBusy ? null : onCompleteWithProof,
+                      onTap: isCompleted || _isBusy
+                          ? null
+                          : onCompleteWithProof,
                     ),
                     const SizedBox(width: AppSizes.space12),
                     Expanded(child: infoBlock),
@@ -458,6 +524,14 @@ class _ContentHabitCard extends StatelessWidget {
                       streak: activity.currentStreak,
                       isCompleted: isCompleted,
                       isInverted: false,
+                    ),
+                    const SizedBox(width: AppSizes.space8),
+                    _HabitManagementMenu(
+                      onEdit: onEdit,
+                      onArchive: onArchive,
+                      onDelete: onDelete,
+                      foregroundColor: AppColors.onSurfaceVariant,
+                      backgroundColor: AppColors.surfaceContainerHighest,
                     ),
                     if (!isCompleted) ...[
                       const SizedBox(width: AppSizes.space8),
@@ -471,6 +545,104 @@ class _ContentHabitCard extends StatelessWidget {
                 ),
         );
       },
+    );
+  }
+}
+
+enum _HabitCardMenuAction { edit, archive, delete }
+
+class _HabitManagementMenu extends StatelessWidget {
+  const _HabitManagementMenu({
+    required this.onEdit,
+    required this.onArchive,
+    required this.onDelete,
+    required this.foregroundColor,
+    required this.backgroundColor,
+  });
+
+  final Future<void> Function()? onEdit;
+  final Future<void> Function()? onArchive;
+  final Future<void> Function()? onDelete;
+  final Color foregroundColor;
+  final Color backgroundColor;
+
+  bool get _hasActions =>
+      onEdit != null || onArchive != null || onDelete != null;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_hasActions) {
+      return const SizedBox.shrink();
+    }
+
+    final l10n = context.l10n;
+    return PopupMenuButton<_HabitCardMenuAction>(
+      tooltip: l10n.habitActionMenuTooltip,
+      color: AppColors.surfaceContainerLowest,
+      onSelected: (value) {
+        switch (value) {
+          case _HabitCardMenuAction.edit:
+            onEdit?.call();
+            break;
+          case _HabitCardMenuAction.archive:
+            onArchive?.call();
+            break;
+          case _HabitCardMenuAction.delete:
+            onDelete?.call();
+            break;
+        }
+      },
+      itemBuilder: (context) => [
+        if (onEdit != null)
+          PopupMenuItem<_HabitCardMenuAction>(
+            value: _HabitCardMenuAction.edit,
+            child: Row(
+              children: [
+                const Icon(Icons.edit_outlined, size: 18),
+                const SizedBox(width: AppSizes.space10),
+                Text(l10n.editAction),
+              ],
+            ),
+          ),
+        if (onArchive != null)
+          PopupMenuItem<_HabitCardMenuAction>(
+            value: _HabitCardMenuAction.archive,
+            child: Row(
+              children: [
+                const Icon(Icons.archive_outlined, size: 18),
+                const SizedBox(width: AppSizes.space10),
+                Text(l10n.archiveAction),
+              ],
+            ),
+          ),
+        if (onDelete != null)
+          PopupMenuItem<_HabitCardMenuAction>(
+            value: _HabitCardMenuAction.delete,
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.delete_outline_rounded,
+                  size: 18,
+                  color: AppColors.error,
+                ),
+                const SizedBox(width: AppSizes.space10),
+                Text(
+                  l10n.deleteAction,
+                  style: const TextStyle(color: AppColors.error),
+                ),
+              ],
+            ),
+          ),
+      ],
+      child: Container(
+        width: 34,
+        height: 34,
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(Icons.more_horiz_rounded, color: foregroundColor, size: 18),
+      ),
     );
   }
 }

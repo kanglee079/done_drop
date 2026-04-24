@@ -8,9 +8,13 @@ import 'package:done_drop/core/models/chat_message.dart';
 import 'package:done_drop/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:done_drop/firebase/repositories/chat_repository.dart';
 import 'package:done_drop/firebase/repositories/friend_repository.dart';
+import 'package:done_drop/l10n/l10n.dart';
 
 class ChatController extends GetxController {
   ChatController(this._chatRepository, this._friendRepository);
+
+  static const Duration _friendshipTimeout = Duration(seconds: 6);
+  static const Duration _initialMessagesTimeout = Duration(seconds: 8);
 
   final ChatRepository _chatRepository;
   final FriendRepository _friendRepository;
@@ -20,11 +24,13 @@ class ChatController extends GetxController {
   final isSending = false.obs;
   final draft = ''.obs;
   final isNotFriend = false.obs;
+  final errorMessage = RxnString();
 
   final TextEditingController textController = TextEditingController();
   final ScrollController scrollController = ScrollController();
 
   StreamSubscription<List<ChatMessage>>? _messagesSub;
+  Future<void>? _bootstrapFuture;
 
   String? get _currentUserId => Get.find<AuthController>().firebaseUser?.uid;
 
@@ -59,22 +65,94 @@ class ChatController extends GetxController {
       draft.value = textController.text;
     });
 
-    _messagesSub = _chatRepository.watchMessages(threadId).listen((items) {
-      messages.assignAll(items);
-      isLoading.value = false;
-      _scrollToBottom();
-    });
+    _bootstrapFuture = _bootstrapConversation();
   }
 
-  Future<void> _checkFriendship(String uid) async {
-    if (uid.isEmpty || buddyId.isEmpty) return;
+  Future<bool> _checkFriendship(String uid) async {
+    if (uid.isEmpty || buddyId.isEmpty) return false;
     final friends = await _friendRepository.getFriends(uid);
-    final isFriend = friends.any(
-      (f) => f.userId1 == buddyId || f.userId2 == buddyId,
-    );
-    if (!isFriend) {
-      isNotFriend.value = true;
+    return friends.any((f) => f.userId1 == buddyId || f.userId2 == buddyId);
+  }
+
+  Future<void> reloadConversation() async {
+    await _bootstrapConversation(force: true);
+  }
+
+  Future<void> _bootstrapConversation({bool force = false}) async {
+    if (!force && _bootstrapFuture != null) {
+      return _bootstrapFuture;
     }
+
+    final future = _runBootstrap();
+    _bootstrapFuture = future;
+    try {
+      await future;
+    } finally {
+      if (identical(_bootstrapFuture, future)) {
+        _bootstrapFuture = null;
+      }
+    }
+  }
+
+  Future<void> _runBootstrap() async {
+    final uid = _currentUserId ?? '';
+    errorMessage.value = null;
+    isLoading.value = true;
+    isNotFriend.value = false;
+    messages.clear();
+    await _messagesSub?.cancel();
+    _messagesSub = null;
+
+    if (uid.isEmpty || buddyId.isEmpty) {
+      _failLoad(currentL10n.chatLoadFailedSubtitle);
+      return;
+    }
+
+    try {
+      final isFriend = await _checkFriendship(uid).timeout(_friendshipTimeout);
+      if (!isFriend) {
+        isNotFriend.value = true;
+        isLoading.value = false;
+        return;
+      }
+
+      await _chatRepository.ensureThread(
+        threadId: threadId,
+        participantIds: [uid, buddyId],
+      );
+
+      final firstSnapshot = Completer<void>();
+      _messagesSub = _chatRepository
+          .watchMessages(threadId)
+          .listen(
+            (items) {
+              messages.assignAll(items);
+              errorMessage.value = null;
+              isLoading.value = false;
+              if (!firstSnapshot.isCompleted) {
+                firstSnapshot.complete();
+              }
+              _scrollToBottom();
+            },
+            onError: (error, _) {
+              _failLoad(currentL10n.chatLoadFailedSubtitle);
+              if (!firstSnapshot.isCompleted) {
+                firstSnapshot.completeError(error);
+              }
+            },
+          );
+
+      await firstSnapshot.future.timeout(_initialMessagesTimeout);
+    } on TimeoutException {
+      _failLoad(currentL10n.chatConnectionTimeoutMessage);
+    } catch (_) {
+      _failLoad(currentL10n.chatLoadFailedSubtitle);
+    }
+  }
+
+  void _failLoad(String message) {
+    errorMessage.value = message;
+    isLoading.value = false;
   }
 
   @override
@@ -88,7 +166,9 @@ class ChatController extends GetxController {
   bool get canSend =>
       draft.value.trim().isNotEmpty &&
       !isSending.value &&
-      !isNotFriend.value;
+      !isNotFriend.value &&
+      !isLoading.value &&
+      errorMessage.value == null;
 
   Future<void> sendCurrentMessage() async {
     if (isNotFriend.value) return;
@@ -105,6 +185,12 @@ class ChatController extends GetxController {
       );
       textController.clear();
       _scrollToBottom();
+    } catch (_) {
+      Get.snackbar(
+        currentL10n.genericErrorTitle,
+        currentL10n.chatSendFailedMessage,
+        snackPosition: SnackPosition.BOTTOM,
+      );
     } finally {
       isSending.value = false;
     }

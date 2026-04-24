@@ -7,5 +7,7 @@ abstract class UserProfileProvider {
   Future<Result<void>> updateUserProfile(UserProfile profile);
   Future<Result<void>> deleteUserProfile(String uid);
   Future<Result<String>> uploadAvatar(String uid, String filePath);
+  Future<Result<String>> generateUniqueUserCode();
+  Future<Result<void>> syncDiscoveryProfile(UserProfile profile, {String? email});
   Stream<UserProfile?> watchUserProfile(String uid);
 }

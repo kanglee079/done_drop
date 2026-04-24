@@ -74,4 +74,9 @@ class FeedDelivery {
         createdAt: DateTime.parse(map['createdAt'] as String),
         isRead: map['isRead'] as bool? ?? false,
       );
+
+  /// Parse from a raw Firestore document map, also accepting keys from
+  /// the denormalized feed delivery structure.
+  factory FeedDelivery.fromMap(Map<String, dynamic> map) =>
+      FeedDelivery.fromFirestore(map);
 }

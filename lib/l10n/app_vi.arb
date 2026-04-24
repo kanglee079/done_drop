@@ -62,6 +62,29 @@
   "passwordTooShort": "Mật khẩu phải có ít nhất 6 ký tự",
   "confirmPasswordRequired": "Vui lòng xác nhận mật khẩu",
   "confirmPasswordMismatch": "Mật khẩu không khớp",
+  "authSigningInStatus": "Đang đăng nhập...",
+  "authLoadingProfileStatus": "Đang tải tài khoản của bạn...",
+  "authCreatingAccountStatus": "Đang tạo tài khoản...",
+  "authPreparingProfileStatus": "Đang chuẩn bị hồ sơ của bạn...",
+  "authPreparingAppStatus": "Đang chuẩn bị ứng dụng...",
+  "authProfileBootstrapError": "Không thể hoàn tất chuẩn bị tài khoản. Vui lòng thử lại.",
+  "authAccountNotFound": "Không tìm thấy tài khoản với email này.",
+  "authWrongPassword": "Mật khẩu chưa đúng. Vui lòng thử lại.",
+  "authEmailAlreadyInUse": "Email này đã được đăng ký.",
+  "authAccountDisabled": "Tài khoản này đã bị vô hiệu hoá.",
+  "authTooManyRequests": "Bạn thao tác quá nhiều lần. Hãy đợi một chút rồi thử lại.",
+  "authNetworkError": "Lỗi mạng. Hãy kiểm tra kết nối rồi thử lại.",
+  "authInvalidCredentials": "Thông tin đăng nhập chưa đúng. Hãy kiểm tra lại email và mật khẩu.",
+  "authDifferentSignInMethod": "Email này đang dùng một phương thức đăng nhập khác.",
+  "authProviderUnavailable": "Phương thức đăng nhập này hiện chưa khả dụng.",
+  "authRecentLoginRequired": "Vui lòng xác minh lại danh tính trước khi tiếp tục.",
+  "authGenericError": "Đăng nhập thất bại. Vui lòng thử lại.",
+  "googleSignInCancelled": "Bạn đã huỷ đăng nhập Google.",
+  "googleSignInNetworkError": "Đăng nhập Google cần kết nối internet ổn định.",
+  "googleSignInConfigError": "Google Sign-In chưa sẵn sàng trên bản build này. Hãy dùng đăng nhập email trước.",
+  "googleSignInIosLimited": "Google Sign-In hiện dùng được trên Android. Trên iPhone, hãy dùng đăng nhập email cho tới khi Sign in with Apple hoàn tất để đáp ứng yêu cầu App Store.",
+  "googleSignInTokenMissing": "Đăng nhập Google hoàn tất nhưng thiếu token cần thiết. Hãy thử lại.",
+  "googleSignInFailed": "Không thể hoàn tất đăng nhập Google. Vui lòng thử lại.",
   "todayGreeting": "Chào {name}",
   "@todayGreeting": {
     "placeholders": {
@@ -112,11 +135,41 @@
   "addAction": "Thêm",
   "addHabitTitle": "Thêm thói quen",
   "addHabitSubtitle": "Giữ nó đủ cụ thể để bạn biết chính xác khi nào là “xong”.",
+  "editHabitTitle": "Chỉnh sửa thói quen",
+  "editHabitSubtitle": "Siết lại tên, thời gian hoặc nhóm để tiêu chuẩn luôn rõ ràng.",
   "habitNameHint": "Tên thói quen",
   "habitCategoryHint": "Nhóm (không bắt buộc)",
+  "habitNameRequiredError": "Hãy đặt một tên rõ ràng cho thói quen này trước khi lưu.",
   "habitTimeLabel": "Thời gian",
   "pickTimeAction": "Chọn giờ",
   "createHabitAction": "Tạo thói quen",
+  "habitCreatedMessage": "Đã thêm thói quen mới vào danh sách Hôm nay.",
+  "habitUpdatedMessage": "Đã cập nhật thông tin thói quen.",
+  "habitCreateFailedMessage": "Không thể tạo thói quen này. Vui lòng thử lại.",
+  "habitUpdateFailedMessage": "Không thể lưu thay đổi của thói quen. Vui lòng thử lại.",
+  "habitActionMenuTooltip": "Tác vụ thói quen",
+  "archiveHabitTitle": "Lưu trữ thói quen",
+  "archiveHabitMessage": "Lưu trữ \"{name}\" và tạm gỡ nó khỏi Hôm nay chứ?",
+  "@archiveHabitMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "habitArchivedMessage": "Đã lưu trữ thói quen và gỡ khỏi Hôm nay.",
+  "habitArchiveFailedMessage": "Chưa thể lưu trữ thói quen này lúc này.",
+  "deleteHabitTitle": "Xoá thói quen",
+  "deleteHabitMessage": "Xoá \"{name}\" và gỡ lịch sử thói quen này khỏi DoneDrop? Các khoảnh khắc chứng minh vẫn được giữ trong lưu trữ.",
+  "@deleteHabitMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "habitDeletedMessage": "Đã xoá thói quen.",
+  "habitDeleteFailedMessage": "Chưa thể xoá thói quen này lúc này.",
   "emptyTodayTitle": "Bắt đầu với một tiêu chuẩn.",
   "emptyTodaySubtitle": "Tạo thói quen đầu tiên bạn muốn chứng minh với chính mình hôm nay.",
   "createFirstHabitAction": "Tạo thói quen đầu tiên",
@@ -181,6 +234,7 @@
   "deleteAccountSubtitle": "Xoá vĩnh viễn hồ sơ, thói quen và khoảnh khắc của bạn",
   "deleteAccountRemovingSubtitle": "Đang xoá dữ liệu tài khoản...",
   "signOutAction": "Đăng xuất",
+  "retryAction": "Thử lại",
   "themeSettingsSnackbarTitle": "Cài đặt giao diện",
   "themeSettingsSnackbarMessage": "Điều khiển giao diện hiện đang theo cài đặt hệ thống của bạn.",
   "setupTitle": "Thiết lập 3 thói quen đầu tiên",
@@ -202,6 +256,8 @@
   "setupMiddayDefault": "Đi bộ 10 phút",
   "setupEveningDefault": "Đọc 20 trang",
   "saveAction": "Lưu",
+  "editAction": "Chỉnh sửa",
+  "archiveAction": "Lưu trữ",
   "closeAction": "Đóng",
   "cancelAction": "Huỷ",
   "continueAction": "Tiếp tục",
@@ -241,6 +297,7 @@
     }
   },
   "wallSectionSubtitle": "Mọi bằng chứng bạn giữ lại, kể cả những khoảnh khắc đã chia sẻ.",
+  "wallSectionSubtitleWithCount": "{count, plural, =1{1 bằng chứng tháng này} other{{count} bằng chứng tháng này}}",
   "wallLeadFallback": "Một lời hứa đã giữ vào {date}",
   "@wallLeadFallback": {
     "placeholders": {
@@ -317,6 +374,7 @@
   "sentSectionLabel": "ĐÃ GỬI",
   "friendRequestIncomingSubtitle": "Muốn kết bạn với bạn",
   "friendRequestSentSubtitle": "Đã gửi yêu cầu kết bạn",
+  "acceptingBuddyRequestStatus": "Đang chấp nhận yêu cầu buddy này…",
   "friendAddedTitle": "Đã thêm buddy",
   "friendAddedMessage": "{name} giờ đã là buddy của bạn",
   "@friendAddedMessage": {
@@ -345,6 +403,7 @@
   "enterUsernameError": "Hãy nhập username",
   "usernameTooShort": "Username phải có ít nhất 3 ký tự",
   "ownUsernameError": "Đó là username của chính bạn",
+  "ownAccountSearchError": "Đó là tài khoản của chính bạn",
   "friendCapReachedError": "Bạn đã đạt tối đa {limit} buddy.",
   "@friendCapReachedError": {
     "placeholders": {
@@ -362,6 +421,15 @@
       }
     }
   },
+  "buddySearchIdNotFoundError": "Không tìm thấy tài khoản với ID này.",
+  "buddySearchEmailNotFoundError": "Không tìm thấy tài khoản với email này.",
+  "buddySearchUsernameNotFoundError": "Không tìm thấy tài khoản với username này.",
+  "buddySearchGenericError": "Không thể tìm buddy lúc này. Vui lòng thử lại.",
+  "buddySearchTimeoutError": "Tìm buddy quá lâu. Vui lòng thử lại.",
+  "buddyRequestGenericError": "Không thể gửi yêu cầu buddy lúc này. Vui lòng thử lại.",
+  "buddyRequestTimeoutError": "Gửi yêu cầu buddy quá lâu. Vui lòng thử lại.",
+  "alreadyBuddyError": "Hai bạn đã là buddy của nhau rồi.",
+  "buddyRequestAlreadySentError": "Yêu cầu buddy này đã được gửi trước đó.",
   "sendBuddyRequestPrompt": "Gửi yêu cầu buddy chứ?",
   "sendBuddyRequestAction": "Gửi yêu cầu buddy",
   "requestSentSuccessTitle": "Đã gửi yêu cầu!",
@@ -376,10 +444,16 @@
   "addAnotherBuddyAction": "Thêm buddy khác",
   "chatOpenAction": "Nhắn tin",
   "chatScreenSubtitle": "Trò chuyện riêng tư với buddy này.",
+  "chatConnectingTitle": "Đang kết nối cuộc trò chuyện",
+  "chatConnectingSubtitle": "Đang tải tin nhắn mới nhất và đồng bộ trạng thái buddy.",
+  "chatLoadFailedTitle": "Không tải được cuộc trò chuyện này",
+  "chatLoadFailedSubtitle": "Hãy kiểm tra kết nối rồi thử tải lại đoạn chat.",
+  "chatConnectionTimeoutMessage": "Tải cuộc trò chuyện quá lâu. Vui lòng thử lại.",
   "chatEmptyTitle": "Bắt đầu cuộc trò chuyện",
   "chatEmptySubtitle": "Giữ liên lạc riêng tư và rõ ràng với buddy này.",
   "chatInputHint": "Nhắn gì đó...",
   "chatSendAction": "Gửi",
+  "chatSendFailedMessage": "Chưa thể gửi tin nhắn lúc này. Vui lòng thử lại.",
   "profileFieldDisplayName": "TÊN HIỂN THỊ",
   "profileFieldBio": "GIỚI THIỆU",
   "profileNameHint": "Tên của bạn",
@@ -495,6 +569,74 @@
   "premiumBenefitHighResBackupsDesc": "Lưu trữ không giảm chất lượng cho mọi bức ảnh bạn trân trọng.",
   "premiumUnavailableAction": "Premium chưa khả dụng trong bản build này",
   "premiumFooterNote": "Premium được cố ý ẩn cho tới khi billing đạt chuẩn store từ đầu đến cuối.",
+  "billingStatusCheckingChip": "Đang kiểm tra store",
+  "billingStatusActiveChip": "Premium đang active",
+  "billingStatusLiveChip": "Store đã sẵn sàng",
+  "billingStatusIssueChip": "Cần setup",
+  "billingPremiumActiveTitle": "Premium đang hoạt động",
+  "billingPremiumActiveSubtitle": "Gói {plan} của bạn đang hoạt động trên tài khoản này.",
+  "@billingPremiumActiveSubtitle": {
+    "placeholders": {
+      "plan": {
+        "type": "String"
+      }
+    }
+  },
+  "billingCheckingSubtitle": "Đang kiểm tra sản phẩm trên store và quyền Premium hiện tại của bạn.",
+  "billingCheckingRestoreMessage": "Đang kiểm tra các giao dịch bạn đã có trên store.",
+  "billingPremiumReadySubtitle": "Mở khoá buddy không giới hạn với gói tháng, năm hoặc lifetime.",
+  "billingCatalogSetupNeededSubtitle": "Catalog trên store vẫn thiếu các product ID Premium bắt buộc.",
+  "billingStoreUnavailableTitle": "Store chưa khả dụng",
+  "billingStoreUnavailableSubtitle": "Billing của store chưa khả dụng trên thiết bị này lúc này.",
+  "billingStoreUnavailableMessage": "DoneDrop chưa kết nối được tới Google Play hoặc App Store trên thiết bị này. Hãy kiểm tra tài khoản store đang đăng nhập, quyền tester và bản build internal testing.",
+  "billingRetryAction": "Thử lại",
+  "billingCatalogMissingTitle": "Thiếu sản phẩm trên store",
+  "billingCatalogMissingMessage": "DoneDrop chưa tìm thấy các product ID Premium này trong catalog store hiện tại: {ids}",
+  "@billingCatalogMissingMessage": {
+    "placeholders": {
+      "ids": {
+        "type": "String"
+      }
+    }
+  },
+  "billingWhatUnlocksTodaySubtitle": "Hiện tại Premium mở khoá một lợi ích thật đang dùng được ngay: bỏ giới hạn 5 buddy. Gói tháng, năm và lifetime đều map vào cùng một entitlement.",
+  "billingBenefitRestoreTitle": "Restore trên thiết bị khác",
+  "billingBenefitRestoreDesc": "Khôi phục entitlement trên thiết bị khác nếu bạn đang đăng nhập cùng tài khoản store.",
+  "billingBenefitLifetimeTitle": "Có lựa chọn lifetime",
+  "billingBenefitLifetimeDesc": "Chọn mua một lần nếu bạn không muốn chu kỳ gia hạn tự động.",
+  "billingChoosePlanTitle": "Chọn gói",
+  "billingMonthlyPlanTitle": "Theo tháng",
+  "billingMonthlyPlanSubtitle": "Tự gia hạn mỗi tháng cho tới khi bạn huỷ trên store.",
+  "billingYearlyPlanTitle": "Theo năm",
+  "billingYearlyPlanSubtitle": "Tự gia hạn mỗi năm cho tới khi bạn huỷ trên store.",
+  "billingLifetimePlanTitle": "Lifetime",
+  "billingLifetimePlanSubtitle": "Mua một lần. Không tự gia hạn.",
+  "billingChoosePlanAction": "Tiếp tục với giá {price}",
+  "@billingChoosePlanAction": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "billingSwitchPlanAction": "Chuyển sang {price}",
+  "@billingSwitchPlanAction": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "billingOwnedAction": "Đã mở khoá",
+  "billingPendingAction": "Đang xử lý...",
+  "billingManageAction": "Quản lý subscription",
+  "billingPurchaseQueuedMessage": "Hãy hoàn tất giao dịch trong cửa sổ store để kích hoạt Premium.",
+  "billingPurchaseStartError": "Store chưa mở được luồng thanh toán. Hãy thử lại.",
+  "billingRestoreSuccessTitle": "Đã khôi phục Premium",
+  "billingRestoreSuccessMessage": "Giao dịch store của bạn đã active lại trên tài khoản này.",
+  "billingRestorePendingMessage": "Yêu cầu restore đã được gửi. Nếu tài khoản store này đã sở hữu Premium, quyền truy cập sẽ xuất hiện lại sớm.",
+  "billingManageUnavailableMessage": "Hiện chưa có subscription tự gia hạn nào để quản lý.",
+  "billingFooterDisclosure": "Subscription sẽ tự gia hạn cho tới khi bạn huỷ trên store. Lifetime là mua một lần. Product ID mặc định của bản build này: dd_premium_monthly, dd_premium_yearly, dd_premium_lifetime.",
   "momentSavedTitle": "Đã lưu khoảnh khắc",
   "savedForSyncTitle": "Đã lưu để đồng bộ",
   "proofCapturedMessage": "Thói quen đã hoàn thành. Bằng chứng đã được ghi lại.",
@@ -505,6 +647,7 @@
   "authRequiredMessage": "Bạn cần đăng nhập",
   "captureUnavailableTitle": "Không mở được camera",
   "captureUnavailableMessage": "Không thể mở camera để chụp bằng chứng. Hãy thử lại.",
+  "captureFallbackToSystemCameraMessage": "Ảnh vừa chụp chưa được ghi lại đúng trên thiết bị này. Hãy mở camera hệ thống để chụp lại.",
   "captureSelectBuddyError": "Hãy chọn ít nhất một buddy trước khi chia sẻ.",
   "timeJustNow": "Vừa xong",
   "timeMinutesAgo": "{count} phút trước",
@@ -699,7 +842,13 @@
   "shareCodeAction": "Chia sẻ mã của tôi",
   "scanAction": "Quét mã",
   "myCodeCopied": "Đã sao chép mã vào bộ nhớ tạm",
+  "yourUserId": "ID của bạn",
+  "scanAction": "Quét mã",
   "invalidCodeError": "Mã QR không hợp lệ",
+  "scanCodeInvalidSubtitle": "Chỉ quét mã QR mời DoneDrop hợp lệ hoặc mã buddy 6 ký tự.",
+  "scanCameraPermissionMessage": "Quyền camera đang tắt. Hãy cho phép camera để quét mã buddy.",
+  "scanCameraUnsupportedMessage": "Thiết bị này không hỗ trợ quét QR cho DoneDrop.",
+  "scanCameraFailedMessage": "DoneDrop chưa thể mở trình quét lúc này. Vui lòng thử lại.",
   "userNotFoundError": "Không tìm thấy người dùng",
   "cantMessageSelfError": "Bạn không thể nhắn tin cho chính mình",
   "onlyFriendsCanChatError": "Bạn chỉ có thể nhắn tin với bạn bè",

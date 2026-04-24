@@ -6,6 +6,11 @@ class AuthRepository {
   AuthRepository(this._provider);
   final AuthProvider _provider;
 
+  bool get shouldOfferGoogleSignIn => _provider.shouldOfferGoogleSignIn;
+
+  String? get googleSignInAvailabilityNotice =>
+      _provider.googleSignInAvailabilityNotice;
+
   Future<Result<UserCredential>> signInWithEmail(
     String email,
     String password,

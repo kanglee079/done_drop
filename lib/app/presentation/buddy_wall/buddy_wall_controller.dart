@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
@@ -13,6 +15,7 @@ class BuddyWallController extends GetxController {
   final moments = <Moment>[].obs;
   final isLoading = true.obs;
   final selectedCategory = ''.obs;
+  StreamSubscription<List<Moment>>? _momentsSubscription;
 
   String get ownerId =>
       (Get.arguments as Map<String, dynamic>?)?['ownerId'] as String? ?? '';
@@ -54,7 +57,8 @@ class BuddyWallController extends GetxController {
       return;
     }
 
-    repo
+    _momentsSubscription?.cancel();
+    _momentsSubscription = repo
         .watchOwnerArchiveMoments(ownerId)
         .listen(
           (items) {
@@ -66,5 +70,11 @@ class BuddyWallController extends GetxController {
             isLoading.value = false;
           },
         );
+  }
+
+  @override
+  void onClose() {
+    _momentsSubscription?.cancel();
+    super.onClose();
   }
 }

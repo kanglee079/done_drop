@@ -122,12 +122,14 @@ class DDResponsiveScrollBody extends StatelessWidget {
     this.maxWidth,
     this.padding,
     this.fillViewport = true,
+    this.controller,
   });
 
   final Widget child;
   final double? maxWidth;
   final EdgeInsetsGeometry? padding;
   final bool fillViewport;
+  final ScrollController? controller;
 
   @override
   Widget build(BuildContext context) {
@@ -136,6 +138,7 @@ class DDResponsiveScrollBody extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         return SingleChildScrollView(
+          controller: controller,
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           physics: const BouncingScrollPhysics(),
           child: ConstrainedBox(

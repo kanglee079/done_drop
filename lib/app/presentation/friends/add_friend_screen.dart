@@ -6,113 +6,193 @@ import 'package:done_drop/app/presentation/friends/add_friend_controller.dart';
 import 'package:done_drop/core/theme/theme.dart';
 import 'package:done_drop/l10n/l10n.dart';
 
-class AddFriendScreen extends StatelessWidget {
+class AddFriendScreen extends GetView<AddFriendController> {
   const AddFriendScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return GetBuilder<AddFriendController>(
-      init: AddFriendController(Get.find()),
-      builder: (ctrl) {
-        final spec = DDResponsiveSpec.of(context);
 
-        // Handle prefill code from QR scan
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          final args = Get.arguments as Map<String, dynamic>?;
-          final prefillCode = args?['prefillCode'] as String?;
-          if (prefillCode != null && prefillCode.isNotEmpty) {
-            ctrl.searchController.text = prefillCode;
-            ctrl.searchByCode(prefillCode);
-          }
-        });
+    return DismissKeyboard(
+      child: Scaffold(
+        backgroundColor: AppColors.surface,
+        appBar: AppBar(
+          backgroundColor: AppColors.surface,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: AppColors.primary),
+            onPressed: () => Get.back(),
+          ),
+          title: Text(l10n.addBuddyTitle),
+          centerTitle: true,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.qr_code_rounded, color: AppColors.primary),
+              onPressed: () => Get.toNamed(AppRoutes.scanCode),
+              tooltip: l10n.scanAction,
+            ),
+          ],
+        ),
+        body: DDResponsiveScrollBody(
+          maxWidth: 560,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSizes.space20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: AppSizes.space4),
+                _HeaderCard(l10n: l10n),
+                const SizedBox(height: AppSizes.space16),
+                Obx(
+                  () => controller.isAtCap.value
+                      ? _FriendCapBanner(limit: controller.maxFriends)
+                      : const SizedBox.shrink(),
+                ),
+                _QuickActionRow(l10n: l10n),
+                const SizedBox(height: AppSizes.space24),
+                _DividerLabel(label: l10n.addByIdTitle),
+                const SizedBox(height: AppSizes.space24),
+                _SearchSection(controller: controller),
+                const SizedBox(height: AppSizes.space24),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
 
-        return DismissKeyboard(
-          child: Scaffold(
-            backgroundColor: AppColors.surface,
-            appBar: AppBar(
-              backgroundColor: AppColors.surface,
-              surfaceTintColor: Colors.transparent,
-              elevation: 0,
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back, color: AppColors.primary),
-                onPressed: () => Get.back(),
-              ),
-              title: Text(l10n.addBuddyTitle),
-              centerTitle: true,
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.qr_code_rounded, color: AppColors.primary),
-                  onPressed: () => Get.toNamed(AppRoutes.scanCode),
-                  tooltip: l10n.scanAction,
+class _HeaderCard extends StatelessWidget {
+  const _HeaderCard({required this.l10n});
+
+  final dynamic l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSizes.space20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.primaryFixed, AppColors.surfaceContainerLowest],
+        ),
+        borderRadius: AppSizes.borderRadiusXl,
+        border: Border.all(
+          color: AppColors.outlineVariant.withValues(alpha: 0.6),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.selectAddMethod.toUpperCase(),
+                  style: AppTypography.labelSmall(
+                    color: AppColors.primary.withValues(alpha: 0.72),
+                  ).copyWith(letterSpacing: 1.2),
+                ),
+                const SizedBox(height: AppSizes.space8),
+                Text(
+                  l10n.addByIdSubtitle,
+                  style: AppTypography.bodyMedium(color: AppColors.onSurface),
                 ),
               ],
             ),
-            body: DDResponsiveScrollBody(
-              maxWidth: 560,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Friend cap indicator
-                  Obx(
-                    () => ctrl.isAtCap.value
-                        ? _FriendCapBanner(limit: ctrl.maxFriends)
-                        : const SizedBox.shrink(),
-                  ),
-
-                  // Action cards (QR & My Code)
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _ActionCard(
-                          icon: Icons.qr_code_scanner_rounded,
-                          title: l10n.scanAction,
-                          subtitle: l10n.scanCodeSubtitle,
-                          onTap: () => Get.toNamed(AppRoutes.scanCode),
-                        ),
-                      ),
-                      const SizedBox(width: AppSizes.space12),
-                      Expanded(
-                        child: _ActionCard(
-                          icon: Icons.qr_code_2_rounded,
-                          title: l10n.shareCodeAction,
-                          subtitle: l10n.myCodeSubtitle,
-                          onTap: () => Get.toNamed(AppRoutes.myCode),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSizes.space24),
-
-                  // Divider with "or"
-                  Row(
-                    children: [
-                      Expanded(child: Divider(color: AppColors.outlineVariant)),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: AppSizes.space16),
-                        child: Text(
-                          '— ${l10n.addByIdTitle.toUpperCase()} —',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.outline,
-                            letterSpacing: 1.5,
-                          ),
-                        ),
-                      ),
-                      Expanded(child: Divider(color: AppColors.outlineVariant)),
-                    ],
-                  ),
-                  const SizedBox(height: AppSizes.space24),
-
-                  // Search field with tabs
-                  _SearchSection(controller: ctrl, spec: spec),
-                ],
-              ),
+          ),
+          const SizedBox(width: AppSizes.space16),
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.9),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Icon(
+              Icons.group_add_rounded,
+              color: AppColors.primary,
+              size: 26,
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuickActionRow extends StatelessWidget {
+  const _QuickActionRow({required this.l10n});
+
+  final dynamic l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final stackCards = constraints.maxWidth < 430;
+        final scanCard = _ActionCard(
+          icon: Icons.qr_code_scanner_rounded,
+          title: l10n.scanAction,
+          subtitle: l10n.scanCodeSubtitle,
+          onTap: () => Get.toNamed(AppRoutes.scanCode),
+        );
+        final myCodeCard = _ActionCard(
+          icon: Icons.qr_code_2_rounded,
+          title: l10n.shareCodeAction,
+          subtitle: l10n.myCodeSubtitle,
+          onTap: () => Get.toNamed(AppRoutes.myCode),
+        );
+
+        if (stackCards) {
+          return Column(
+            children: [
+              scanCard,
+              const SizedBox(height: AppSizes.space12),
+              myCodeCard,
+            ],
+          );
+        }
+
+        return Row(
+          children: [
+            Expanded(child: scanCard),
+            const SizedBox(width: AppSizes.space12),
+            Expanded(child: myCodeCard),
+          ],
         );
       },
+    );
+  }
+}
+
+class _DividerLabel extends StatelessWidget {
+  const _DividerLabel({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(child: Divider(color: AppColors.outlineVariant)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSizes.space16),
+          child: Text(
+            '— ${label.toUpperCase()} —',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: AppColors.outline,
+              letterSpacing: 1.5,
+            ),
+          ),
+        ),
+        Expanded(child: Divider(color: AppColors.outlineVariant)),
+      ],
     );
   }
 }
@@ -137,11 +217,14 @@ class _ActionCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(AppSizes.space16),
         decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLow,
+          color: AppColors.surfaceContainerLowest,
           borderRadius: AppSizes.borderRadiusLg,
-          border: Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.5)),
+          boxShadow: AppColors.cardShadow,
+          border: Border.all(
+            color: AppColors.outlineVariant.withValues(alpha: 0.5),
+          ),
         ),
-        child: Column(
+        child: Row(
           children: [
             Container(
               width: 48,
@@ -152,26 +235,36 @@ class _ActionCard extends StatelessWidget {
               ),
               child: Icon(icon, color: AppColors.primary, size: 24),
             ),
-            const SizedBox(height: AppSizes.space10),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 13,
-                color: AppColors.onSurface,
+            const SizedBox(width: AppSizes.space14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                      color: AppColors.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: AppSizes.space4),
-            Text(
-              subtitle,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 11,
-                color: AppColors.onSurfaceVariant,
-              ),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: AppColors.outline,
+              size: 20,
             ),
           ],
         ),
@@ -181,10 +274,9 @@ class _ActionCard extends StatelessWidget {
 }
 
 class _SearchSection extends StatefulWidget {
-  const _SearchSection({required this.controller, required this.spec});
+  const _SearchSection({required this.controller});
 
   final AddFriendController controller;
-  final DDResponsiveSpec spec;
 
   @override
   State<_SearchSection> createState() => _SearchSectionState();
@@ -193,6 +285,7 @@ class _SearchSection extends StatefulWidget {
 class _SearchSectionState extends State<_SearchSection>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final GlobalKey _feedbackAnchorKey = GlobalKey();
 
   @override
   void initState() {
@@ -202,6 +295,7 @@ class _SearchSectionState extends State<_SearchSection>
   }
 
   void _onTabChanged() {
+    if (!_tabController.indexIsChanging) return;
     setState(() {});
   }
 
@@ -212,157 +306,210 @@ class _SearchSectionState extends State<_SearchSection>
     super.dispose();
   }
 
-  void _performSearch() {
+  Future<void> _performSearch() async {
     final query = widget.controller.searchController.text.trim();
     if (query.isEmpty) return;
+    FocusManager.instance.primaryFocus?.unfocus();
     if (_tabController.index == 0) {
-      widget.controller.searchByCode(query);
+      await widget.controller.searchByCode(query);
     } else {
-      widget.controller.searchByEmail();
+      await widget.controller.searchByEmail();
     }
+    _scrollToFeedback();
+  }
+
+  Future<void> _sendRequest() async {
+    FocusManager.instance.primaryFocus?.unfocus();
+    await widget.controller.sendRequest();
+    _scrollToFeedback();
+  }
+
+  void _scrollToFeedback() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final feedbackContext = _feedbackAnchorKey.currentContext;
+      if (!mounted || feedbackContext == null) return;
+      Scrollable.ensureVisible(
+        feedbackContext,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+        alignment: 0.0,
+        alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
+      );
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // Tab bar
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.surfaceContainerHighest,
-            borderRadius: AppSizes.borderRadiusMd,
-          ),
-          child: TabBar(
-            controller: _tabController,
-            indicatorSize: TabBarIndicatorSize.tab,
-            indicator: BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            labelColor: Colors.white,
-            unselectedLabelColor: AppColors.onSurfaceVariant,
-            dividerColor: Colors.transparent,
-            tabs: [
-              Tab(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.tag_rounded, size: 16),
-                    const SizedBox(width: 6),
-                    Text(l10n.userIdLabel, style: const TextStyle(fontSize: 13)),
-                  ],
-                ),
-              ),
-              Tab(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.email_outlined, size: 16),
-                    const SizedBox(width: 6),
-                    Text(l10n.emailLabel, style: const TextStyle(fontSize: 13)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: AppSizes.space16),
+    return Obx(() {
+      final isSearching = widget.controller.isSearching.value;
+      final isSendingRequest = widget.controller.isSendingRequest.value;
+      final isAtCap = widget.controller.isAtCap.value;
+      final errorMessage = widget.controller.errorMessage.value;
+      final user = widget.controller.foundUser.value;
+      final requestSent = widget.controller.requestSent.value;
 
-        // Search field
-        Row(
-          children: [
-            Expanded(
-              child: Obx(
-                () => DDTextField(
-                  controller: widget.controller.searchController,
-                  label: '',
-                  hint: _tabController.index == 0
-                      ? l10n.userIdHint
-                      : l10n.emailHint,
-                  prefixIcon: _tabController.index == 0
-                      ? Icons.tag_rounded
-                      : Icons.email_outlined,
-                  keyboardType: _tabController.index == 0
-                      ? TextInputType.text
-                      : TextInputType.emailAddress,
-                  textInputAction: TextInputAction.search,
-                  onFieldSubmitted: (_) => _performSearch(),
-                  enabled: !widget.controller.isSearching.value &&
-                      !widget.controller.isAtCap.value,
-                ),
-              ),
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.surfaceContainerHighest,
+              borderRadius: AppSizes.borderRadiusMd,
             ),
-            const SizedBox(width: AppSizes.space12),
-            Obx(
-              () => SizedBox(
-                width: 120,
+            child: TabBar(
+              controller: _tabController,
+              indicatorSize: TabBarIndicatorSize.tab,
+              indicator: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              labelColor: Colors.white,
+              unselectedLabelColor: AppColors.onSurfaceVariant,
+              dividerColor: Colors.transparent,
+              tabs: [
+                Tab(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.tag_rounded, size: 16),
+                      const SizedBox(width: 6),
+                      Text(
+                        l10n.userIdLabel,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Tab(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.email_outlined, size: 16),
+                      const SizedBox(width: 6),
+                      Text(
+                        l10n.emailLabel,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSizes.space16),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final stackAction = constraints.maxWidth < 420;
+              final searchField = DDTextField(
+                controller: widget.controller.searchController,
+                label: '',
+                hint: _tabController.index == 0
+                    ? l10n.userIdHint
+                    : l10n.emailHint,
+                prefixIcon: _tabController.index == 0
+                    ? Icons.tag_rounded
+                    : Icons.email_outlined,
+                keyboardType: _tabController.index == 0
+                    ? TextInputType.text
+                    : TextInputType.emailAddress,
+                textInputAction: TextInputAction.search,
+                autocorrect: false,
+                enableSuggestions: false,
+                textCapitalization: _tabController.index == 0
+                    ? TextCapitalization.characters
+                    : TextCapitalization.none,
+                onFieldSubmitted: (_) => _performSearch(),
+                enabled: !isSearching && !isSendingRequest && !isAtCap,
+              );
+              final searchButton = SizedBox(
+                width: stackAction ? double.infinity : 136,
                 child: DDPrimaryButton(
-                  label: l10n.findByIdAction,
+                  label: l10n.searchAction,
                   icon: Icons.search_rounded,
-                  isLoading: widget.controller.isSearching.value,
-                  onPressed: (widget.controller.isSearching.value ||
-                          widget.controller.isAtCap.value)
+                  isLoading: isSearching,
+                  onPressed: (isSearching || isSendingRequest || isAtCap)
                       ? null
                       : _performSearch,
                 ),
-              ),
-            ),
-          ],
-        ),
+              );
 
-        // Error
-        Obx(() {
-          final msg = widget.controller.errorMessage.value;
-          if (msg == null) return const SizedBox(height: 0);
-          return Padding(
-            padding: const EdgeInsets.only(top: AppSizes.space12),
-            child: Container(
-              padding: const EdgeInsets.all(AppSizes.space12),
-              decoration: BoxDecoration(
-                color: AppColors.errorContainer,
-                borderRadius: AppSizes.borderRadiusMd,
-              ),
-              child: Row(
+              if (stackAction) {
+                return Column(
+                  children: [
+                    searchField,
+                    const SizedBox(height: AppSizes.space12),
+                    searchButton,
+                  ],
+                );
+              }
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.error_outline, color: AppColors.error, size: 18),
-                  const SizedBox(width: AppSizes.space8),
-                  Expanded(
-                    child: Text(
-                      msg,
-                      style: TextStyle(
-                        color: AppColors.onErrorContainer,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
+                  Expanded(child: searchField),
+                  const SizedBox(width: AppSizes.space12),
+                  searchButton,
                 ],
-              ),
+              );
+            },
+          ),
+          SizedBox(key: _feedbackAnchorKey),
+          if (errorMessage != null)
+            Padding(
+              padding: const EdgeInsets.only(top: AppSizes.space12),
+              child: _ErrorBanner(message: errorMessage),
             ),
-          );
-        }),
+          const SizedBox(height: AppSizes.space20),
+          if (user != null)
+            requestSent
+                ? _RequestSentCard(
+                    name: user.displayName,
+                    onReset: widget.controller.reset,
+                  )
+                : _FoundUserCard(
+                    name: user.displayName,
+                    avatarUrl: user.avatarUrl,
+                    onSendRequest: _sendRequest,
+                    isLoading: isSendingRequest,
+                  ),
+        ],
+      );
+    });
+  }
+}
 
-        const SizedBox(height: AppSizes.space24),
+class _ErrorBanner extends StatelessWidget {
+  const _ErrorBanner({required this.message});
 
-        // Found user
-        Obx(() {
-          final user = widget.controller.foundUser.value;
-          if (user == null) return const SizedBox.shrink();
-          if (widget.controller.requestSent.value) {
-            return _RequestSentCard(
-              name: user.displayName,
-              onReset: widget.controller.reset,
-            );
-          }
-          return _FoundUserCard(
-            name: user.displayName,
-            avatarUrl: user.avatarUrl,
-            onSendRequest: widget.controller.sendRequest,
-            isLoading: widget.controller.isSearching.value,
-          );
-        }),
-      ],
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSizes.space12),
+      decoration: BoxDecoration(
+        color: AppColors.errorContainer,
+        borderRadius: AppSizes.borderRadiusMd,
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.error_outline, color: AppColors.error, size: 18),
+          const SizedBox(width: AppSizes.space8),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(color: AppColors.onErrorContainer, fontSize: 13),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -393,7 +540,7 @@ class _FriendCapBanner extends StatelessWidget {
               children: [
                 Text(
                   l10n.buddyLimitReachedTitle,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontWeight: FontWeight.w700,
                     color: AppColors.primary,
                   ),
@@ -462,6 +609,7 @@ class _FoundUserCard extends StatelessWidget {
           DDPrimaryButton(
             label: l10n.sendBuddyRequestAction,
             icon: Icons.person_add_rounded,
+            isLoading: isLoading,
             onPressed: isLoading ? null : onSendRequest,
             isExpanded: true,
           ),
@@ -502,6 +650,7 @@ class _RequestSentCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             l10n.requestSentSuccessMessage(name),
+            textAlign: TextAlign.center,
             style: TextStyle(fontSize: 14, color: AppColors.onSurfaceVariant),
           ),
           const SizedBox(height: AppSizes.space16),

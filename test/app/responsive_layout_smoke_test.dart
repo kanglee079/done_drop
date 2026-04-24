@@ -13,6 +13,7 @@ import 'package:done_drop/app/presentation/onboarding/onboarding_screen.dart';
 import 'package:done_drop/app/presentation/premium/premium_screen.dart';
 import 'package:done_drop/app/presentation/capture/moment_controller.dart';
 import 'package:done_drop/core/services/capture_camera_service.dart';
+import 'package:done_drop/core/services/capture_recovery_service.dart';
 import 'package:done_drop/features/auth/data/onboarding_service.dart';
 import 'package:done_drop/features/auth/presentation/controllers/onboarding_controller.dart';
 
@@ -156,6 +157,7 @@ void main() {
     ) async {
       Get.put<MomentController>(MomentController());
       Get.put<CaptureCameraService>(_FakeCaptureCameraService());
+      Get.put<CaptureRecoveryService>(CaptureRecoveryService());
 
       await _pumpResponsiveApp(
         tester,

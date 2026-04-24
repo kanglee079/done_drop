@@ -161,6 +161,7 @@ class AccountDeletionService {
     await _localDatabase.clearAll();
     await _media.clearCache();
     await _storage.remove(AppConstants.keyUserId);
+    await _storage.remove('pending_capture_session');
   }
 
   Future<void> _deleteOwnedMoments(String userId) async {

@@ -470,6 +470,144 @@ abstract class AppLocalizations {
   /// **'Passwords do not match'**
   String get confirmPasswordMismatch;
 
+  /// No description provided for @authSigningInStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Signing you in...'**
+  String get authSigningInStatus;
+
+  /// No description provided for @authLoadingProfileStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading your account...'**
+  String get authLoadingProfileStatus;
+
+  /// No description provided for @authCreatingAccountStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating your account...'**
+  String get authCreatingAccountStatus;
+
+  /// No description provided for @authPreparingProfileStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing your profile...'**
+  String get authPreparingProfileStatus;
+
+  /// No description provided for @authPreparingAppStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing your app...'**
+  String get authPreparingAppStatus;
+
+  /// No description provided for @authProfileBootstrapError.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t finish preparing your account. Please try again.'**
+  String get authProfileBootstrapError;
+
+  /// No description provided for @authAccountNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No account found with this email address.'**
+  String get authAccountNotFound;
+
+  /// No description provided for @authWrongPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect password. Please try again.'**
+  String get authWrongPassword;
+
+  /// No description provided for @authEmailAlreadyInUse.
+  ///
+  /// In en, this message translates to:
+  /// **'This email is already registered.'**
+  String get authEmailAlreadyInUse;
+
+  /// No description provided for @authAccountDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'This account has been disabled.'**
+  String get authAccountDisabled;
+
+  /// No description provided for @authTooManyRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Please wait a bit and try again.'**
+  String get authTooManyRequests;
+
+  /// No description provided for @authNetworkError.
+  ///
+  /// In en, this message translates to:
+  /// **'Network error. Check your connection and try again.'**
+  String get authNetworkError;
+
+  /// No description provided for @authInvalidCredentials.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid credentials. Check your email and password.'**
+  String get authInvalidCredentials;
+
+  /// No description provided for @authDifferentSignInMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'This email already uses a different sign-in method.'**
+  String get authDifferentSignInMethod;
+
+  /// No description provided for @authProviderUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This sign-in method is not available right now.'**
+  String get authProviderUnavailable;
+
+  /// No description provided for @authRecentLoginRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please verify your identity again before this action.'**
+  String get authRecentLoginRequired;
+
+  /// No description provided for @authGenericError.
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication failed. Please try again.'**
+  String get authGenericError;
+
+  /// No description provided for @googleSignInCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Google sign-in was cancelled.'**
+  String get googleSignInCancelled;
+
+  /// No description provided for @googleSignInNetworkError.
+  ///
+  /// In en, this message translates to:
+  /// **'Google sign-in needs a stable internet connection.'**
+  String get googleSignInNetworkError;
+
+  /// No description provided for @googleSignInConfigError.
+  ///
+  /// In en, this message translates to:
+  /// **'Google sign-in is not ready on this build yet. Please use email login for now.'**
+  String get googleSignInConfigError;
+
+  /// No description provided for @googleSignInIosLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Google sign-in is live on Android. On iPhone, use email login until Sign in with Apple is shipped for App Store compliance.'**
+  String get googleSignInIosLimited;
+
+  /// No description provided for @googleSignInTokenMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Google sign-in completed without the required token. Please try again.'**
+  String get googleSignInTokenMissing;
+
+  /// No description provided for @googleSignInFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Google sign-in could not be completed. Please try again.'**
+  String get googleSignInFailed;
+
   /// No description provided for @todayGreeting.
   ///
   /// In en, this message translates to:
@@ -626,6 +764,18 @@ abstract class AppLocalizations {
   /// **'Keep it specific enough that you know exactly what “done” means.'**
   String get addHabitSubtitle;
 
+  /// No description provided for @editHabitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit habit'**
+  String get editHabitTitle;
+
+  /// No description provided for @editHabitSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tighten the title, timing, or category so the standard stays clear.'**
+  String get editHabitSubtitle;
+
   /// No description provided for @habitNameHint.
   ///
   /// In en, this message translates to:
@@ -637,6 +787,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Category (optional)'**
   String get habitCategoryHint;
+
+  /// No description provided for @habitNameRequiredError.
+  ///
+  /// In en, this message translates to:
+  /// **'Give this habit a clear name before saving.'**
+  String get habitNameRequiredError;
 
   /// No description provided for @habitTimeLabel.
   ///
@@ -655,6 +811,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Create habit'**
   String get createHabitAction;
+
+  /// No description provided for @habitCreatedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'New habit added to your Today list.'**
+  String get habitCreatedMessage;
+
+  /// No description provided for @habitUpdatedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Habit details updated.'**
+  String get habitUpdatedMessage;
+
+  /// No description provided for @habitCreateFailedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t create this habit. Please try again.'**
+  String get habitCreateFailedMessage;
+
+  /// No description provided for @habitUpdateFailedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t save the updated habit. Please try again.'**
+  String get habitUpdateFailedMessage;
+
+  /// No description provided for @habitActionMenuTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Habit actions'**
+  String get habitActionMenuTooltip;
+
+  /// No description provided for @archiveHabitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive habit'**
+  String get archiveHabitTitle;
+
+  /// No description provided for @archiveHabitMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive \"{name}\" and remove it from Today for now?'**
+  String archiveHabitMessage(String name);
+
+  /// No description provided for @habitArchivedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Habit archived and removed from Today.'**
+  String get habitArchivedMessage;
+
+  /// No description provided for @habitArchiveFailedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t archive this habit right now.'**
+  String get habitArchiveFailedMessage;
+
+  /// No description provided for @deleteHabitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete habit'**
+  String get deleteHabitTitle;
+
+  /// No description provided for @deleteHabitMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \"{name}\" and remove its habit history from DoneDrop? Proof moments stay in your archive.'**
+  String deleteHabitMessage(String name);
+
+  /// No description provided for @habitDeletedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Habit deleted.'**
+  String get habitDeletedMessage;
+
+  /// No description provided for @habitDeleteFailedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t delete this habit right now.'**
+  String get habitDeleteFailedMessage;
 
   /// No description provided for @emptyTodayTitle.
   ///
@@ -998,6 +1232,12 @@ abstract class AppLocalizations {
   /// **'Sign out'**
   String get signOutAction;
 
+  /// No description provided for @retryAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retryAction;
+
   /// No description provided for @themeSettingsSnackbarTitle.
   ///
   /// In en, this message translates to:
@@ -1081,6 +1321,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save'**
   String get saveAction;
+
+  /// No description provided for @editAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get editAction;
+
+  /// No description provided for @archiveAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive'**
+  String get archiveAction;
 
   /// No description provided for @closeAction.
   ///
@@ -1231,6 +1483,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Every proof you kept, including the ones you shared.'**
   String get wallSectionSubtitle;
+
+  /// No description provided for @wallSectionSubtitleWithCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 proof this month} other{{count} proofs this month}}'**
+  String wallSectionSubtitleWithCount(int count);
 
   /// No description provided for @wallLeadFallback.
   ///
@@ -1460,6 +1718,12 @@ abstract class AppLocalizations {
   /// **'Friend request sent'**
   String get friendRequestSentSubtitle;
 
+  /// No description provided for @acceptingBuddyRequestStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepting this buddy request…'**
+  String get acceptingBuddyRequestStatus;
+
   /// No description provided for @friendAddedTitle.
   ///
   /// In en, this message translates to:
@@ -1544,6 +1808,12 @@ abstract class AppLocalizations {
   /// **'That is your own username'**
   String get ownUsernameError;
 
+  /// No description provided for @ownAccountSearchError.
+  ///
+  /// In en, this message translates to:
+  /// **'That is your own account'**
+  String get ownAccountSearchError;
+
   /// No description provided for @friendCapReachedError.
   ///
   /// In en, this message translates to:
@@ -1561,6 +1831,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Friend request sent to {name}'**
   String requestSentMessage(String name);
+
+  /// No description provided for @buddySearchIdNotFoundError.
+  ///
+  /// In en, this message translates to:
+  /// **'No account found with that ID.'**
+  String get buddySearchIdNotFoundError;
+
+  /// No description provided for @buddySearchEmailNotFoundError.
+  ///
+  /// In en, this message translates to:
+  /// **'No account found with that email.'**
+  String get buddySearchEmailNotFoundError;
+
+  /// No description provided for @buddySearchUsernameNotFoundError.
+  ///
+  /// In en, this message translates to:
+  /// **'No account found with that username.'**
+  String get buddySearchUsernameNotFoundError;
+
+  /// No description provided for @buddySearchGenericError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t search for a buddy right now. Please try again.'**
+  String get buddySearchGenericError;
+
+  /// No description provided for @buddySearchTimeoutError.
+  ///
+  /// In en, this message translates to:
+  /// **'Buddy search is taking too long. Please try again.'**
+  String get buddySearchTimeoutError;
+
+  /// No description provided for @buddyRequestGenericError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t send the buddy request right now. Please try again.'**
+  String get buddyRequestGenericError;
+
+  /// No description provided for @buddyRequestTimeoutError.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending the buddy request is taking too long. Please try again.'**
+  String get buddyRequestTimeoutError;
+
+  /// No description provided for @alreadyBuddyError.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re already buddies with this user.'**
+  String get alreadyBuddyError;
+
+  /// No description provided for @buddyRequestAlreadySentError.
+  ///
+  /// In en, this message translates to:
+  /// **'This buddy request has already been sent.'**
+  String get buddyRequestAlreadySentError;
 
   /// No description provided for @sendBuddyRequestPrompt.
   ///
@@ -1604,6 +1928,36 @@ abstract class AppLocalizations {
   /// **'Private conversation with this buddy.'**
   String get chatScreenSubtitle;
 
+  /// No description provided for @chatConnectingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting your conversation'**
+  String get chatConnectingTitle;
+
+  /// No description provided for @chatConnectingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading the latest messages and syncing buddy status.'**
+  String get chatConnectingSubtitle;
+
+  /// No description provided for @chatLoadFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This conversation couldn\'t load'**
+  String get chatLoadFailedTitle;
+
+  /// No description provided for @chatLoadFailedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your connection and try loading the chat again.'**
+  String get chatLoadFailedSubtitle;
+
+  /// No description provided for @chatConnectionTimeoutMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The conversation is taking too long to load. Please try again.'**
+  String get chatConnectionTimeoutMessage;
+
   /// No description provided for @chatEmptyTitle.
   ///
   /// In en, this message translates to:
@@ -1627,6 +1981,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Send'**
   String get chatSendAction;
+
+  /// No description provided for @chatSendFailedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your message couldn\'t be sent right now. Please try again.'**
+  String get chatSendFailedMessage;
 
   /// No description provided for @profileFieldDisplayName.
   ///
@@ -2276,6 +2636,246 @@ abstract class AppLocalizations {
   /// **'Premium is intentionally hidden until store-compliant billing is implemented end to end.'**
   String get premiumFooterNote;
 
+  /// No description provided for @billingStatusCheckingChip.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking store'**
+  String get billingStatusCheckingChip;
+
+  /// No description provided for @billingStatusActiveChip.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium active'**
+  String get billingStatusActiveChip;
+
+  /// No description provided for @billingStatusLiveChip.
+  ///
+  /// In en, this message translates to:
+  /// **'Store live'**
+  String get billingStatusLiveChip;
+
+  /// No description provided for @billingStatusIssueChip.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs setup'**
+  String get billingStatusIssueChip;
+
+  /// No description provided for @billingPremiumActiveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium is active'**
+  String get billingPremiumActiveTitle;
+
+  /// No description provided for @billingPremiumActiveSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your {plan} entitlement is active on this account.'**
+  String billingPremiumActiveSubtitle(String plan);
+
+  /// No description provided for @billingCheckingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking store products and your current premium access.'**
+  String get billingCheckingSubtitle;
+
+  /// No description provided for @billingCheckingRestoreMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking your existing purchases from the store.'**
+  String get billingCheckingRestoreMessage;
+
+  /// No description provided for @billingPremiumReadySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock unlimited buddies with monthly, yearly, or lifetime billing.'**
+  String get billingPremiumReadySubtitle;
+
+  /// No description provided for @billingCatalogSetupNeededSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The store catalog still needs the required premium product IDs.'**
+  String get billingCatalogSetupNeededSubtitle;
+
+  /// No description provided for @billingStoreUnavailableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Store unavailable'**
+  String get billingStoreUnavailableTitle;
+
+  /// No description provided for @billingStoreUnavailableSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Store billing is unavailable on this device right now.'**
+  String get billingStoreUnavailableSubtitle;
+
+  /// No description provided for @billingStoreUnavailableMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'DoneDrop couldn\'t connect to Google Play or the App Store on this device. Check the logged-in store account, tester access, and internal testing build.'**
+  String get billingStoreUnavailableMessage;
+
+  /// No description provided for @billingRetryAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get billingRetryAction;
+
+  /// No description provided for @billingCatalogMissingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Store products missing'**
+  String get billingCatalogMissingTitle;
+
+  /// No description provided for @billingCatalogMissingMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'DoneDrop could not find these premium product IDs in the current store catalog: {ids}'**
+  String billingCatalogMissingMessage(String ids);
+
+  /// No description provided for @billingWhatUnlocksTodaySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium currently unlocks one real benefit today: removing the 5-buddy cap. Monthly, yearly, and lifetime all map to the same entitlement.'**
+  String get billingWhatUnlocksTodaySubtitle;
+
+  /// No description provided for @billingBenefitRestoreTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore across devices'**
+  String get billingBenefitRestoreTitle;
+
+  /// No description provided for @billingBenefitRestoreDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore the same entitlement on another device signed into the same store account.'**
+  String get billingBenefitRestoreDesc;
+
+  /// No description provided for @billingBenefitLifetimeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lifetime unlock available'**
+  String get billingBenefitLifetimeTitle;
+
+  /// No description provided for @billingBenefitLifetimeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a one-time purchase if you prefer no renewal cycle.'**
+  String get billingBenefitLifetimeDesc;
+
+  /// No description provided for @billingChoosePlanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a plan'**
+  String get billingChoosePlanTitle;
+
+  /// No description provided for @billingMonthlyPlanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get billingMonthlyPlanTitle;
+
+  /// No description provided for @billingMonthlyPlanSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-renews every month until you cancel in the store.'**
+  String get billingMonthlyPlanSubtitle;
+
+  /// No description provided for @billingYearlyPlanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly'**
+  String get billingYearlyPlanTitle;
+
+  /// No description provided for @billingYearlyPlanSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-renews every year until you cancel in the store.'**
+  String get billingYearlyPlanSubtitle;
+
+  /// No description provided for @billingLifetimePlanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lifetime'**
+  String get billingLifetimePlanTitle;
+
+  /// No description provided for @billingLifetimePlanSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'One-time purchase. No renewal.'**
+  String get billingLifetimePlanSubtitle;
+
+  /// No description provided for @billingChoosePlanAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue for {price}'**
+  String billingChoosePlanAction(String price);
+
+  /// No description provided for @billingSwitchPlanAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch for {price}'**
+  String billingSwitchPlanAction(String price);
+
+  /// No description provided for @billingOwnedAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Already unlocked'**
+  String get billingOwnedAction;
+
+  /// No description provided for @billingPendingAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Working...'**
+  String get billingPendingAction;
+
+  /// No description provided for @billingManageAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage subscription'**
+  String get billingManageAction;
+
+  /// No description provided for @billingPurchaseQueuedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the purchase in the store sheet to activate Premium.'**
+  String get billingPurchaseQueuedMessage;
+
+  /// No description provided for @billingPurchaseStartError.
+  ///
+  /// In en, this message translates to:
+  /// **'The store did not open the purchase flow. Please try again.'**
+  String get billingPurchaseStartError;
+
+  /// No description provided for @billingRestoreSuccessTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium restored'**
+  String get billingRestoreSuccessTitle;
+
+  /// No description provided for @billingRestoreSuccessMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your store purchase is active on this account again.'**
+  String get billingRestoreSuccessMessage;
+
+  /// No description provided for @billingRestorePendingMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore was requested. If this store account already owns Premium, it should reappear shortly.'**
+  String get billingRestorePendingMessage;
+
+  /// No description provided for @billingManageUnavailableMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No active auto-renewing subscription is available to manage yet.'**
+  String get billingManageUnavailableMessage;
+
+  /// No description provided for @billingFooterDisclosure.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscriptions renew automatically until cancelled in the store. Lifetime is a one-time purchase. Product IDs in this build: dd_premium_monthly, dd_premium_yearly, dd_premium_lifetime.'**
+  String get billingFooterDisclosure;
+
   /// No description provided for @momentSavedTitle.
   ///
   /// In en, this message translates to:
@@ -2335,6 +2935,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'We couldn\'t open the proof camera. Please try again.'**
   String get captureUnavailableMessage;
+
+  /// No description provided for @captureFallbackToSystemCameraMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The captured photo did not come through correctly on this device. Open the system camera to retake it.'**
+  String get captureFallbackToSystemCameraMessage;
 
   /// No description provided for @captureSelectBuddyError.
   ///
@@ -3116,11 +3722,41 @@ abstract class AppLocalizations {
   /// **'Code copied to clipboard'**
   String get myCodeCopied;
 
+  /// No description provided for @yourUserId.
+  ///
+  /// In en, this message translates to:
+  /// **'Your ID'**
+  String get yourUserId;
+
   /// No description provided for @invalidCodeError.
   ///
   /// In en, this message translates to:
   /// **'Invalid QR code'**
   String get invalidCodeError;
+
+  /// No description provided for @scanCodeInvalidSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Only a valid DoneDrop QR invite or 6-character buddy code can be scanned.'**
+  String get scanCodeInvalidSubtitle;
+
+  /// No description provided for @scanCameraPermissionMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera permission is off. Allow camera access to scan a buddy QR code.'**
+  String get scanCameraPermissionMessage;
+
+  /// No description provided for @scanCameraUnsupportedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This device doesn\'t support QR scanning for DoneDrop.'**
+  String get scanCameraUnsupportedMessage;
+
+  /// No description provided for @scanCameraFailedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'DoneDrop couldn\'t open the scanner right now. Please try again.'**
+  String get scanCameraFailedMessage;
 
   /// No description provided for @userNotFoundError.
   ///

@@ -21,7 +21,7 @@ service cloud.firestore {
     // Friendship documents use sorted ID format: id1_id2 (id1 < id2 lexicographically).
     // The friendship doc ID is already the concatenation, so we pass it as a single param.
     function friendshipDocExists(friendshipId) {
-      return exists(path('databases/$(database)/documents/friendships/'+friendshipId));
+      return exists(/databases/$(database)/documents/friendships/$(friendshipId));
     }
 
     function areFriends(userId1, userId2) {
@@ -30,14 +30,34 @@ service cloud.firestore {
     }
 
     function isMomentOwner(momentId) {
-      return exists(path('databases/$(database)/documents/moments/'+momentId))
-        && get(path('databases/$(database)/documents/moments/'+momentId)).data.ownerId == currentUser();
+      return exists(/databases/$(database)/documents/moments/$(momentId))
+        && get(/databases/$(database)/documents/moments/$(momentId)).data.ownerId == currentUser();
     }
 
     // Soft cap: Firestore rules don't support aggregate counts.
     // Client enforces the primary check; this returns true as fallback.
     function isBelowFriendCap() {
       return true;
+    }
+
+    function isValidPublicDirectoryData(data, userId) {
+      return data.id == userId
+        && data.keys().hasOnly([
+          'id',
+          'displayName',
+          'username',
+          'userCode',
+          'avatarUrl',
+          'bio',
+          'createdAt',
+          'premiumStatus'
+        ]);
+    }
+
+    function isValidLookupData(data, userId, fieldName, fieldValue) {
+      return data.userId == userId
+        && data[fieldName] == fieldValue
+        && data.keys().hasOnly(['userId', fieldName]);
     }
 
     // ── USERS ────────────────────────────────────────────────────────────────
@@ -70,6 +90,59 @@ service cloud.firestore {
         allow delete: if isOwner(userId);
         allow update: if false;
       }
+    }
+
+    match /user_directory/{userId} {
+      allow get: if isAuthenticated();
+      allow list: if false;
+      allow create: if isOwner(userId)
+        && isValidPublicDirectoryData(request.resource.data, userId);
+      allow update: if isOwner(userId)
+        && isValidPublicDirectoryData(request.resource.data, userId);
+      allow delete: if isOwner(userId);
+    }
+
+    match /user_code_lookup/{code} {
+      allow get: if isAuthenticated();
+      allow list: if false;
+      allow create: if isAuthenticated()
+        && isValidLookupData(request.resource.data, currentUser(), 'code', code);
+      allow update: if isAuthenticated()
+        && resource.data.userId == currentUser()
+        && isValidLookupData(request.resource.data, currentUser(), 'code', code);
+      allow delete: if isAuthenticated() && resource.data.userId == currentUser();
+    }
+
+    match /user_username_lookup/{username} {
+      allow get: if isAuthenticated();
+      allow list: if false;
+      allow create: if isAuthenticated()
+        && isValidLookupData(
+          request.resource.data,
+          currentUser(),
+          'username',
+          username
+        );
+      allow update: if isAuthenticated()
+        && resource.data.userId == currentUser()
+        && isValidLookupData(
+          request.resource.data,
+          currentUser(),
+          'username',
+          username
+        );
+      allow delete: if isAuthenticated() && resource.data.userId == currentUser();
+    }
+
+    match /user_email_lookup/{email} {
+      allow get: if isAuthenticated();
+      allow list: if false;
+      allow create: if isAuthenticated()
+        && isValidLookupData(request.resource.data, currentUser(), 'email', email);
+      allow update: if isAuthenticated()
+        && resource.data.userId == currentUser()
+        && isValidLookupData(request.resource.data, currentUser(), 'email', email);
+      allow delete: if isAuthenticated() && resource.data.userId == currentUser();
     }
 
     // ── FRIENDSHIPS ─────────────────────────────────────────────────────────
@@ -238,12 +311,12 @@ service cloud.firestore {
 
       match /messages/{messageId} {
         allow read: if isAuthenticated()
-          && exists(path('databases/$(database)/documents/chats/'+threadId))
-          && currentUser() in get(path('databases/$(database)/documents/chats/'+threadId)).data.participantIds;
+          && exists(/databases/$(database)/documents/chats/$(threadId))
+          && currentUser() in get(/databases/$(database)/documents/chats/$(threadId)).data.participantIds;
 
         allow create: if isAuthenticated()
-          && exists(path('databases/$(database)/documents/chats/'+threadId))
-          && currentUser() in get(path('databases/$(database)/documents/chats/'+threadId)).data.participantIds
+          && exists(/databases/$(database)/documents/chats/$(threadId))
+          && currentUser() in get(/databases/$(database)/documents/chats/$(threadId)).data.participantIds
           && request.resource.data.senderId == currentUser()
           && request.resource.data.threadId == threadId;
 

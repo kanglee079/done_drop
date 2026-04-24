@@ -1,6 +1,26 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/theme.dart';
 
+class _ExpandIfPossible extends StatelessWidget {
+  const _ExpandIfPossible({required this.expand, required this.child});
+
+  final bool expand;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!expand) return child;
+
+    // Avoid forcing infinite width when the button sits in an unconstrained Row/Wrap.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (!constraints.hasBoundedWidth) return child;
+        return SizedBox(width: double.infinity, child: child);
+      },
+    );
+  }
+}
+
 /// DoneDrop Primary Button — Gradient CTA
 class DDPrimaryButton extends StatelessWidget {
   const DDPrimaryButton({
@@ -67,7 +87,7 @@ class DDPrimaryButton extends StatelessWidget {
         ),
       ),
     );
-    return isExpanded ? SizedBox(width: double.infinity, child: button) : button;
+    return _ExpandIfPossible(expand: isExpanded, child: button);
   }
 }
 
@@ -88,6 +108,7 @@ class DDSecondaryButton extends StatelessWidget {
   final IconData? icon;
   final bool isExpanded;
   final bool isLoading;
+
   /// When false, button appears dimmed and taps are ignored
   final bool isEnabled;
 
@@ -102,7 +123,9 @@ class DDSecondaryButton extends StatelessWidget {
           borderRadius: AppSizes.borderRadiusMd,
           color: enabled
               ? Theme.of(context).colorScheme.surfaceContainerHighest
-              : Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+              : Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         ),
         child: Center(
           child: isLoading
@@ -120,7 +143,9 @@ class DDSecondaryButton extends StatelessWidget {
                     if (icon != null) ...[
                       Icon(
                         icon,
-                        color: enabled ? AppColors.onSurface : AppColors.outline,
+                        color: enabled
+                            ? AppColors.onSurface
+                            : AppColors.outline,
                         size: 20,
                       ),
                       const SizedBox(width: AppSizes.space8),
@@ -129,7 +154,9 @@ class DDSecondaryButton extends StatelessWidget {
                       label,
                       style: TextStyle(
                         fontFamily: AppTypography.sansFamily,
-                        color: enabled ? AppColors.onSurface : AppColors.outline,
+                        color: enabled
+                            ? AppColors.onSurface
+                            : AppColors.outline,
                         fontSize: 14,
                         fontWeight: FontWeight.w700, // slightly bolder
                       ),
@@ -139,7 +166,7 @@ class DDSecondaryButton extends StatelessWidget {
         ),
       ),
     );
-    return isExpanded ? SizedBox(width: double.infinity, child: button) : button;
+    return _ExpandIfPossible(expand: isExpanded, child: button);
   }
 }
 
@@ -190,7 +217,7 @@ class DDTextButton extends StatelessWidget {
         ),
       ),
     );
-    return isExpanded ? SizedBox(width: double.infinity, child: button) : button;
+    return _ExpandIfPossible(expand: isExpanded, child: button);
   }
 }
 

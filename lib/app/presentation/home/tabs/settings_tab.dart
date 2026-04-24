@@ -135,6 +135,21 @@ class _SettingsTab extends StatelessWidget {
             subtitle: l10n.profileSubtitle,
             onTap: () => Get.toNamed(AppRoutes.profile),
           ),
+          Obx(
+            () => settingsController.shouldShowPremiumEntry
+                ? Column(
+                    children: [
+                      const SizedBox(height: AppSizes.space12),
+                      _MeLinkTile(
+                        icon: Icons.auto_awesome_rounded,
+                        title: settingsController.premiumEntryTitle,
+                        subtitle: settingsController.premiumEntrySubtitle,
+                        onTap: () => Get.toNamed(AppRoutes.premium),
+                      ),
+                    ],
+                  )
+                : const SizedBox.shrink(),
+          ),
           const SizedBox(height: AppSizes.space12),
           _MeLinkTile(
             icon: Icons.group_outlined,
@@ -464,7 +479,9 @@ class _MeStatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: AppSizes.metricCardMinHeight),
+      constraints: const BoxConstraints(
+        minHeight: AppSizes.metricCardMinHeight,
+      ),
       child: Container(
         padding: const EdgeInsets.all(AppSizes.space16),
         decoration: BoxDecoration(

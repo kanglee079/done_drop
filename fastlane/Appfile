@@ -1,0 +1,14 @@
+# Google Play Developer API credentials
+# Download from: Google Play Console > Users & permissions > Service accounts > Create service account
+# Then: Create a new key (JSON) and download it here
+json_key_file("fastlane/donedrop-service-account.json")
+
+# Package name
+package_name("com.donedrop.app")
+
+# Track to deploy to (production, beta, alpha, internal)
+track("internal")
+
+# Submission to production requires separate rollout step
+# After running supply, manually roll out to production in Play Console or use:
+#   fastlane run promote_play_store_version track:"production" from_track:"internal"

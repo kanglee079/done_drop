@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 import 'package:done_drop/core/services/local_database_service.dart';
@@ -34,6 +36,7 @@ class OfflineQueueService extends GetxService implements HabitCompletionQueue {
 
   /// Subscribe token for connectivity changes
   void Function()? _connectivityUnsubscribe;
+  StreamSubscription<int>? _pendingCountSubscription;
 
   @override
   void onInit() {
@@ -44,12 +47,14 @@ class OfflineQueueService extends GetxService implements HabitCompletionQueue {
 
   @override
   void onClose() {
+    _pendingCountSubscription?.cancel();
     _connectivityUnsubscribe?.call();
     super.onClose();
   }
 
   void _watchPendingCount() {
-    _db.watchPendingCount().listen((n) {
+    _pendingCountSubscription?.cancel();
+    _pendingCountSubscription = _db.watchPendingCount().listen((n) {
       pendingCount.value = n;
     });
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:done_drop/app/presentation/home/home_controller.dart';
 import 'package:done_drop/core/services/storage_service.dart';
 import 'package:done_drop/core/services/notification_service.dart';
 import 'package:done_drop/l10n/l10n.dart';
@@ -25,7 +26,13 @@ class NotificationController extends GetxController {
 
   // Selected day toggles (Mon-Sun)
   final RxList<bool> activeDays = <bool>[
-    true, true, true, true, true, true, false,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    false,
   ].obs;
 
   String get reminderTimeLabel {
@@ -88,7 +95,10 @@ class NotificationController extends GetxController {
   Future<void> pickReminderTime() async {
     final time = await showTimePicker(
       context: Get.context!,
-      initialTime: TimeOfDay(hour: reminderHour.value, minute: reminderMinute.value),
+      initialTime: TimeOfDay(
+        hour: reminderHour.value,
+        minute: reminderMinute.value,
+      ),
     );
     if (time != null) {
       reminderHour.value = time.hour;
@@ -197,6 +207,26 @@ class NotificationController extends GetxController {
   }
 
   Future<void> requestPermissions() async {
-    await _notifService.requestPermission(requestExactAlarms: true);
+    await _notifService.requestPermission();
+    if (reminderEnabled.value) {
+      _scheduleReminder();
+    }
+    if (recapEnabled.value) {
+      _scheduleRecap();
+    }
+    if (Get.isRegistered<HomeController>()) {
+      await _notifService.syncActivityReminders(
+        Get.find<HomeController>().activities,
+      );
+    }
+    final snapshot = await _notifService.getPermissionSnapshot();
+    if (!snapshot.notificationsEnabled) {
+      Get.snackbar(
+        currentL10n.notificationSettingsTitle,
+        currentL10n.notificationPermissionOffSubtitle,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
   }
 }

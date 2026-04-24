@@ -15,7 +15,6 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return GetBuilder<ProfileController>(
-      init: ProfileController(),
       builder: (ctrl) {
         return DismissKeyboard(
           child: Scaffold(
@@ -135,7 +134,9 @@ class ProfileScreen extends StatelessWidget {
                   // User Code
                   Obx(() {
                     final code = ctrl.userCode;
-                    if (code == null || code.isEmpty) return const SizedBox.shrink();
+                    if (code == null || code.isEmpty) {
+                      return const SizedBox.shrink();
+                    }
                     return GestureDetector(
                       onTap: () => Get.toNamed(AppRoutes.myCode),
                       child: Container(
@@ -151,10 +152,16 @@ class ProfileScreen extends StatelessWidget {
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.15),
+                                color: AppColors.primary.withValues(
+                                  alpha: 0.15,
+                                ),
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              child: const Icon(Icons.qr_code_rounded, color: AppColors.primary, size: 22),
+                              child: const Icon(
+                                Icons.qr_code_rounded,
+                                color: AppColors.primary,
+                                size: 22,
+                              ),
                             ),
                             const SizedBox(width: AppSizes.space12),
                             Expanded(
@@ -166,7 +173,9 @@ class ProfileScreen extends StatelessWidget {
                                     style: TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w700,
-                                      color: AppColors.primary.withValues(alpha: 0.7),
+                                      color: AppColors.primary.withValues(
+                                        alpha: 0.7,
+                                      ),
                                       letterSpacing: 1.5,
                                     ),
                                   ),
@@ -184,7 +193,11 @@ class ProfileScreen extends StatelessWidget {
                                 ],
                               ),
                             ),
-                            Icon(Icons.arrow_forward_ios_rounded, color: AppColors.primary.withValues(alpha: 0.5), size: 16),
+                            Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              color: AppColors.primary.withValues(alpha: 0.5),
+                              size: 16,
+                            ),
                           ],
                         ),
                       ),

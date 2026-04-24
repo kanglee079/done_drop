@@ -70,6 +70,21 @@ class NotificationCenterController extends GetxController {
       );
     }
     await refreshPermissionState();
+    if (!notificationsEnabled.value) {
+      Get.snackbar(
+        currentL10n.notificationSettingsTitle,
+        currentL10n.notificationPermissionOffSubtitle,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+    if (!exactAlarmEnabled.value) {
+      Get.snackbar(
+        currentL10n.notificationSettingsTitle,
+        currentL10n.notificationExactAlarmOffSubtitle,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
   }
 
   void openSettings() {
@@ -77,7 +92,10 @@ class NotificationCenterController extends GetxController {
   }
 
   void openFriendRequests() {
-    Get.toNamed(AppRoutes.friends);
+    Get.toNamed(
+      AppRoutes.friends,
+      arguments: {'initialTab': 'requests'},
+    );
   }
 
   Future<void> openBuddyUpdate(FeedDelivery delivery) async {
