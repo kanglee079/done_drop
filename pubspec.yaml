@@ -1,7 +1,7 @@
 name: done_drop
 description: "DoneDrop — Personal discipline app. Create habits, complete them, capture proof moments, and share privately with accountability partners."
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.1+2
 
 environment:
   sdk: ^3.10.3
