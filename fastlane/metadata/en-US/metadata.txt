@@ -1,0 +1,20 @@
+title: DoneDrop
+support_email: support@donedrop.app
+short_description: Build habits, capture proof, and share progress with trusted buddies.
+full_description: |
+  DoneDrop is a private accountability app for people who want to complete the routines they keep promising themselves.
+
+  Plan your daily focus, complete habits, and capture proof moments when the work is done. Keep those moments private, or share selected progress with trusted buddies who help you stay consistent without turning your discipline into a public performance.
+
+  What you can do with DoneDrop:
+  - Create daily habits and one-off tasks for today's focus.
+  - Capture proof moments with photos and captions.
+  - Share selected moments privately with buddies.
+  - Add buddies with QR codes or private invite codes.
+  - Review your own progress in a memory wall.
+  - Chat privately with accountability buddies.
+  - Manage reminders, profile, privacy, and account deletion from Settings.
+
+  Premium, where available, unlocks expanded accountability features such as removing the free buddy cap.
+
+  DoneDrop is built for private discipline: complete it, capture it, and share the proof only with people you choose.

@@ -14,7 +14,6 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return GetBuilder<SettingsController>(
-      init: SettingsController(),
       builder: (ctrl) {
         final spec = DDResponsiveSpec.of(context);
         return DismissKeyboard(
@@ -61,54 +60,130 @@ class SettingsScreen extends StatelessWidget {
                       color: AppColors.onSurfaceVariant,
                     ),
                   ),
-                  const SizedBox(height: AppSizes.space32),
-                  // Premium banner
-                  GestureDetector(
-                    onTap: () => Get.toNamed(AppRoutes.premium),
-                    child: Container(
-                      padding: const EdgeInsets.all(AppSizes.space24),
-                      decoration: BoxDecoration(
-                        gradient: AppColors.primaryGradient,
-                        borderRadius: AppSizes.borderRadiusLg,
-                      ),
-                      child: Row(
+                  Obx(
+                    () {
+                      if (!ctrl.shouldShowPremiumEntry) {
+                        return const SizedBox(height: AppSizes.space24);
+                      }
+
+                      return Column(
                         children: [
-                          const Icon(
-                            Icons.auto_awesome,
-                            color: Colors.white,
-                            size: 28,
-                          ),
-                          const SizedBox(width: AppSizes.space16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  l10n.premiumBannerTitle,
-                                  style: TextStyle(
-                                    fontFamily: AppTypography.serifFamily,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
+                          const SizedBox(height: AppSizes.space32),
+                          GestureDetector(
+                            onTap: () => Get.toNamed(AppRoutes.premium),
+                            child: Container(
+                              padding: const EdgeInsets.all(AppSizes.space24),
+                              decoration: BoxDecoration(
+                                gradient:
+                                    ctrl.hasPremiumAccess ||
+                                        ctrl.isStoreBillingReady
+                                    ? AppColors.primaryGradient
+                                    : null,
+                                color:
+                                    ctrl.hasPremiumAccess ||
+                                        ctrl.isStoreBillingReady
+                                    ? null
+                                    : AppColors.surfaceContainerLowest,
+                                borderRadius: AppSizes.borderRadiusLg,
+                                border:
+                                    ctrl.hasPremiumAccess ||
+                                        ctrl.isStoreBillingReady
+                                    ? null
+                                    : Border.all(
+                                        color: AppColors.outlineVariant,
+                                      ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    ctrl.hasPremiumAccess ||
+                                            ctrl.isStoreBillingReady
+                                        ? Icons.auto_awesome
+                                        : Icons.lock_clock_outlined,
+                                    color:
+                                        ctrl.hasPremiumAccess ||
+                                            ctrl.isStoreBillingReady
+                                        ? Colors.white
+                                        : AppColors.primary,
+                                    size: 28,
                                   ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  l10n.premiumBannerSubtitle,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white70,
+                                  const SizedBox(width: AppSizes.space16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          ctrl.premiumEntryTitle,
+                                          style: TextStyle(
+                                            fontFamily:
+                                                AppTypography.serifFamily,
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.w600,
+                                            color:
+                                                ctrl.hasPremiumAccess ||
+                                                    ctrl.isStoreBillingReady
+                                                ? Colors.white
+                                                : AppColors.onSurface,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          ctrl.premiumEntrySubtitle,
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color:
+                                                ctrl.hasPremiumAccess ||
+                                                    ctrl.isStoreBillingReady
+                                                ? Colors.white70
+                                                : AppColors.onSurfaceVariant,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ],
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      if (!ctrl.hasPremiumAccess &&
+                                          !ctrl.isStoreBillingReady)
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: AppSizes.space8,
+                                            vertical: AppSizes.space4,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.primaryFixed,
+                                            borderRadius:
+                                                AppSizes.borderRadiusFull,
+                                          ),
+                                          child: Text(
+                                            l10n.billingStatusIssueChip,
+                                            style: AppTypography.labelSmall(
+                                              color: AppColors.primary,
+                                            ),
+                                          ),
+                                        ),
+                                      const SizedBox(height: AppSizes.space8),
+                                      Icon(
+                                        Icons.chevron_right,
+                                        color:
+                                            ctrl.hasPremiumAccess ||
+                                                ctrl.isStoreBillingReady
+                                            ? Colors.white
+                                            : AppColors.outline,
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                          const Icon(Icons.chevron_right, color: Colors.white),
+                          const SizedBox(height: AppSizes.space32),
                         ],
-                      ),
-                    ),
+                      );
+                    },
                   ),
-                  const SizedBox(height: AppSizes.space32),
                   // Notification settings
                   Text(
                     l10n.preferencesTitle,
@@ -184,7 +259,10 @@ class SettingsScreen extends StatelessWidget {
                   _SettingsTile(
                     title: l10n.signOutTitle,
                     desc: l10n.signOutSubtitle,
-                    trailing: const Icon(Icons.logout, color: AppColors.outline),
+                    trailing: const Icon(
+                      Icons.logout,
+                      color: AppColors.outline,
+                    ),
                     onTap: () => _showSignOutDialog(context, ctrl),
                   ),
                   const SizedBox(height: AppSizes.space48),
@@ -257,6 +335,8 @@ class _SettingsTile extends StatelessWidget {
                       fontSize: 12,
                       color: AppColors.onSurfaceVariant,
                     ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),

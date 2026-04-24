@@ -199,89 +199,108 @@ class HomeController extends GetxController {
   }
 
   void _watchFriendCount(String userId) {
-    _friendCountSubscription = _friendRepo.watchFriendships(userId).listen(
-      (list) {
-        friendCount.value = list.length;
-      },
-      onError: (error) {
-        // Non-critical: silently ignore permission errors on first load
-        debugPrint('[_watchFriendCount] Error: $error');
-      },
-    );
+    unawaited(_seedFriendCount(userId));
+    _friendCountSubscription = _friendRepo
+        .watchFriendships(userId)
+        .listen(
+          (list) {
+            friendCount.value = list.length;
+          },
+          onError: (error) {
+            // Non-critical: silently ignore permission errors on first load
+            debugPrint('[_watchFriendCount] Error: $error');
+          },
+        );
+  }
+
+  Future<void> _seedFriendCount(String userId) async {
+    try {
+      final count = await _friendRepo.getFriendCount(userId);
+      if (_boundUserId == userId) {
+        friendCount.value = count;
+      }
+    } catch (error) {
+      debugPrint('[_seedFriendCount] Error: $error');
+    }
   }
 
   void _watchProfile(String userId) {
-    _profileSubscription = _userProfileRepo.watchUserProfile(userId).listen(
-      (p) {
-        profile.value = p;
-      },
-      onError: (error) {
-        debugPrint('[_watchProfile] Error: $error');
-      },
-    );
+    _profileSubscription = _userProfileRepo
+        .watchUserProfile(userId)
+        .listen(
+          (p) {
+            profile.value = p;
+          },
+          onError: (error) {
+            debugPrint('[_watchProfile] Error: $error');
+          },
+        );
   }
 
   void _watchActivities(String userId) {
-    _activeActivitiesSubscription = _activityRepo.watchActiveActivities(userId).listen(
-      (list) async {
-        activities.assignAll(sortActivitiesBySchedule(list));
-        _recalcStats();
-        isLoading.value = false;
-        unawaited(
-          NotificationService.instance.syncActivityReminders(activities),
+    _activeActivitiesSubscription = _activityRepo
+        .watchActiveActivities(userId)
+        .listen(
+          (list) async {
+            activities.assignAll(sortActivitiesBySchedule(list));
+            _recalcStats();
+            isLoading.value = false;
+            unawaited(
+              NotificationService.instance.syncActivityReminders(activities),
+            );
+            await LocalCacheService.instance.cacheActivities(
+              userId,
+              activities.map((activity) => activity.toFirestore()).toList(),
+            );
+          },
+          onError: (error) {
+            debugPrint('[_watchActivities] Error: $error');
+            isLoading.value = false;
+          },
         );
-        await LocalCacheService.instance.cacheActivities(
-          userId,
-          activities.map((activity) => activity.toFirestore()).toList(),
+
+    _completionLogsSubscription = _activityRepo
+        .watchCompletionLogs(userId, limit: 100)
+        .listen(
+          (logs) {
+            weekLogs.value = logs;
+          },
+          onError: (error) {
+            debugPrint('[_watchCompletionLogs] Error: $error');
+          },
         );
-      },
-      onError: (error) {
-        debugPrint('[_watchActivities] Error: $error');
-        isLoading.value = false;
-      },
-    );
 
-    _completionLogsSubscription = _activityRepo.watchCompletionLogs(
-      userId,
-      limit: 100,
-    ).listen(
-      (logs) {
-        weekLogs.value = logs;
-      },
-      onError: (error) {
-        debugPrint('[_watchCompletionLogs] Error: $error');
-      },
-    );
-
-    _archivedActivitiesSubscription = _activityRepo.watchArchivedActivities(
-      userId,
-    ).listen(
-      (list) {
-        archivedActivities.value = list;
-      },
-      onError: (error) {
-        debugPrint('[_watchArchivedActivities] Error: $error');
-      },
-    );
+    _archivedActivitiesSubscription = _activityRepo
+        .watchArchivedActivities(userId)
+        .listen(
+          (list) {
+            archivedActivities.value = list;
+          },
+          onError: (error) {
+            debugPrint('[_watchArchivedActivities] Error: $error');
+          },
+        );
   }
 
   void _watchTodayInstances(String userId) {
-    _todayInstancesSubscription = _activityRepo.watchTodayInstances(userId).listen(
-      (instances) async {
-        todayInstances.clear();
-        for (final inst in instances) {
-          todayInstances[inst.activityId] = inst;
-        }
-        _recalcStats();
-        await LocalCacheService.instance.cacheTodayInstances(
-          userId,
-          instances.map((i) => i.toFirestore()).toList(),
+    _todayInstancesSubscription = _activityRepo
+        .watchTodayInstances(userId)
+        .listen(
+          (instances) async {
+            todayInstances.clear();
+            for (final inst in instances) {
+              todayInstances[inst.activityId] = inst;
+            }
+            _recalcStats();
+            await LocalCacheService.instance.cacheTodayInstances(
+              userId,
+              instances.map((i) => i.toFirestore()).toList(),
+            );
+          },
+          onError: (error) {
+            debugPrint('[_watchTodayInstances] Error: $error');
+          },
         );
-      },
-      onError: (error) {
-        debugPrint('[_watchTodayInstances] Error: $error');
-      },
-    );
   }
 
   void _recalcStats() {
@@ -425,36 +444,65 @@ class HomeController extends GetxController {
     activities.assignAll(
       sortActivitiesBySchedule(<Activity>[...activities, activity]),
     );
-    await NotificationService.instance.syncActivityReminders(activities);
+    await _syncReminders();
     todayInstances[activity.id] = optimisticInstance;
     _recalcStats();
-    await LocalCacheService.instance.cacheActivities(
-      uid,
-      activities.map((item) => item.toFirestore()).toList(),
-    );
-    await LocalCacheService.instance.cacheTodayInstances(
-      uid,
-      todayInstances.values.map((item) => item.toFirestore()).toList(),
-    );
+    await _cacheHomeState(uid);
 
     try {
       await _activityRepo.createActivity(activity);
       await _activityRepo.getOrCreateTodayInstance(activity.id, uid);
     } catch (_) {
       activities.assignAll(previousActivities);
-      await NotificationService.instance.syncActivityReminders(activities);
+      await _syncReminders();
       todayInstances
         ..clear()
         ..addAll(previousInstances);
       _recalcStats();
-      await LocalCacheService.instance.cacheActivities(
-        uid,
-        previousActivities.map((item) => item.toFirestore()).toList(),
-      );
-      await LocalCacheService.instance.cacheTodayInstances(
-        uid,
-        previousInstances.values.map((item) => item.toFirestore()).toList(),
-      );
+      await _cacheHomeState(uid);
+      rethrow;
+    }
+  }
+
+  Future<void> updateActivity({
+    required String activityId,
+    required String title,
+    String? description,
+    String? category,
+    String? reminderTime,
+  }) async {
+    final uid = _userId;
+    if (uid == null) return;
+
+    final currentIndex = activities.indexWhere((item) => item.id == activityId);
+    if (currentIndex == -1) return;
+
+    final current = activities[currentIndex];
+    final updated = current.copyWith(
+      title: title,
+      description: description,
+      category: category,
+      reminderTime: reminderTime,
+      updatedAt: DateTime.now(),
+    );
+
+    final previousActivities = List<Activity>.from(activities);
+    activities.assignAll(
+      sortActivitiesBySchedule(
+        activities
+            .map((item) => item.id == activityId ? updated : item)
+            .toList(growable: false),
+      ),
+    );
+    await _syncReminders();
+    await _cacheHomeState(uid);
+
+    try {
+      await _activityRepo.updateActivity(updated);
+    } catch (_) {
+      activities.assignAll(previousActivities);
+      await _syncReminders();
+      await _cacheHomeState(uid);
       rethrow;
     }
   }
@@ -477,12 +525,132 @@ class HomeController extends GetxController {
 
   /// Archive an activity.
   Future<void> archiveActivity(String activityId) async {
-    await _activityRepo.archiveActivity(activityId);
+    final uid = _userId;
+    if (uid == null) return;
+
+    final activity = activities.firstWhereOrNull(
+      (item) => item.id == activityId,
+    );
+    if (activity == null) return;
+
+    final previousActivities = List<Activity>.from(activities);
+    final previousArchived = List<Activity>.from(archivedActivities);
+    final previousInstances = Map<String, ActivityInstance>.from(
+      todayInstances,
+    );
+    final archived = activity.copyWith(
+      isArchived: true,
+      updatedAt: DateTime.now(),
+    );
+
+    activities.removeWhere((item) => item.id == activityId);
+    archivedActivities.insert(0, archived);
+    todayInstances.remove(activityId);
+    _recalcStats();
+    await _syncReminders();
+    await _cacheHomeState(uid);
+
+    try {
+      await _activityRepo.archiveActivity(activityId);
+    } catch (_) {
+      activities.assignAll(previousActivities);
+      archivedActivities.assignAll(previousArchived);
+      todayInstances
+        ..clear()
+        ..addAll(previousInstances);
+      _recalcStats();
+      await _syncReminders();
+      await _cacheHomeState(uid);
+      rethrow;
+    }
   }
 
   /// Restore a previously archived activity.
   Future<void> restoreActivity(String activityId) async {
-    await _activityRepo.unarchiveActivity(activityId);
+    final uid = _userId;
+    if (uid == null) return;
+
+    final activity = archivedActivities.firstWhereOrNull(
+      (item) => item.id == activityId,
+    );
+    if (activity == null) return;
+
+    final previousActivities = List<Activity>.from(activities);
+    final previousArchived = List<Activity>.from(archivedActivities);
+    final previousInstances = Map<String, ActivityInstance>.from(
+      todayInstances,
+    );
+    final restored = activity.copyWith(
+      isArchived: false,
+      updatedAt: DateTime.now(),
+    );
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    archivedActivities.removeWhere((item) => item.id == activityId);
+    activities.assignAll(
+      sortActivitiesBySchedule(<Activity>[...activities, restored]),
+    );
+    todayInstances[activityId] = ActivityInstance(
+      id: 'inst_${activityId}_${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}',
+      activityId: activityId,
+      ownerId: uid,
+      date: today,
+      status: 'pending',
+      createdAt: now,
+      updatedAt: now,
+    );
+    _recalcStats();
+    await _syncReminders();
+    await _cacheHomeState(uid);
+
+    try {
+      await _activityRepo.unarchiveActivity(activityId);
+      await _activityRepo.getOrCreateTodayInstance(activityId, uid);
+    } catch (_) {
+      activities.assignAll(previousActivities);
+      archivedActivities.assignAll(previousArchived);
+      todayInstances
+        ..clear()
+        ..addAll(previousInstances);
+      _recalcStats();
+      await _syncReminders();
+      await _cacheHomeState(uid);
+      rethrow;
+    }
+  }
+
+  Future<void> deleteActivity(String activityId) async {
+    final uid = _userId;
+    if (uid == null) return;
+
+    final previousActivities = List<Activity>.from(activities);
+    final previousArchived = List<Activity>.from(archivedActivities);
+    final previousInstances = Map<String, ActivityInstance>.from(
+      todayInstances,
+    );
+
+    activities.removeWhere((item) => item.id == activityId);
+    archivedActivities.removeWhere((item) => item.id == activityId);
+    todayInstances.remove(activityId);
+    _recalcStats();
+    await _syncReminders();
+    await _cacheHomeState(uid);
+
+    try {
+      await _activityRepo.deleteActivity(activityId, uid);
+      await LocalCacheService.instance.invalidateTodayInstances(uid);
+    } catch (_) {
+      activities.assignAll(previousActivities);
+      archivedActivities.assignAll(previousArchived);
+      todayInstances
+        ..clear()
+        ..addAll(previousInstances);
+      _recalcStats();
+      await _syncReminders();
+      await _cacheHomeState(uid);
+      rethrow;
+    }
   }
 
   /// Mark today's instance of an activity as missed.
@@ -541,14 +709,7 @@ class HomeController extends GetxController {
     Future<void>.microtask(() async {
       final uid = _userId;
       if (uid == null) return;
-      await LocalCacheService.instance.cacheActivities(
-        uid,
-        activities.map((activity) => activity.toFirestore()).toList(),
-      );
-      await LocalCacheService.instance.cacheTodayInstances(
-        uid,
-        todayInstances.values.map((instance) => instance.toFirestore()).toList(),
-      );
+      await _cacheHomeState(uid);
     });
   }
 
@@ -560,6 +721,21 @@ class HomeController extends GetxController {
       activity: activity,
       previousStreak: result.previousStreak,
       newStreak: result.newStreak,
+    );
+  }
+
+  Future<void> _syncReminders() async {
+    await NotificationService.instance.syncActivityReminders(activities);
+  }
+
+  Future<void> _cacheHomeState(String userId) async {
+    await LocalCacheService.instance.cacheActivities(
+      userId,
+      activities.map((item) => item.toFirestore()).toList(),
+    );
+    await LocalCacheService.instance.cacheTodayInstances(
+      userId,
+      todayInstances.values.map((item) => item.toFirestore()).toList(),
     );
   }
 }

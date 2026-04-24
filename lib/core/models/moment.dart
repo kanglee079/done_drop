@@ -212,6 +212,14 @@ class Moment {
         createdAt: delivery.createdAt,
         updatedAt: delivery.createdAt,
       );
+
+  /// Creates a Moment from a FeedDelivery with a specified sync status.
+  /// Use this when rendering optimistic moments from the Buddy feed.
+  factory Moment.fromFeedDeliveryWithStatus(
+    FeedDelivery delivery,
+    MomentSyncStatus syncStatus,
+  ) =>
+      Moment.fromFeedDelivery(delivery).copyWith(syncStatus: syncStatus);
 }
 
 /// Metadata for a single media file. Stored in Firestore; actual bytes in Firebase Storage.

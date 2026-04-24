@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:done_drop/features/auth/presentation/controllers/auth_controller.dart';
@@ -30,6 +32,8 @@ class RecapController extends GetxController {
   final RxBool isLoading = true.obs;
   final RxInt weekCompletions = 0.obs;
   final RxInt bestStreak = 0.obs;
+  StreamSubscription<List<Moment>>? _momentsSubscription;
+  StreamSubscription<List<Activity>>? _activitiesSubscription;
 
   @override
   void onInit() {
@@ -45,43 +49,56 @@ class RecapController extends GetxController {
       return;
     }
 
-    _momentRepo.watchPersonalMoments(uid, limit: 200).listen((moments) {
-      final now = DateTime.now();
-      final weekStart = now.subtract(Duration(days: now.weekday - 1));
-      final startOfWeek = DateTime(weekStart.year, weekStart.month, weekStart.day);
+    _momentsSubscription?.cancel();
+    _momentsSubscription = _momentRepo
+        .watchPersonalMoments(uid, limit: 200)
+        .listen((moments) {
+          final now = DateTime.now();
+          final weekStart = now.subtract(Duration(days: now.weekday - 1));
+          final startOfWeek = DateTime(
+            weekStart.year,
+            weekStart.month,
+            weekStart.day,
+          );
 
-      final thisWeek = moments.where((m) {
-        return m.createdAt.isAfter(startOfWeek) ||
-            m.createdAt.isAtSameMomentAs(startOfWeek);
-      }).toList();
+          final thisWeek = moments.where((m) {
+            return m.createdAt.isAfter(startOfWeek) ||
+                m.createdAt.isAtSameMomentAs(startOfWeek);
+          }).toList();
 
-      final grouped = <String, List<Moment>>{};
-      for (final m in thisWeek) {
-        final key = _dateKey(m.createdAt);
-        grouped.putIfAbsent(key, () => []).add(m);
-      }
+          final grouped = <String, List<Moment>>{};
+          for (final m in thisWeek) {
+            final key = _dateKey(m.createdAt);
+            grouped.putIfAbsent(key, () => []).add(m);
+          }
 
-      final sortedKeys = grouped.keys.toList()..sort((a, b) => b.compareTo(a));
-      days.value = sortedKeys.map((key) {
-        final date = DateTime.parse(key);
-        return RecapDay(date: date, moments: grouped[key]!);
-      }).toList();
+          final sortedKeys = grouped.keys.toList()
+            ..sort((a, b) => b.compareTo(a));
+          days.value = sortedKeys.map((key) {
+            final date = DateTime.parse(key);
+            return RecapDay(date: date, moments: grouped[key]!);
+          }).toList();
 
-      weekCompletions.value = thisWeek.length;
-      isLoading.value = false;
+          weekCompletions.value = thisWeek.length;
+          isLoading.value = false;
 
-      AnalyticsService.instance.recapViewed(_weekKey());
-    });
+          AnalyticsService.instance.recapViewed(_weekKey());
+        });
   }
 
   void _watchActivities() {
     final uid = _userId;
     if (uid == null) return;
 
-    _activityRepo.watchActiveActivities(uid).listen((list) {
+    _activitiesSubscription?.cancel();
+    _activitiesSubscription = _activityRepo.watchActiveActivities(uid).listen((
+      list,
+    ) {
       activities.value = list;
       if (list.isNotEmpty) {
-        bestStreak.value = list.map((a) => a.currentStreak).reduce((a, b) => a > b ? a : b);
+        bestStreak.value = list
+            .map((a) => a.currentStreak)
+            .reduce((a, b) => a > b ? a : b);
       }
     });
   }
@@ -131,5 +148,12 @@ class RecapController extends GetxController {
   int _weekNumber(DateTime date) {
     final dayOfYear = date.difference(DateTime(date.year, 1, 1)).inDays;
     return ((dayOfYear - date.weekday + 10) / 7).floor();
+  }
+
+  @override
+  void onClose() {
+    _momentsSubscription?.cancel();
+    _activitiesSubscription?.cancel();
+    super.onClose();
   }
 }

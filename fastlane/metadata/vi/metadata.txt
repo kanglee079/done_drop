@@ -1,0 +1,19 @@
+title: DoneDrop
+short_description: Xây dựng thói quen, ghi nhận thành quả, chia sẻ tiến độ với những người bạn đáng tin cậy.
+full_description: |
+  DoneDrop là ứng dụng trách nhiệm cá nhân dành cho những ai muốn hoàn thành thói quen mà họ luôn hứa với chính mình.
+
+  Lên kế hoạch cho mục tiêu hôm nay, hoàn thành thói quen, và ghi nhận khoảnh khắc thành công. Giữ những khoảnh khắc đó riêng tư, hoặc chia sẻ với những người bạn đáng tin cậy để cùng giữ nhất quán mà không cần biến nỗ lực thành màn trình diễn công khai.
+
+  Những gì bạn có thể làm với DoneDrop:
+  - Tạo thói quen hàng ngày và công việc đơn lẻ cho mục tiêu hôm nay.
+  - Ghi nhận khoảnh khắc thành quả bằng ảnh và chú thích.
+  - Chia sẻ những khoảnh khắc đã chọn một cách riêng tư với bạn bè.
+  - Thêm bạn bè qua mã QR hoặc mã mời riêng tư.
+  - Xem lại tiến độ của chính bạn trong bức tường kỷ niệm.
+  - Trò chuyện riêng tư với những người bạn đồng hành.
+  - Quản lý nhắc nhở, hồ sơ, quyền riêng tư và xóa tài khoản từ Cài đặt.
+
+  Premium, khi có sẵn, mở khóa các tính năng mở rộng như xóa giới hạn bạn bè miễn phí.
+
+  DoneDrop được xây dựng cho sự kỷ luật riêng tư: hoàn thành nó, ghi nhận nó, và chia sẻ bằng chứng chỉ với những người bạn chọn.

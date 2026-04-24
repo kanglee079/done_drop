@@ -23,27 +23,35 @@ class StorageService {
     return _prefs!;
   }
 
+  SharedPreferences? get _maybePrefs => _prefs;
+
   // ── String ────────────────────────────────────────────────────────────────
-  String? getString(String key) => _p.getString(key);
+  String? getString(String key) => _maybePrefs?.getString(key);
 
   Future<bool> setString(String key, String value) => _p.setString(key, value);
 
   // ── Bool ─────────────────────────────────────────────────────────────────
-  bool? getBool(String key) => _p.getBool(key);
+  bool? getBool(String key) => _maybePrefs?.getBool(key);
 
   Future<bool> setBool(String key, bool value) => _p.setBool(key, value);
 
   // ── Int ─────────────────────────────────────────────────────────────────
-  int? getInt(String key) => _p.getInt(key);
+  int? getInt(String key) => _maybePrefs?.getInt(key);
 
   Future<bool> setInt(String key, int value) => _p.setInt(key, value);
+
+  // ── String List ────────────────────────────────────────────────────────
+  List<String>? getStringList(String key) => _maybePrefs?.getStringList(key);
+
+  Future<bool> setStringList(String key, List<String> value) =>
+      _p.setStringList(key, value);
 
   // ── Remove ──────────────────────────────────────────────────────────────
   Future<bool> remove(String key) => _p.remove(key);
 
   Future<bool> clear() => _p.clear();
 
-  bool containsKey(String key) => _p.containsKey(key);
+  bool containsKey(String key) => _maybePrefs?.containsKey(key) ?? false;
 
   // ── Auth ─────────────────────────────────────────────────────────────────
   String? get userId => getString('user_id');

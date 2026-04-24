@@ -42,53 +42,102 @@ class _PreviewScreenState extends State<PreviewScreen> {
             children: [
               _PreviewTopBar(controller: _controller),
               Obx(() {
-                if (!_controller.isPosting.value) {
-                  return const SizedBox.shrink();
-                }
-                return Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSizes.space24,
-                    0,
-                    AppSizes.space24,
-                    AppSizes.space8,
-                  ),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(AppSizes.space16),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerLowest,
-                      borderRadius: AppSizes.borderRadiusMd,
-                      border: Border.all(color: AppColors.outlineVariant),
+                if (!_controller.isPosting.value &&
+                    _controller.errorMessage.value != null) {
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSizes.space24,
+                      0,
+                      AppSizes.space24,
+                      AppSizes.space8,
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _controller.uploadStatusLabel,
-                          style: AppTypography.labelLarge(
-                            color: AppColors.onSurface,
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(AppSizes.space16),
+                      decoration: BoxDecoration(
+                        color: AppColors.errorContainer.withValues(alpha: 0.42),
+                        borderRadius: AppSizes.borderRadiusMd,
+                        border: Border.all(color: AppColors.error.withValues(alpha: 0.18)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.error_outline_rounded,
+                            color: AppColors.error,
+                            size: 18,
                           ),
-                        ),
-                        const SizedBox(height: AppSizes.space10),
-                        ClipRRect(
-                          borderRadius: AppSizes.borderRadiusFull,
-                          child: LinearProgressIndicator(
-                            value:
-                                _controller.uploadStage.value ==
-                                    MediaUploadStage.finalizing
-                                ? null
-                                : _controller.uploadProgress.value.clamp(0, 1),
-                            minHeight: 8,
-                            backgroundColor: AppColors.surfaceContainerHigh,
-                            valueColor: const AlwaysStoppedAnimation<Color>(
-                              AppColors.primary,
+                          const SizedBox(width: AppSizes.space10),
+                          Expanded(
+                            child: Text(
+                              _controller.errorMessage.value!,
+                              style: AppTypography.bodySmall(color: AppColors.error),
                             ),
                           ),
-                        ),
-                      ],
+                          if (_controller.canRetryUpload) ...[
+                            const SizedBox(width: AppSizes.space10),
+                            TextButton(
+                              onPressed: _controller.retryFailedUpload,
+                              child: Text(
+                                context.l10n.retryAction,
+                                style: AppTypography.labelMedium(color: AppColors.error),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
-                  ),
-                );
+                  );
+                }
+                return const SizedBox.shrink();
+              }),
+              // Upload progress bar — shown while posting.
+              Obx(() {
+                if (_controller.isPosting.value) {
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSizes.space24,
+                      0,
+                      AppSizes.space24,
+                      AppSizes.space8,
+                    ),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(AppSizes.space16),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceContainerLowest,
+                        borderRadius: AppSizes.borderRadiusMd,
+                        border: Border.all(color: AppColors.outlineVariant),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _controller.uploadStatusLabel,
+                            style: AppTypography.labelLarge(
+                              color: AppColors.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: AppSizes.space10),
+                          ClipRRect(
+                            borderRadius: AppSizes.borderRadiusFull,
+                            child: LinearProgressIndicator(
+                              value: _controller.uploadStage.value ==
+                                      MediaUploadStage.finalizing
+                                  ? null
+                                  : _controller.uploadProgress.value.clamp(0, 1),
+                              minHeight: 8,
+                              backgroundColor: AppColors.surfaceContainerHigh,
+                              valueColor: const AlwaysStoppedAnimation<Color>(
+                                AppColors.primary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
               }),
               Expanded(
                 child: SingleChildScrollView(

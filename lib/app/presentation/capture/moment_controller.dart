@@ -33,6 +33,14 @@ class MomentSubmissionResult {
   final bool wasOfflineQueued;
 }
 
+/// Generates a unique moment ID using timestamp + random suffix to avoid
+/// collisions when the user posts multiple moments within the same millisecond.
+String _generateMomentId() {
+  final timestamp = DateTime.now().millisecondsSinceEpoch;
+  final random = (timestamp % 9999).toString().padLeft(4, '0');
+  return 'moment_${timestamp}_$random';
+}
+
 /// Controller for the capture and preview flow.
 ///
 /// The controller owns one capture session at a time and is created by the
@@ -68,11 +76,20 @@ class MomentController extends GetxController {
   final Rxn<MomentSubmissionResult> lastSubmission =
       Rxn<MomentSubmissionResult>();
 
+  /// Retry count for failed uploads. Reset on each new post attempt.
+  final RxInt uploadRetryCount = 0.obs;
+  static const int _maxUploadRetries = 2;
+  bool get canRetryUpload =>
+      uploadRetryCount.value < _maxUploadRetries &&
+      _lastFailedMomentId != null;
+
   String? _imagePath;
   String? _activityId;
   String? _activityInstanceId;
   String? _completionLogId;
   bool _sessionInitialized = false;
+  /// MomentId of the last failed upload — used for retry.
+  String? _lastFailedMomentId;
 
   String? get _userId => _authController.firebaseUser?.uid;
 
@@ -124,6 +141,7 @@ class MomentController extends GetxController {
     errorMessage.value = null;
   }
 
+  /// Public entry point. Validates inputs then delegates to the core logic.
   Future<void> postMoment() async {
     if (_imagePath == null) {
       errorMessage.value = currentL10n.capturePhotoRequired;
@@ -146,12 +164,24 @@ class MomentController extends GetxController {
     uploadProgress.value = 0;
     uploadStage.value = MediaUploadStage.preparing;
     errorMessage.value = null;
+    uploadRetryCount.value = 0;
+    _lastFailedMomentId = null;
+
+    await _postMomentCore();
+  }
+
+  /// Internal post logic shared by postMoment() and retryFailedUpload().
+  /// All error recovery and retry logic lives here.
+  Future<void> _postMomentCore() async {
+    final uid = _userId!;
+    final imagePath = _imagePath!;
+    assert(imagePath.isNotEmpty);
 
     if (isProofMoment) {
       try {
         await _ensureProofCompletion(uid);
       } catch (error, stackTrace) {
-        debugPrint('[MomentController.postMoment] Completion failed: $error');
+        debugPrint('[MomentController._postMomentCore] Completion failed: $error');
         debugPrintStack(stackTrace: stackTrace);
         isPosting.value = false;
         uploadStage.value = MediaUploadStage.complete;
@@ -160,7 +190,7 @@ class MomentController extends GetxController {
       }
     }
 
-    final momentId = 'moment_${DateTime.now().millisecondsSinceEpoch}';
+    final momentId = _generateMomentId();
     final now = DateTime.now();
     final postVisibility = visibility.value;
     final caption = captionController.text.trim();
@@ -204,7 +234,7 @@ class MomentController extends GetxController {
       completedAt: now,
       createdAt: now,
       updatedAt: now,
-      localPreviewPath: _imagePath,
+      localPreviewPath: imagePath,
       uploadProgress: 0,
       syncStatus: MomentSyncStatus.processing,
     );
@@ -231,7 +261,7 @@ class MomentController extends GetxController {
       final media = await _mediaService.uploadMomentImages(
         userId: uid,
         momentId: momentId,
-        localFilePath: _imagePath!,
+        localFilePath: imagePath,
         onProgress: (progress) {
           uploadProgress.value = progress.progress;
           uploadStage.value = progress.stage;
@@ -278,15 +308,16 @@ class MomentController extends GetxController {
       );
       await _finishSubmission(wasOfflineQueued: false);
     } catch (error, stackTrace) {
-      debugPrint('[MomentController.postMoment] Error: $error');
+      debugPrint('[MomentController._postMomentCore] Error: $error');
       debugPrintStack(stackTrace: stackTrace);
-      isPosting.value = false;
-      uploadStage.value = MediaUploadStage.complete;
+      _lastFailedMomentId = momentId;
       _updateOptimisticMoment(
         momentId,
         syncStatus: MomentSyncStatus.failed,
       );
       errorMessage.value = currentL10n.momentPostFailed(error.toString());
+      isPosting.value = false;
+      uploadStage.value = MediaUploadStage.complete;
     }
   }
 
@@ -322,11 +353,34 @@ class MomentController extends GetxController {
     uploadProgress.value = 0;
     uploadStage.value = MediaUploadStage.complete;
     lastSubmission.value = null;
+    uploadRetryCount.value = 0;
+    _lastFailedMomentId = null;
     _imagePath = null;
     _activityId = null;
     _activityInstanceId = null;
     _completionLogId = null;
     _sessionInitialized = false;
+  }
+
+  /// Retry the last failed upload.
+  /// Discards any existing prepared upload for the failed path, then re-warms
+  /// the preparation and attempts to post again.
+  Future<void> retryFailedUpload() async {
+    if (!canRetryUpload || _imagePath == null) return;
+
+    uploadRetryCount.value++;
+    errorMessage.value = null;
+    isPosting.value = true;
+    uploadProgress.value = 0;
+    uploadStage.value = MediaUploadStage.preparing;
+
+    // Re-warm upload preparation (discard first to ensure clean state).
+    _discardUpload(_imagePath!);
+    _warmUpload(_imagePath!);
+
+    // Retry the full postMoment flow by calling the same core.
+    // We reuse _lastFailedMomentId to update the same optimistic moment.
+    await _postMomentCore();
   }
 
   void _warmUpload(String path) {

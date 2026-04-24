@@ -1,9 +1,11 @@
 import 'dart:async';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
 import 'package:done_drop/core/models/feed_delivery.dart';
+import 'package:done_drop/core/models/friendship.dart';
 import 'package:done_drop/core/models/moment.dart';
 import 'package:done_drop/core/services/block_service.dart';
 import 'package:done_drop/core/services/buddy_feed_cache_service.dart';
@@ -43,24 +45,78 @@ class FeedController extends GetxController {
   final List<FeedDelivery> _liveDeliveries = <FeedDelivery>[];
   final List<FeedDelivery> _olderDeliveries = <FeedDelivery>[];
   final RxList<Moment> _optimisticMoments = <Moment>[].obs;
+  final RxList<Moment> _fallbackMoments = <Moment>[].obs;
 
+  StreamSubscription<User?>? _authStateSubscription;
   StreamSubscription<List<FeedDelivery>>? _feedSubscription;
+  StreamSubscription<List<String>>? _blockedUsersSubscription;
+  StreamSubscription<int>? _unreadCountSubscription;
+  StreamSubscription<List<Friendship>>? _friendCountSubscription;
+  StreamSubscription<List<Moment>>? _fallbackMomentsSubscription;
+  String? _boundUserId;
 
   @override
   void onInit() {
     super.onInit();
-    _hydrateCachedFeed();
+    _handleAuthUserChanged(_authController.firebaseUser);
+    _authStateSubscription = _authController.authStateStream.listen(
+      _handleAuthUserChanged,
+    );
+  }
+
+  @override
+  void onClose() {
+    _authStateSubscription?.cancel();
+    _cancelSubscriptions();
+    _cache.clearWarmRegistry();
+    super.onClose();
+  }
+
+  void _handleAuthUserChanged(User? user) {
+    final uid = user?.uid;
+    if (_boundUserId == uid) return;
+
+    _boundUserId = uid;
+    _cancelSubscriptions();
+    _resetState(isLoading: uid != null);
+
+    if (uid == null) return;
+
+    // Watch blocked users first so their IDs are available when hydrating cache.
     _watchBlockedUsers();
+    _hydrateCachedFeed();
     _watchFriendFeed();
     _watchUnreadCount();
     _watchFriendCount();
   }
 
-  @override
-  void onClose() {
+  void _cancelSubscriptions() {
     _feedSubscription?.cancel();
-    _cache.clearWarmRegistry();
-    super.onClose();
+    _blockedUsersSubscription?.cancel();
+    _unreadCountSubscription?.cancel();
+    _friendCountSubscription?.cancel();
+    _fallbackMomentsSubscription?.cancel();
+
+    _feedSubscription = null;
+    _blockedUsersSubscription = null;
+    _unreadCountSubscription = null;
+    _friendCountSubscription = null;
+    _fallbackMomentsSubscription = null;
+  }
+
+  void _resetState({required bool isLoading}) {
+    this.isLoading.value = isLoading;
+    moments.clear();
+    deliveries.clear();
+    blockedUserIds.clear();
+    unreadCount.value = 0;
+    friendCount.value = 0;
+    hasMore.value = true;
+    isFetchingMore.value = false;
+    _liveDeliveries.clear();
+    _olderDeliveries.clear();
+    _optimisticMoments.clear();
+    _fallbackMoments.clear();
   }
 
   void _hydrateCachedFeed() {
@@ -70,10 +126,16 @@ class FeedController extends GetxController {
         .loadCachedFeedDeliveries(uid)
         .map(FeedDelivery.fromFirestore)
         .toList(growable: false);
-    if (cachedDeliveries.isEmpty) return;
 
-    final liveSlice = cachedDeliveries.take(_headWindowSize).toList();
-    final olderSlice = cachedDeliveries.skip(_headWindowSize).toList();
+    // Filter cached deliveries by blocked users to avoid showing blocked content.
+    final filteredDeliveries = cachedDeliveries
+        .where((delivery) => !blockedUserIds.contains(delivery.ownerId))
+        .toList(growable: false);
+
+    if (filteredDeliveries.isEmpty) return;
+
+    final liveSlice = filteredDeliveries.take(_headWindowSize).toList();
+    final olderSlice = filteredDeliveries.skip(_headWindowSize).toList();
 
     _liveDeliveries
       ..clear()
@@ -81,18 +143,23 @@ class FeedController extends GetxController {
     _olderDeliveries
       ..clear()
       ..addAll(olderSlice);
-    hasMore.value = cachedDeliveries.length >= _headWindowSize;
+    hasMore.value = filteredDeliveries.length >= _headWindowSize;
     _rebuildRemoteState();
     isLoading.value = false;
   }
 
   void _watchBlockedUsers() {
     final blockSvc = Get.find<BlockService>();
-    blockSvc.watchBlockedUserIds().listen(
+    _blockedUsersSubscription?.cancel();
+    _blockedUsersSubscription = blockSvc.watchBlockedUserIds().listen(
       (ids) {
         blockedUserIds
           ..clear()
           ..addAll(ids);
+        // Re-apply cache hydration now that blocked IDs are available.
+        if (_liveDeliveries.isEmpty && _olderDeliveries.isEmpty) {
+          _hydrateCachedFeed();
+        }
         _mergeMoments();
       },
       onError: (error) {
@@ -109,56 +176,105 @@ class FeedController extends GetxController {
     }
 
     _feedSubscription?.cancel();
-    _feedSubscription = _momentRepo.watchFeedDeliveries(uid).listen(
-      (deliveryList) async {
-        _liveDeliveries
-          ..clear()
-          ..addAll(
-            deliveryList
-                .where((delivery) => !blockedUserIds.contains(delivery.ownerId)),
-          );
-        final liveIds = _liveDeliveries.map((delivery) => delivery.id).toSet();
-        _olderDeliveries.removeWhere((delivery) => liveIds.contains(delivery.id));
-        hasMore.value = _olderDeliveries.isNotEmpty ||
-            deliveryList.length >= _headWindowSize;
-        _rebuildRemoteState();
-        await _cache.cacheDeliveries(
-          uid,
-          deliveries.take(_cacheLimit).toList(growable: false),
+    _feedSubscription = _momentRepo
+        .watchFeedDeliveries(uid)
+        .listen(
+          (deliveryList) async {
+            _liveDeliveries
+              ..clear()
+              ..addAll(
+                deliveryList.where(
+                  (delivery) => !blockedUserIds.contains(delivery.ownerId),
+                ),
+              );
+            final liveIds = _liveDeliveries
+                .map((delivery) => delivery.id)
+                .toSet();
+            _olderDeliveries.removeWhere(
+              (delivery) => liveIds.contains(delivery.id),
+            );
+            hasMore.value =
+                _olderDeliveries.isNotEmpty ||
+                deliveryList.length >= _headWindowSize;
+            _rebuildRemoteState();
+            await _cache.cacheDeliveries(
+              uid,
+              deliveries.take(_cacheLimit).toList(growable: false),
+            );
+            isLoading.value = false;
+          },
+          onError: (error) {
+            debugPrint('[_watchFriendFeed] Error: $error');
+            isLoading.value = false;
+          },
         );
-        isLoading.value = false;
-      },
-      onError: (error) {
-        debugPrint('[_watchFriendFeed] Error: $error');
-        isLoading.value = false;
-      },
-    );
   }
 
   void _watchUnreadCount() {
     final uid = _userId;
     if (uid == null) return;
-    _momentRepo.watchUnreadFeedCount(uid).listen(
-      (count) {
-        unreadCount.value = count;
-      },
-      onError: (error) {
-        debugPrint('[_watchUnreadCount] Error: $error');
-      },
-    );
+    _unreadCountSubscription?.cancel();
+    _unreadCountSubscription = _momentRepo
+        .watchUnreadFeedCount(uid)
+        .listen(
+          (count) {
+            unreadCount.value = count;
+          },
+          onError: (error) {
+            debugPrint('[_watchUnreadCount] Error: $error');
+          },
+        );
   }
 
   void _watchFriendCount() {
     final uid = _userId;
     if (uid == null) return;
-    _friendRepo.watchFriendships(uid).listen(
-      (list) {
-        friendCount.value = list.length;
-      },
-      onError: (error) {
-        debugPrint('[_watchFriendCount] Error: $error');
-      },
-    );
+    _friendCountSubscription?.cancel();
+    _friendCountSubscription = _friendRepo
+        .watchFriendships(uid)
+        .listen(
+          (list) {
+            friendCount.value = list.length;
+            _watchFallbackMoments(
+              list
+                  .map((friendship) => friendship.otherUserId(uid))
+                  .toSet()
+                  .toList(growable: false),
+            );
+          },
+          onError: (error) {
+            debugPrint('[_watchFriendCount] Error: $error');
+          },
+        );
+  }
+
+  void _watchFallbackMoments(List<String> ownerIds) {
+    final uid = _userId;
+    if (uid == null) return;
+
+    _fallbackMomentsSubscription?.cancel();
+    if (ownerIds.isEmpty) {
+      _fallbackMoments.clear();
+      _mergeMoments();
+      return;
+    }
+
+    _fallbackMomentsSubscription = _momentRepo
+        .watchVisibleBuddyMoments(ownerIds: ownerIds, viewerId: uid)
+        .listen(
+          (items) {
+            _fallbackMoments.assignAll(
+              items.where((moment) => !blockedUserIds.contains(moment.ownerId)),
+            );
+            if (isLoading.value && _fallbackMoments.isNotEmpty) {
+              isLoading.value = false;
+            }
+            _mergeMoments();
+          },
+          onError: (error) {
+            debugPrint('[_watchFallbackMoments] Error: $error');
+          },
+        );
   }
 
   String getOwnerName(Moment moment) {
@@ -222,7 +338,9 @@ class FeedController extends GetxController {
       return;
     }
 
-    final oldestLoaded = deliveries.isNotEmpty ? deliveries.last.createdAt : null;
+    final oldestLoaded = deliveries.isNotEmpty
+        ? deliveries.last.createdAt
+        : null;
     if (oldestLoaded == null) return;
 
     isFetchingMore.value = true;
@@ -261,13 +379,22 @@ class FeedController extends GetxController {
     final blocked = blockedUserIds;
     final remoteMoments = deliveries.map(Moment.fromFeedDelivery).toList();
     final remoteIds = remoteMoments.map((moment) => moment.id).toSet();
-    final optimistic = _optimisticMoments
+    final fallback = _fallbackMoments
         .where((moment) => !remoteIds.contains(moment.id))
+        .where((moment) => !blocked.contains(moment.ownerId))
+        .toList(growable: false);
+    final mergedRemoteIds = <String>{
+      ...remoteIds,
+      ...fallback.map((moment) => moment.id),
+    };
+    final optimistic = _optimisticMoments
+        .where((moment) => !mergedRemoteIds.contains(moment.id))
         .where((moment) => !blocked.contains(moment.ownerId))
         .toList(growable: false);
 
     final merged = <Moment>[
       ...optimistic,
+      ...fallback,
       ...remoteMoments.where((moment) => !blocked.contains(moment.ownerId)),
     ]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
@@ -276,7 +403,10 @@ class FeedController extends GetxController {
 
   void _rebuildRemoteState() {
     final mergedById = <String, FeedDelivery>{};
-    for (final delivery in <FeedDelivery>[..._liveDeliveries, ..._olderDeliveries]) {
+    for (final delivery in <FeedDelivery>[
+      ..._liveDeliveries,
+      ..._olderDeliveries,
+    ]) {
       mergedById[delivery.id] = delivery;
     }
 

@@ -238,8 +238,13 @@ class MediaService {
   }
 
   void discardPreparedUpload(String localFilePath) {
-    _preparedMomentImages.remove(localFilePath);
-    _preparedOriginalImages.remove(localFilePath);
+    // Only clear the map that was actually populated by warmMomentUpload.
+    // This prevents leaving orphaned entries when server thumbnails are enabled.
+    if (_useServerGeneratedThumbnails) {
+      _preparedOriginalImages.remove(localFilePath);
+    } else {
+      _preparedMomentImages.remove(localFilePath);
+    }
   }
 
   // ── Local Cache ───────────────────────────────────────────────────────────

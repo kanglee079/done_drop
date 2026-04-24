@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -32,6 +34,7 @@ class ProfileController extends GetxController {
   final RxnString errorMessage = RxnString();
   final RxnString successMessage = RxnString();
   final RxBool isUploadingAvatar = false.obs;
+  StreamSubscription<UserProfile?>? _profileSubscription;
 
   @override
   void onInit() {
@@ -42,7 +45,8 @@ class ProfileController extends GetxController {
   void _watchProfile() {
     final uid = _userId;
     if (uid == null) return;
-    _userProfileRepo.watchUserProfile(uid).listen((p) {
+    _profileSubscription?.cancel();
+    _profileSubscription = _userProfileRepo.watchUserProfile(uid).listen((p) {
       profile.value = p;
       // Pre-fill form when profile loads
       if (p != null) {
@@ -128,14 +132,12 @@ class ProfileController extends GetxController {
   }
 
   Future<void> deleteAccount() async {
-    if (!Get.isRegistered<SettingsController>()) {
-      Get.put(SettingsController());
-    }
     await Get.find<SettingsController>().deleteAccount();
   }
 
   @override
   void onClose() {
+    _profileSubscription?.cancel();
     nameController.dispose();
     bioController.dispose();
     super.onClose();

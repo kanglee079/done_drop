@@ -74,8 +74,99 @@ class ChatScreen extends GetView<ChatController> {
             Expanded(
               child: Obx(() {
                 if (controller.isLoading.value) {
-                  return const Center(
-                    child: CircularProgressIndicator(color: AppColors.primary),
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSizes.space24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const SizedBox(
+                            width: 36,
+                            height: 36,
+                            child: CircularProgressIndicator(
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          const SizedBox(height: AppSizes.space16),
+                          Text(
+                            context.l10n.chatConnectingTitle,
+                            textAlign: TextAlign.center,
+                            style: AppTypography.headlineSmall(
+                              color: AppColors.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: AppSizes.space8),
+                          Text(
+                            context.l10n.chatConnectingSubtitle,
+                            textAlign: TextAlign.center,
+                            style: AppTypography.bodyMedium(
+                              color: AppColors.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                if (controller.errorMessage.value != null) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSizes.space24),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 360),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(AppSizes.space20),
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceContainerLowest,
+                            borderRadius: AppSizes.borderRadiusLg,
+                            border: Border.all(color: AppColors.outlineVariant),
+                            boxShadow: AppColors.cardShadow,
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 64,
+                                height: 64,
+                                decoration: BoxDecoration(
+                                  color: AppColors.errorContainer,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Icon(
+                                  Icons.chat_bubble_outline_rounded,
+                                  color: AppColors.error,
+                                  size: 28,
+                                ),
+                              ),
+                              const SizedBox(height: AppSizes.space16),
+                              Text(
+                                context.l10n.chatLoadFailedTitle,
+                                textAlign: TextAlign.center,
+                                style: AppTypography.headlineSmall(
+                                  color: AppColors.onSurface,
+                                ),
+                              ),
+                              const SizedBox(height: AppSizes.space8),
+                              Text(
+                                controller.errorMessage.value!,
+                                textAlign: TextAlign.center,
+                                style: AppTypography.bodyMedium(
+                                  color: AppColors.onSurfaceVariant,
+                                ),
+                              ),
+                              const SizedBox(height: AppSizes.space20),
+                              FilledButton.icon(
+                                onPressed: controller.reloadConversation,
+                                icon: const Icon(Icons.refresh_rounded),
+                                label: Text(context.l10n.retryAction),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                   );
                 }
 
@@ -168,8 +259,7 @@ class ChatScreen extends GetView<ChatController> {
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
                     final message = messages[messages.length - 1 - index];
-                    final isMine =
-                        message.senderId == controller.currentUserId;
+                    final isMine = message.senderId == controller.currentUserId;
                     return _ChatBubble(
                       text: message.text,
                       timestamp: controller.formatTimestamp(message.createdAt),
@@ -181,61 +271,69 @@ class ChatScreen extends GetView<ChatController> {
             ),
             SafeArea(
               top: false,
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSizes.space12,
-                  AppSizes.space10,
-                  AppSizes.space12,
-                  AppSizes.space12,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceContainerLowest,
-                  border: Border(
-                    top: BorderSide(color: AppColors.outlineVariant),
+              child: Obx(
+                () => Container(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSizes.space12,
+                    AppSizes.space10,
+                    AppSizes.space12,
+                    AppSizes.space12,
                   ),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: controller.textController,
-                        minLines: 1,
-                        maxLines: 4,
-                        textCapitalization: TextCapitalization.sentences,
-                        decoration: InputDecoration(
-                          hintText: context.l10n.chatInputHint,
-                          filled: true,
-                          fillColor: AppColors.surface,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: AppSizes.space12,
-                            vertical: AppSizes.space12,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(18),
-                            borderSide: BorderSide(
-                              color: AppColors.outlineVariant,
-                            ),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(18),
-                            borderSide: BorderSide(
-                              color: AppColors.outlineVariant,
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(18),
-                            borderSide: const BorderSide(
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        ),
-                        onSubmitted: (_) => controller.sendCurrentMessage(),
-                      ),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceContainerLowest,
+                    border: Border(
+                      top: BorderSide(color: AppColors.outlineVariant),
                     ),
-                    const SizedBox(width: AppSizes.space10),
-                    Obx(
-                      () => SizedBox(
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: controller.textController,
+                          enabled:
+                              !controller.isLoading.value &&
+                              controller.errorMessage.value == null &&
+                              !controller.isNotFriend.value,
+                          minLines: 1,
+                          maxLines: 4,
+                          textCapitalization: TextCapitalization.sentences,
+                          decoration: InputDecoration(
+                            hintText: controller.isLoading.value
+                                ? context.l10n.chatConnectingSubtitle
+                                : controller.errorMessage.value != null
+                                ? context.l10n.chatLoadFailedSubtitle
+                                : context.l10n.chatInputHint,
+                            filled: true,
+                            fillColor: AppColors.surface,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: AppSizes.space12,
+                              vertical: AppSizes.space12,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(18),
+                              borderSide: BorderSide(
+                                color: AppColors.outlineVariant,
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(18),
+                              borderSide: BorderSide(
+                                color: AppColors.outlineVariant,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(18),
+                              borderSide: const BorderSide(
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
+                          onSubmitted: (_) => controller.sendCurrentMessage(),
+                        ),
+                      ),
+                      const SizedBox(width: AppSizes.space10),
+                      SizedBox(
                         height: 48,
                         child: FilledButton(
                           onPressed: controller.canSend
@@ -265,8 +363,8 @@ class ChatScreen extends GetView<ChatController> {
                                 ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -323,15 +421,9 @@ class _ChatBubble extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                text,
-                style: AppTypography.bodyMedium(color: textColor),
-              ),
+              Text(text, style: AppTypography.bodyMedium(color: textColor)),
               const SizedBox(height: AppSizes.space6),
-              Text(
-                timestamp,
-                style: AppTypography.bodySmall(color: timeColor),
-              ),
+              Text(timestamp, style: AppTypography.bodySmall(color: timeColor)),
             ],
           ),
         ),

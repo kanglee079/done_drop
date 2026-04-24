@@ -1,4 +1,4 @@
-import 'dart:math';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -12,12 +12,6 @@ import 'package:done_drop/core/models/user_profile.dart';
 import 'package:done_drop/core/services/locale_controller.dart';
 import 'package:done_drop/l10n/l10n.dart';
 
-String _generateUserCode() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  final random = Random.secure();
-  return List.generate(6, (_) => chars[random.nextInt(chars.length)]).join();
-}
-
 class SignUpController extends GetxController {
   SignUpController(this._authRepo, this._userProfileRepo);
   final AuthRepository _authRepo;
@@ -30,9 +24,15 @@ class SignUpController extends GetxController {
   final formKey = GlobalKey<FormState>();
 
   final isLoading = false.obs;
+  final statusMessage = RxnString();
   final errorMessage = RxnString();
   final isPasswordVisible = false.obs;
   final isConfirmPasswordVisible = false.obs;
+
+  void clearInlineMessages() {
+    if (isLoading.value) return;
+    errorMessage.value = null;
+  }
 
   void togglePasswordVisibility() {
     isPasswordVisible.value = !isPasswordVisible.value;
@@ -84,74 +84,109 @@ class SignUpController extends GetxController {
 
   /// Sign-up: creates Firebase Auth account, then bootstraps Firestore profile.
   Future<void> signUp() async {
+    if (isLoading.value) return;
     if (!(formKey.currentState?.validate() ?? false)) return;
 
     isLoading.value = true;
+    statusMessage.value = currentL10n.authCreatingAccountStatus;
     errorMessage.value = null;
     AnalyticsService.instance.signInStarted();
+    var keepBusyUntilDisposed = false;
 
-    final result = await _authRepo.signUpWithEmail(
-      emailController.text.trim(),
-      passwordController.text,
-    );
+    try {
+      final result = await _authRepo.signUpWithEmail(
+        emailController.text.trim(),
+        passwordController.text,
+      );
 
-    isLoading.value = false;
+      await result.fold(
+        onSuccess: (credential) async {
+          AnalyticsService.instance.logLogin('email_signup');
+          statusMessage.value = currentL10n.authPreparingProfileStatus;
 
-    await result.fold(
-      onSuccess: (credential) async {
-        AnalyticsService.instance.logLogin('email_signup');
+          final uid = credential.user?.uid;
+          if (uid == null) {
+            final msg = currentL10n.authProfileBootstrapError;
+            errorMessage.value = msg;
+            AnalyticsService.instance.signInFailed(msg);
+            await _authRepo.signOut();
+            return;
+          }
 
-        // Bootstrap user profile in Firestore
-        final uid = credential.user?.uid;
-        if (uid != null) {
           final localeCode = Get.find<LocaleController>().currentLanguageCode;
-          final profile = UserProfile(
-            id: uid,
-            displayName: nameController.text.trim(),
-            username: null,
-            userCode: _generateUserCode(),
-            avatarUrl: null,
-            bio: null,
-            createdAt: DateTime.now(),
-            premiumStatus: false,
-            blockedUserIds: const [],
-            settings: UserSettings(
-              hasCompletedHabitSetup: false,
-              preferredLocaleCode: localeCode,
-            ),
-            widgetPreferences: const WidgetPreferences(),
+          final codeResult = await _userProfileRepo.generateUniqueUserCode();
+
+          await codeResult.fold(
+            onSuccess: (userCode) async {
+              final profile = UserProfile(
+                id: uid,
+                displayName: nameController.text.trim(),
+                username: null,
+                userCode: userCode,
+                avatarUrl: null,
+                bio: null,
+                createdAt: DateTime.now(),
+                premiumStatus: false,
+                blockedUserIds: const [],
+                settings: UserSettings(
+                  hasCompletedHabitSetup: false,
+                  preferredLocaleCode: localeCode,
+                ),
+                widgetPreferences: const WidgetPreferences(),
+              );
+
+              final profileResult = await _userProfileRepo.createUserProfile(
+                profile,
+              );
+              await profileResult.fold(
+                onSuccess: (_) async {
+                  statusMessage.value = currentL10n.authPreparingAppStatus;
+                  keepBusyUntilDisposed = true;
+                  Get.offAllNamed(AppRoutes.initialSetup);
+                },
+                onFailure: (failure) async {
+                  final msg = _failureMessage(
+                    failure,
+                    fallback: currentL10n.authProfileBootstrapError,
+                  );
+                  errorMessage.value = msg;
+                  AnalyticsService.instance.signInFailed(msg);
+                  await _authRepo.signOut();
+                },
+              );
+            },
+            onFailure: (failure) async {
+              final msg = _failureMessage(
+                failure,
+                fallback: currentL10n.authProfileBootstrapError,
+              );
+              errorMessage.value = msg;
+              AnalyticsService.instance.signInFailed(msg);
+              await _authRepo.signOut();
+            },
           );
-
-          // Retry user profile creation to handle Firestore propagation delay
-          Result<UserProfile>? profileResult;
-          for (var attempt = 0; attempt < 3; attempt++) {
-            profileResult = await _userProfileRepo.createUserProfile(profile);
-            if (profileResult.isSuccess) break;
-            await Future.delayed(Duration(milliseconds: 500 * (attempt + 1)));
-          }
-
-          // Verify profile was created by reading it back
-          if (profileResult?.isSuccess ?? false) {
-            await Future.delayed(const Duration(milliseconds: 300));
-            final verifyResult = await _userProfileRepo.getUserProfile(uid);
-            if (verifyResult.isFailure) {
-              // Last retry if verification fails
-              await _userProfileRepo.createUserProfile(profile);
-              await Future.delayed(const Duration(milliseconds: 500));
-            }
-          }
+        },
+        onFailure: (failure) async {
+          final msg = _failureMessage(failure);
+          errorMessage.value = msg;
+          AnalyticsService.instance.signInFailed(msg);
+        },
+      );
+    } finally {
+      if (!keepBusyUntilDisposed) {
+        statusMessage.value = null;
+        if (!isClosed) {
+          isLoading.value = false;
         }
+      }
+    }
+  }
 
-        Get.offAllNamed(AppRoutes.initialSetup);
-      },
-      onFailure: (failure) {
-        final msg = failure is AppFailure
-            ? failure.message
-            : failure.toString();
-        errorMessage.value = msg;
-        AnalyticsService.instance.signInFailed(msg);
-      },
-    );
+  String _failureMessage(dynamic failure, {String? fallback}) {
+    if (failure is AppFailure && failure.message.trim().isNotEmpty) {
+      return failure.message;
+    }
+    return fallback ?? currentL10n.authProfileBootstrapError;
   }
 
   void goToSignIn() {

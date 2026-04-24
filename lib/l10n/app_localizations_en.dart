@@ -201,6 +201,87 @@ class AppLocalizationsEn extends AppLocalizations {
   String get confirmPasswordMismatch => 'Passwords do not match';
 
   @override
+  String get authSigningInStatus => 'Signing you in...';
+
+  @override
+  String get authLoadingProfileStatus => 'Loading your account...';
+
+  @override
+  String get authCreatingAccountStatus => 'Creating your account...';
+
+  @override
+  String get authPreparingProfileStatus => 'Preparing your profile...';
+
+  @override
+  String get authPreparingAppStatus => 'Preparing your app...';
+
+  @override
+  String get authProfileBootstrapError =>
+      'We couldn\'t finish preparing your account. Please try again.';
+
+  @override
+  String get authAccountNotFound => 'No account found with this email address.';
+
+  @override
+  String get authWrongPassword => 'Incorrect password. Please try again.';
+
+  @override
+  String get authEmailAlreadyInUse => 'This email is already registered.';
+
+  @override
+  String get authAccountDisabled => 'This account has been disabled.';
+
+  @override
+  String get authTooManyRequests =>
+      'Too many attempts. Please wait a bit and try again.';
+
+  @override
+  String get authNetworkError =>
+      'Network error. Check your connection and try again.';
+
+  @override
+  String get authInvalidCredentials =>
+      'Invalid credentials. Check your email and password.';
+
+  @override
+  String get authDifferentSignInMethod =>
+      'This email already uses a different sign-in method.';
+
+  @override
+  String get authProviderUnavailable =>
+      'This sign-in method is not available right now.';
+
+  @override
+  String get authRecentLoginRequired =>
+      'Please verify your identity again before this action.';
+
+  @override
+  String get authGenericError => 'Authentication failed. Please try again.';
+
+  @override
+  String get googleSignInCancelled => 'Google sign-in was cancelled.';
+
+  @override
+  String get googleSignInNetworkError =>
+      'Google sign-in needs a stable internet connection.';
+
+  @override
+  String get googleSignInConfigError =>
+      'Google sign-in is not ready on this build yet. Please use email login for now.';
+
+  @override
+  String get googleSignInIosLimited =>
+      'Google sign-in is live on Android. On iPhone, use email login until Sign in with Apple is shipped for App Store compliance.';
+
+  @override
+  String get googleSignInTokenMissing =>
+      'Google sign-in completed without the required token. Please try again.';
+
+  @override
+  String get googleSignInFailed =>
+      'Google sign-in could not be completed. Please try again.';
+
+  @override
   String todayGreeting(String name) {
     return 'Hi $name';
   }
@@ -289,10 +370,21 @@ class AppLocalizationsEn extends AppLocalizations {
       'Keep it specific enough that you know exactly what “done” means.';
 
   @override
+  String get editHabitTitle => 'Edit habit';
+
+  @override
+  String get editHabitSubtitle =>
+      'Tighten the title, timing, or category so the standard stays clear.';
+
+  @override
   String get habitNameHint => 'Habit name';
 
   @override
   String get habitCategoryHint => 'Category (optional)';
+
+  @override
+  String get habitNameRequiredError =>
+      'Give this habit a clear name before saving.';
 
   @override
   String get habitTimeLabel => 'Time';
@@ -302,6 +394,53 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get createHabitAction => 'Create habit';
+
+  @override
+  String get habitCreatedMessage => 'New habit added to your Today list.';
+
+  @override
+  String get habitUpdatedMessage => 'Habit details updated.';
+
+  @override
+  String get habitCreateFailedMessage =>
+      'We couldn\'t create this habit. Please try again.';
+
+  @override
+  String get habitUpdateFailedMessage =>
+      'We couldn\'t save the updated habit. Please try again.';
+
+  @override
+  String get habitActionMenuTooltip => 'Habit actions';
+
+  @override
+  String get archiveHabitTitle => 'Archive habit';
+
+  @override
+  String archiveHabitMessage(String name) {
+    return 'Archive \"$name\" and remove it from Today for now?';
+  }
+
+  @override
+  String get habitArchivedMessage => 'Habit archived and removed from Today.';
+
+  @override
+  String get habitArchiveFailedMessage =>
+      'We couldn\'t archive this habit right now.';
+
+  @override
+  String get deleteHabitTitle => 'Delete habit';
+
+  @override
+  String deleteHabitMessage(String name) {
+    return 'Delete \"$name\" and remove its habit history from DoneDrop? Proof moments stay in your archive.';
+  }
+
+  @override
+  String get habitDeletedMessage => 'Habit deleted.';
+
+  @override
+  String get habitDeleteFailedMessage =>
+      'We couldn\'t delete this habit right now.';
 
   @override
   String get emptyTodayTitle => 'Start with one standard.';
@@ -489,6 +628,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signOutAction => 'Sign out';
 
   @override
+  String get retryAction => 'Retry';
+
+  @override
   String get themeSettingsSnackbarTitle => 'Theme settings';
 
   @override
@@ -534,6 +676,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get saveAction => 'Save';
+
+  @override
+  String get editAction => 'Edit';
+
+  @override
+  String get archiveAction => 'Archive';
 
   @override
   String get closeAction => 'Close';
@@ -615,6 +763,17 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get wallSectionSubtitle =>
       'Every proof you kept, including the ones you shared.';
+
+  @override
+  String wallSectionSubtitleWithCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count proofs this month',
+      one: '1 proof this month',
+    );
+    return '$_temp0';
+  }
 
   @override
   String wallLeadFallback(String date) {
@@ -747,6 +906,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get friendRequestSentSubtitle => 'Friend request sent';
 
   @override
+  String get acceptingBuddyRequestStatus => 'Accepting this buddy request…';
+
+  @override
   String get friendAddedTitle => 'Friend added';
 
   @override
@@ -794,6 +956,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ownUsernameError => 'That is your own username';
 
   @override
+  String get ownAccountSearchError => 'That is your own account';
+
+  @override
   String friendCapReachedError(int limit) {
     return 'You have reached the maximum of $limit friends.';
   }
@@ -805,6 +970,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String requestSentMessage(String name) {
     return 'Friend request sent to $name';
   }
+
+  @override
+  String get buddySearchIdNotFoundError => 'No account found with that ID.';
+
+  @override
+  String get buddySearchEmailNotFoundError =>
+      'No account found with that email.';
+
+  @override
+  String get buddySearchUsernameNotFoundError =>
+      'No account found with that username.';
+
+  @override
+  String get buddySearchGenericError =>
+      'Couldn\'t search for a buddy right now. Please try again.';
+
+  @override
+  String get buddySearchTimeoutError =>
+      'Buddy search is taking too long. Please try again.';
+
+  @override
+  String get buddyRequestGenericError =>
+      'Couldn\'t send the buddy request right now. Please try again.';
+
+  @override
+  String get buddyRequestTimeoutError =>
+      'Sending the buddy request is taking too long. Please try again.';
+
+  @override
+  String get alreadyBuddyError => 'You\'re already buddies with this user.';
+
+  @override
+  String get buddyRequestAlreadySentError =>
+      'This buddy request has already been sent.';
 
   @override
   String get sendBuddyRequestPrompt => 'Send a buddy request?';
@@ -830,6 +1029,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatScreenSubtitle => 'Private conversation with this buddy.';
 
   @override
+  String get chatConnectingTitle => 'Connecting your conversation';
+
+  @override
+  String get chatConnectingSubtitle =>
+      'Loading the latest messages and syncing buddy status.';
+
+  @override
+  String get chatLoadFailedTitle => 'This conversation couldn\'t load';
+
+  @override
+  String get chatLoadFailedSubtitle =>
+      'Check your connection and try loading the chat again.';
+
+  @override
+  String get chatConnectionTimeoutMessage =>
+      'The conversation is taking too long to load. Please try again.';
+
+  @override
   String get chatEmptyTitle => 'Start the conversation';
 
   @override
@@ -841,6 +1058,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatSendAction => 'Send';
+
+  @override
+  String get chatSendFailedMessage =>
+      'Your message couldn\'t be sent right now. Please try again.';
 
   @override
   String get profileFieldDisplayName => 'DISPLAY NAME';
@@ -1198,6 +1419,151 @@ class AppLocalizationsEn extends AppLocalizations {
       'Premium is intentionally hidden until store-compliant billing is implemented end to end.';
 
   @override
+  String get billingStatusCheckingChip => 'Checking store';
+
+  @override
+  String get billingStatusActiveChip => 'Premium active';
+
+  @override
+  String get billingStatusLiveChip => 'Store live';
+
+  @override
+  String get billingStatusIssueChip => 'Needs setup';
+
+  @override
+  String get billingPremiumActiveTitle => 'Premium is active';
+
+  @override
+  String billingPremiumActiveSubtitle(String plan) {
+    return 'Your $plan entitlement is active on this account.';
+  }
+
+  @override
+  String get billingCheckingSubtitle =>
+      'Checking store products and your current premium access.';
+
+  @override
+  String get billingCheckingRestoreMessage =>
+      'Checking your existing purchases from the store.';
+
+  @override
+  String get billingPremiumReadySubtitle =>
+      'Unlock unlimited buddies with monthly, yearly, or lifetime billing.';
+
+  @override
+  String get billingCatalogSetupNeededSubtitle =>
+      'The store catalog still needs the required premium product IDs.';
+
+  @override
+  String get billingStoreUnavailableTitle => 'Store unavailable';
+
+  @override
+  String get billingStoreUnavailableSubtitle =>
+      'Store billing is unavailable on this device right now.';
+
+  @override
+  String get billingStoreUnavailableMessage =>
+      'DoneDrop couldn\'t connect to Google Play or the App Store on this device. Check the logged-in store account, tester access, and internal testing build.';
+
+  @override
+  String get billingRetryAction => 'Retry';
+
+  @override
+  String get billingCatalogMissingTitle => 'Store products missing';
+
+  @override
+  String billingCatalogMissingMessage(String ids) {
+    return 'DoneDrop could not find these premium product IDs in the current store catalog: $ids';
+  }
+
+  @override
+  String get billingWhatUnlocksTodaySubtitle =>
+      'Premium currently unlocks one real benefit today: removing the 5-buddy cap. Monthly, yearly, and lifetime all map to the same entitlement.';
+
+  @override
+  String get billingBenefitRestoreTitle => 'Restore across devices';
+
+  @override
+  String get billingBenefitRestoreDesc =>
+      'Restore the same entitlement on another device signed into the same store account.';
+
+  @override
+  String get billingBenefitLifetimeTitle => 'Lifetime unlock available';
+
+  @override
+  String get billingBenefitLifetimeDesc =>
+      'Choose a one-time purchase if you prefer no renewal cycle.';
+
+  @override
+  String get billingChoosePlanTitle => 'Choose a plan';
+
+  @override
+  String get billingMonthlyPlanTitle => 'Monthly';
+
+  @override
+  String get billingMonthlyPlanSubtitle =>
+      'Auto-renews every month until you cancel in the store.';
+
+  @override
+  String get billingYearlyPlanTitle => 'Yearly';
+
+  @override
+  String get billingYearlyPlanSubtitle =>
+      'Auto-renews every year until you cancel in the store.';
+
+  @override
+  String get billingLifetimePlanTitle => 'Lifetime';
+
+  @override
+  String get billingLifetimePlanSubtitle => 'One-time purchase. No renewal.';
+
+  @override
+  String billingChoosePlanAction(String price) {
+    return 'Continue for $price';
+  }
+
+  @override
+  String billingSwitchPlanAction(String price) {
+    return 'Switch for $price';
+  }
+
+  @override
+  String get billingOwnedAction => 'Already unlocked';
+
+  @override
+  String get billingPendingAction => 'Working...';
+
+  @override
+  String get billingManageAction => 'Manage subscription';
+
+  @override
+  String get billingPurchaseQueuedMessage =>
+      'Complete the purchase in the store sheet to activate Premium.';
+
+  @override
+  String get billingPurchaseStartError =>
+      'The store did not open the purchase flow. Please try again.';
+
+  @override
+  String get billingRestoreSuccessTitle => 'Premium restored';
+
+  @override
+  String get billingRestoreSuccessMessage =>
+      'Your store purchase is active on this account again.';
+
+  @override
+  String get billingRestorePendingMessage =>
+      'Restore was requested. If this store account already owns Premium, it should reappear shortly.';
+
+  @override
+  String get billingManageUnavailableMessage =>
+      'No active auto-renewing subscription is available to manage yet.';
+
+  @override
+  String get billingFooterDisclosure =>
+      'Subscriptions renew automatically until cancelled in the store. Lifetime is a one-time purchase. Product IDs in this build: dd_premium_monthly, dd_premium_yearly, dd_premium_lifetime.';
+
+  @override
   String get momentSavedTitle => 'Moment saved';
 
   @override
@@ -1227,6 +1593,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get captureUnavailableMessage =>
       'We couldn\'t open the proof camera. Please try again.';
+
+  @override
+  String get captureFallbackToSystemCameraMessage =>
+      'The captured photo did not come through correctly on this device. Open the system camera to retake it.';
 
   @override
   String get captureSelectBuddyError =>
@@ -1659,7 +2029,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get myCodeCopied => 'Code copied to clipboard';
 
   @override
+  String get yourUserId => 'Your ID';
+
+  @override
   String get invalidCodeError => 'Invalid QR code';
+
+  @override
+  String get scanCodeInvalidSubtitle =>
+      'Only a valid DoneDrop QR invite or 6-character buddy code can be scanned.';
+
+  @override
+  String get scanCameraPermissionMessage =>
+      'Camera permission is off. Allow camera access to scan a buddy QR code.';
+
+  @override
+  String get scanCameraUnsupportedMessage =>
+      'This device doesn\'t support QR scanning for DoneDrop.';
+
+  @override
+  String get scanCameraFailedMessage =>
+      'DoneDrop couldn\'t open the scanner right now. Please try again.';
 
   @override
   String get userNotFoundError => 'User not found';

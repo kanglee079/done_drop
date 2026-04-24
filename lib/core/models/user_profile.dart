@@ -67,6 +67,21 @@ class UserProfile {
     'widgetPreferences': widgetPreferences.toFirestore(),
   };
 
+  Map<String, dynamic> toPublicDirectoryFirestore() => {
+    'id': id,
+    'displayName': displayName,
+    'username': username?.trim().isEmpty ?? true
+        ? null
+        : username!.trim().toLowerCase(),
+    'userCode': userCode?.trim().isEmpty ?? true
+        ? null
+        : userCode!.trim().toUpperCase(),
+    'avatarUrl': avatarUrl,
+    'bio': bio,
+    'createdAt': createdAt.toIso8601String(),
+    'premiumStatus': premiumStatus,
+  };
+
   factory UserProfile.fromFirestore(Map<String, dynamic> map) => UserProfile(
     id: map['id'] as String,
     displayName: map['displayName'] as String,

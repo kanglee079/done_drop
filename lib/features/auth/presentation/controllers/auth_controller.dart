@@ -8,7 +8,9 @@ import 'package:done_drop/features/auth/repositories/user_profile_repository.dar
 import 'package:done_drop/app/routes/app_routes.dart';
 import 'package:done_drop/core/errors/result.dart';
 import 'package:done_drop/core/models/user_profile.dart';
+import 'package:done_drop/core/services/capture_recovery_service.dart';
 import 'package:done_drop/core/services/locale_controller.dart';
+import 'package:done_drop/core/services/storage_service.dart';
 
 class AuthController extends GetxController {
   AuthController(
@@ -21,6 +23,8 @@ class AuthController extends GetxController {
   final OnboardingService _onboardingService;
   final UserProfileRepository _userProfileRepo;
   final LocaleController _localeController;
+  CaptureRecoveryService get _captureRecovery =>
+      Get.find<CaptureRecoveryService>();
 
   final Rx<User?> _firebaseUser = Rx<User?>(null);
   final Rx<UserProfile?> _userProfile = Rx<UserProfile?>(null);
@@ -57,14 +61,16 @@ class AuthController extends GetxController {
   }
 
   Future<void> handleAuthGate() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-
     if (_firebaseUser.value == null) {
       if (!_onboardingService.hasCompletedOnboarding) {
         Get.offAllNamed(AppRoutes.onboarding);
       } else {
         Get.offAllNamed(AppRoutes.signIn);
       }
+      return;
+    }
+
+    if (await _captureRecovery.restorePendingCaptureIfNeeded()) {
       return;
     }
 
@@ -116,6 +122,7 @@ class AuthController extends GetxController {
 
     if (profile != null) {
       _userProfile.value = profile;
+      await StorageService.instance.setPremium(profile!.premiumStatus);
       await _localeController.syncFromProfile(profile);
     }
     return profile;
@@ -125,6 +132,7 @@ class AuthController extends GetxController {
     _userProfileSubscription?.cancel();
     if (user == null) {
       _userProfile.value = null;
+      unawaited(StorageService.instance.setPremium(false));
       return;
     }
 
@@ -133,6 +141,8 @@ class AuthController extends GetxController {
         .listen(
           (profile) async {
             _userProfile.value = profile;
+            final isPremium = profile?.premiumStatus ?? false;
+            await StorageService.instance.setPremium(isPremium);
             await _localeController.syncFromProfile(profile);
           },
           onError: (error) {

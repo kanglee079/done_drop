@@ -204,6 +204,86 @@ class AppLocalizationsVi extends AppLocalizations {
   String get confirmPasswordMismatch => 'Mật khẩu không khớp';
 
   @override
+  String get authSigningInStatus => 'Đang đăng nhập...';
+
+  @override
+  String get authLoadingProfileStatus => 'Đang tải tài khoản của bạn...';
+
+  @override
+  String get authCreatingAccountStatus => 'Đang tạo tài khoản...';
+
+  @override
+  String get authPreparingProfileStatus => 'Đang chuẩn bị hồ sơ của bạn...';
+
+  @override
+  String get authPreparingAppStatus => 'Đang chuẩn bị ứng dụng...';
+
+  @override
+  String get authProfileBootstrapError =>
+      'Không thể hoàn tất chuẩn bị tài khoản. Vui lòng thử lại.';
+
+  @override
+  String get authAccountNotFound => 'Không tìm thấy tài khoản với email này.';
+
+  @override
+  String get authWrongPassword => 'Mật khẩu chưa đúng. Vui lòng thử lại.';
+
+  @override
+  String get authEmailAlreadyInUse => 'Email này đã được đăng ký.';
+
+  @override
+  String get authAccountDisabled => 'Tài khoản này đã bị vô hiệu hoá.';
+
+  @override
+  String get authTooManyRequests =>
+      'Bạn thao tác quá nhiều lần. Hãy đợi một chút rồi thử lại.';
+
+  @override
+  String get authNetworkError => 'Lỗi mạng. Hãy kiểm tra kết nối rồi thử lại.';
+
+  @override
+  String get authInvalidCredentials =>
+      'Thông tin đăng nhập chưa đúng. Hãy kiểm tra lại email và mật khẩu.';
+
+  @override
+  String get authDifferentSignInMethod =>
+      'Email này đang dùng một phương thức đăng nhập khác.';
+
+  @override
+  String get authProviderUnavailable =>
+      'Phương thức đăng nhập này hiện chưa khả dụng.';
+
+  @override
+  String get authRecentLoginRequired =>
+      'Vui lòng xác minh lại danh tính trước khi tiếp tục.';
+
+  @override
+  String get authGenericError => 'Đăng nhập thất bại. Vui lòng thử lại.';
+
+  @override
+  String get googleSignInCancelled => 'Bạn đã huỷ đăng nhập Google.';
+
+  @override
+  String get googleSignInNetworkError =>
+      'Đăng nhập Google cần kết nối internet ổn định.';
+
+  @override
+  String get googleSignInConfigError =>
+      'Google Sign-In chưa sẵn sàng trên bản build này. Hãy dùng đăng nhập email trước.';
+
+  @override
+  String get googleSignInIosLimited =>
+      'Google Sign-In hiện dùng được trên Android. Trên iPhone, hãy dùng đăng nhập email cho tới khi Sign in with Apple hoàn tất để đáp ứng yêu cầu App Store.';
+
+  @override
+  String get googleSignInTokenMissing =>
+      'Đăng nhập Google hoàn tất nhưng thiếu token cần thiết. Hãy thử lại.';
+
+  @override
+  String get googleSignInFailed =>
+      'Không thể hoàn tất đăng nhập Google. Vui lòng thử lại.';
+
+  @override
   String todayGreeting(String name) {
     return 'Chào $name';
   }
@@ -290,10 +370,21 @@ class AppLocalizationsVi extends AppLocalizations {
       'Giữ nó đủ cụ thể để bạn biết chính xác khi nào là “xong”.';
 
   @override
+  String get editHabitTitle => 'Chỉnh sửa thói quen';
+
+  @override
+  String get editHabitSubtitle =>
+      'Siết lại tên, thời gian hoặc nhóm để tiêu chuẩn luôn rõ ràng.';
+
+  @override
   String get habitNameHint => 'Tên thói quen';
 
   @override
   String get habitCategoryHint => 'Nhóm (không bắt buộc)';
+
+  @override
+  String get habitNameRequiredError =>
+      'Hãy đặt một tên rõ ràng cho thói quen này trước khi lưu.';
 
   @override
   String get habitTimeLabel => 'Thời gian';
@@ -303,6 +394,53 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get createHabitAction => 'Tạo thói quen';
+
+  @override
+  String get habitCreatedMessage =>
+      'Đã thêm thói quen mới vào danh sách Hôm nay.';
+
+  @override
+  String get habitUpdatedMessage => 'Đã cập nhật thông tin thói quen.';
+
+  @override
+  String get habitCreateFailedMessage =>
+      'Không thể tạo thói quen này. Vui lòng thử lại.';
+
+  @override
+  String get habitUpdateFailedMessage =>
+      'Không thể lưu thay đổi của thói quen. Vui lòng thử lại.';
+
+  @override
+  String get habitActionMenuTooltip => 'Tác vụ thói quen';
+
+  @override
+  String get archiveHabitTitle => 'Lưu trữ thói quen';
+
+  @override
+  String archiveHabitMessage(String name) {
+    return 'Lưu trữ \"$name\" và tạm gỡ nó khỏi Hôm nay chứ?';
+  }
+
+  @override
+  String get habitArchivedMessage => 'Đã lưu trữ thói quen và gỡ khỏi Hôm nay.';
+
+  @override
+  String get habitArchiveFailedMessage =>
+      'Chưa thể lưu trữ thói quen này lúc này.';
+
+  @override
+  String get deleteHabitTitle => 'Xoá thói quen';
+
+  @override
+  String deleteHabitMessage(String name) {
+    return 'Xoá \"$name\" và gỡ lịch sử thói quen này khỏi DoneDrop? Các khoảnh khắc chứng minh vẫn được giữ trong lưu trữ.';
+  }
+
+  @override
+  String get habitDeletedMessage => 'Đã xoá thói quen.';
+
+  @override
+  String get habitDeleteFailedMessage => 'Chưa thể xoá thói quen này lúc này.';
 
   @override
   String get emptyTodayTitle => 'Bắt đầu với một tiêu chuẩn.';
@@ -491,6 +629,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get signOutAction => 'Đăng xuất';
 
   @override
+  String get retryAction => 'Thử lại';
+
+  @override
   String get themeSettingsSnackbarTitle => 'Cài đặt giao diện';
 
   @override
@@ -537,6 +678,12 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get saveAction => 'Lưu';
+
+  @override
+  String get editAction => 'Chỉnh sửa';
+
+  @override
+  String get archiveAction => 'Lưu trữ';
 
   @override
   String get closeAction => 'Đóng';
@@ -618,6 +765,17 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get wallSectionSubtitle =>
       'Mọi bằng chứng bạn giữ lại, kể cả những khoảnh khắc đã chia sẻ.';
+
+  @override
+  String wallSectionSubtitleWithCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count bằng chứng tháng này',
+      one: '1 bằng chứng tháng này',
+    );
+    return '$_temp0';
+  }
 
   @override
   String wallLeadFallback(String date) {
@@ -750,6 +908,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get friendRequestSentSubtitle => 'Đã gửi yêu cầu kết bạn';
 
   @override
+  String get acceptingBuddyRequestStatus => 'Đang chấp nhận yêu cầu buddy này…';
+
+  @override
   String get friendAddedTitle => 'Đã thêm buddy';
 
   @override
@@ -797,6 +958,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get ownUsernameError => 'Đó là username của chính bạn';
 
   @override
+  String get ownAccountSearchError => 'Đó là tài khoản của chính bạn';
+
+  @override
   String friendCapReachedError(int limit) {
     return 'Bạn đã đạt tối đa $limit buddy.';
   }
@@ -808,6 +972,40 @@ class AppLocalizationsVi extends AppLocalizations {
   String requestSentMessage(String name) {
     return 'Đã gửi yêu cầu kết bạn tới $name';
   }
+
+  @override
+  String get buddySearchIdNotFoundError =>
+      'Không tìm thấy tài khoản với ID này.';
+
+  @override
+  String get buddySearchEmailNotFoundError =>
+      'Không tìm thấy tài khoản với email này.';
+
+  @override
+  String get buddySearchUsernameNotFoundError =>
+      'Không tìm thấy tài khoản với username này.';
+
+  @override
+  String get buddySearchGenericError =>
+      'Không thể tìm buddy lúc này. Vui lòng thử lại.';
+
+  @override
+  String get buddySearchTimeoutError => 'Tìm buddy quá lâu. Vui lòng thử lại.';
+
+  @override
+  String get buddyRequestGenericError =>
+      'Không thể gửi yêu cầu buddy lúc này. Vui lòng thử lại.';
+
+  @override
+  String get buddyRequestTimeoutError =>
+      'Gửi yêu cầu buddy quá lâu. Vui lòng thử lại.';
+
+  @override
+  String get alreadyBuddyError => 'Hai bạn đã là buddy của nhau rồi.';
+
+  @override
+  String get buddyRequestAlreadySentError =>
+      'Yêu cầu buddy này đã được gửi trước đó.';
 
   @override
   String get sendBuddyRequestPrompt => 'Gửi yêu cầu buddy chứ?';
@@ -833,6 +1031,24 @@ class AppLocalizationsVi extends AppLocalizations {
   String get chatScreenSubtitle => 'Trò chuyện riêng tư với buddy này.';
 
   @override
+  String get chatConnectingTitle => 'Đang kết nối cuộc trò chuyện';
+
+  @override
+  String get chatConnectingSubtitle =>
+      'Đang tải tin nhắn mới nhất và đồng bộ trạng thái buddy.';
+
+  @override
+  String get chatLoadFailedTitle => 'Không tải được cuộc trò chuyện này';
+
+  @override
+  String get chatLoadFailedSubtitle =>
+      'Hãy kiểm tra kết nối rồi thử tải lại đoạn chat.';
+
+  @override
+  String get chatConnectionTimeoutMessage =>
+      'Tải cuộc trò chuyện quá lâu. Vui lòng thử lại.';
+
+  @override
   String get chatEmptyTitle => 'Bắt đầu cuộc trò chuyện';
 
   @override
@@ -844,6 +1060,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get chatSendAction => 'Gửi';
+
+  @override
+  String get chatSendFailedMessage =>
+      'Chưa thể gửi tin nhắn lúc này. Vui lòng thử lại.';
 
   @override
   String get profileFieldDisplayName => 'TÊN HIỂN THỊ';
@@ -1202,6 +1422,151 @@ class AppLocalizationsVi extends AppLocalizations {
       'Premium được cố ý ẩn cho tới khi billing đạt chuẩn store từ đầu đến cuối.';
 
   @override
+  String get billingStatusCheckingChip => 'Đang kiểm tra store';
+
+  @override
+  String get billingStatusActiveChip => 'Premium đang active';
+
+  @override
+  String get billingStatusLiveChip => 'Store đã sẵn sàng';
+
+  @override
+  String get billingStatusIssueChip => 'Cần setup';
+
+  @override
+  String get billingPremiumActiveTitle => 'Premium đang hoạt động';
+
+  @override
+  String billingPremiumActiveSubtitle(String plan) {
+    return 'Gói $plan của bạn đang hoạt động trên tài khoản này.';
+  }
+
+  @override
+  String get billingCheckingSubtitle =>
+      'Đang kiểm tra sản phẩm trên store và quyền Premium hiện tại của bạn.';
+
+  @override
+  String get billingCheckingRestoreMessage =>
+      'Đang kiểm tra các giao dịch bạn đã có trên store.';
+
+  @override
+  String get billingPremiumReadySubtitle =>
+      'Mở khoá buddy không giới hạn với gói tháng, năm hoặc lifetime.';
+
+  @override
+  String get billingCatalogSetupNeededSubtitle =>
+      'Catalog trên store vẫn thiếu các product ID Premium bắt buộc.';
+
+  @override
+  String get billingStoreUnavailableTitle => 'Store chưa khả dụng';
+
+  @override
+  String get billingStoreUnavailableSubtitle =>
+      'Billing của store chưa khả dụng trên thiết bị này lúc này.';
+
+  @override
+  String get billingStoreUnavailableMessage =>
+      'DoneDrop chưa kết nối được tới Google Play hoặc App Store trên thiết bị này. Hãy kiểm tra tài khoản store đang đăng nhập, quyền tester và bản build internal testing.';
+
+  @override
+  String get billingRetryAction => 'Thử lại';
+
+  @override
+  String get billingCatalogMissingTitle => 'Thiếu sản phẩm trên store';
+
+  @override
+  String billingCatalogMissingMessage(String ids) {
+    return 'DoneDrop chưa tìm thấy các product ID Premium này trong catalog store hiện tại: $ids';
+  }
+
+  @override
+  String get billingWhatUnlocksTodaySubtitle =>
+      'Hiện tại Premium mở khoá một lợi ích thật đang dùng được ngay: bỏ giới hạn 5 buddy. Gói tháng, năm và lifetime đều map vào cùng một entitlement.';
+
+  @override
+  String get billingBenefitRestoreTitle => 'Restore trên thiết bị khác';
+
+  @override
+  String get billingBenefitRestoreDesc =>
+      'Khôi phục entitlement trên thiết bị khác nếu bạn đang đăng nhập cùng tài khoản store.';
+
+  @override
+  String get billingBenefitLifetimeTitle => 'Có lựa chọn lifetime';
+
+  @override
+  String get billingBenefitLifetimeDesc =>
+      'Chọn mua một lần nếu bạn không muốn chu kỳ gia hạn tự động.';
+
+  @override
+  String get billingChoosePlanTitle => 'Chọn gói';
+
+  @override
+  String get billingMonthlyPlanTitle => 'Theo tháng';
+
+  @override
+  String get billingMonthlyPlanSubtitle =>
+      'Tự gia hạn mỗi tháng cho tới khi bạn huỷ trên store.';
+
+  @override
+  String get billingYearlyPlanTitle => 'Theo năm';
+
+  @override
+  String get billingYearlyPlanSubtitle =>
+      'Tự gia hạn mỗi năm cho tới khi bạn huỷ trên store.';
+
+  @override
+  String get billingLifetimePlanTitle => 'Lifetime';
+
+  @override
+  String get billingLifetimePlanSubtitle => 'Mua một lần. Không tự gia hạn.';
+
+  @override
+  String billingChoosePlanAction(String price) {
+    return 'Tiếp tục với giá $price';
+  }
+
+  @override
+  String billingSwitchPlanAction(String price) {
+    return 'Chuyển sang $price';
+  }
+
+  @override
+  String get billingOwnedAction => 'Đã mở khoá';
+
+  @override
+  String get billingPendingAction => 'Đang xử lý...';
+
+  @override
+  String get billingManageAction => 'Quản lý subscription';
+
+  @override
+  String get billingPurchaseQueuedMessage =>
+      'Hãy hoàn tất giao dịch trong cửa sổ store để kích hoạt Premium.';
+
+  @override
+  String get billingPurchaseStartError =>
+      'Store chưa mở được luồng thanh toán. Hãy thử lại.';
+
+  @override
+  String get billingRestoreSuccessTitle => 'Đã khôi phục Premium';
+
+  @override
+  String get billingRestoreSuccessMessage =>
+      'Giao dịch store của bạn đã active lại trên tài khoản này.';
+
+  @override
+  String get billingRestorePendingMessage =>
+      'Yêu cầu restore đã được gửi. Nếu tài khoản store này đã sở hữu Premium, quyền truy cập sẽ xuất hiện lại sớm.';
+
+  @override
+  String get billingManageUnavailableMessage =>
+      'Hiện chưa có subscription tự gia hạn nào để quản lý.';
+
+  @override
+  String get billingFooterDisclosure =>
+      'Subscription sẽ tự gia hạn cho tới khi bạn huỷ trên store. Lifetime là mua một lần. Product ID mặc định của bản build này: dd_premium_monthly, dd_premium_yearly, dd_premium_lifetime.';
+
+  @override
   String get momentSavedTitle => 'Đã lưu khoảnh khắc';
 
   @override
@@ -1232,6 +1597,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get captureUnavailableMessage =>
       'Không thể mở camera để chụp bằng chứng. Hãy thử lại.';
+
+  @override
+  String get captureFallbackToSystemCameraMessage =>
+      'Ảnh vừa chụp chưa được ghi lại đúng trên thiết bị này. Hãy mở camera hệ thống để chụp lại.';
 
   @override
   String get captureSelectBuddyError =>
@@ -1663,7 +2032,26 @@ class AppLocalizationsVi extends AppLocalizations {
   String get myCodeCopied => 'Đã sao chép mã vào bộ nhớ tạm';
 
   @override
+  String get yourUserId => 'ID của bạn';
+
+  @override
   String get invalidCodeError => 'Mã QR không hợp lệ';
+
+  @override
+  String get scanCodeInvalidSubtitle =>
+      'Chỉ quét mã QR mời DoneDrop hợp lệ hoặc mã buddy 6 ký tự.';
+
+  @override
+  String get scanCameraPermissionMessage =>
+      'Quyền camera đang tắt. Hãy cho phép camera để quét mã buddy.';
+
+  @override
+  String get scanCameraUnsupportedMessage =>
+      'Thiết bị này không hỗ trợ quét QR cho DoneDrop.';
+
+  @override
+  String get scanCameraFailedMessage =>
+      'DoneDrop chưa thể mở trình quét lúc này. Vui lòng thử lại.';
 
   @override
   String get userNotFoundError => 'Không tìm thấy người dùng';

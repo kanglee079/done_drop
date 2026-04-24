@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -12,14 +15,16 @@ class MemoryWallController extends GetxController {
   MemoryWallController(this._momentRepo);
   final MomentRepository _momentRepo;
 
-  String? get _userId => Get.find<AuthController>().firebaseUser?.uid;
-
   final RxList<Moment> moments = <Moment>[].obs;
   final isLoading = true.obs;
   final selectedCategory = ''.obs;
 
   final List<Moment> _remoteMoments = <Moment>[];
   final RxList<Moment> _optimisticMoments = <Moment>[].obs;
+  final AuthController _authController = Get.find<AuthController>();
+  StreamSubscription<User?>? _authStateSubscription;
+  StreamSubscription<List<Moment>>? _momentsSubscription;
+  String? _boundUserId;
 
   List<Moment> get filteredMoments {
     final source = moments;
@@ -44,16 +49,43 @@ class MemoryWallController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _watchMoments();
+    _handleAuthUserChanged(_authController.firebaseUser);
+    _authStateSubscription = _authController.authStateStream.listen(
+      _handleAuthUserChanged,
+    );
   }
 
-  void _watchMoments() {
-    final uid = _userId;
-    if (uid == null) {
-      isLoading.value = false;
-      return;
-    }
-    _momentRepo.watchOwnerArchiveMoments(uid).listen(
+  @override
+  void onClose() {
+    _authStateSubscription?.cancel();
+    _momentsSubscription?.cancel();
+    super.onClose();
+  }
+
+  void _handleAuthUserChanged(User? user) {
+    final uid = user?.uid;
+    if (_boundUserId == uid) return;
+
+    _boundUserId = uid;
+    _momentsSubscription?.cancel();
+    _resetState(isLoading: uid != null);
+
+    if (uid == null) return;
+
+    _watchMoments(uid);
+  }
+
+  void _resetState({required bool isLoading}) {
+    this.isLoading.value = isLoading;
+    selectedCategory.value = '';
+    moments.clear();
+    _remoteMoments.clear();
+    _optimisticMoments.clear();
+  }
+
+  void _watchMoments(String uid) {
+    _momentsSubscription?.cancel();
+    _momentsSubscription = _momentRepo.watchOwnerArchiveMoments(uid).listen(
       (remoteMoments) {
         _remoteMoments
           ..clear()

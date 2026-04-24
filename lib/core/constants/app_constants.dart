@@ -31,6 +31,10 @@ class AppConstants {
 
   // ── Firebase Collections ─────────────────────────────────────────────────
   static const String colUsers = 'users';
+  static const String colUserDirectory = 'user_directory';
+  static const String colUserCodeLookup = 'user_code_lookup';
+  static const String colUserUsernameLookup = 'user_username_lookup';
+  static const String colUserEmailLookup = 'user_email_lookup';
   static const String colMoments = 'moments';
   static const String colReactions = 'reactions';
   // task_templates: legacy V1.0 artifacts — replaced by activities

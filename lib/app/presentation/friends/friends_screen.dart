@@ -1,148 +1,169 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:done_drop/core/theme/theme.dart';
+
 import 'package:done_drop/app/core/widgets/widgets.dart';
-import 'package:done_drop/app/routes/app_routes.dart';
 import 'package:done_drop/app/presentation/friends/friends_controller.dart';
+import 'package:done_drop/app/routes/app_routes.dart';
+import 'package:done_drop/core/models/friend_request.dart';
+import 'package:done_drop/core/models/friendship.dart';
+import 'package:done_drop/core/models/user_profile.dart';
+import 'package:done_drop/core/theme/theme.dart';
 import 'package:done_drop/l10n/l10n.dart';
 
-class FriendsScreen extends StatelessWidget {
+class FriendsScreen extends GetView<FriendsController> {
   const FriendsScreen({super.key});
+
+  int _resolveInitialTabIndex() {
+    final args = Get.arguments;
+    if (args is int) {
+      return args.clamp(0, 1);
+    }
+    if (args is Map<String, dynamic>) {
+      final initialTab = args['initialTab'];
+      if (initialTab is int) {
+        return initialTab.clamp(0, 1);
+      }
+      if (initialTab is String && initialTab.toLowerCase() == 'requests') {
+        return 1;
+      }
+    }
+    return 0;
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final spec = DDResponsiveSpec.of(context);
-    return GetBuilder<FriendsController>(
-      init: FriendsController(Get.find()),
-      builder: (ctrl) {
-        return DismissKeyboard(
-          child: DefaultTabController(
-            length: 2,
-            child: Scaffold(
-              backgroundColor: AppColors.surface,
-              appBar: AppBar(
-                backgroundColor: AppColors.surface,
-                surfaceTintColor: Colors.transparent,
-                elevation: 0,
-                leadingWidth: 64,
-                leading: Padding(
-                  padding: const EdgeInsets.only(left: AppSizes.space8),
-                  child: IconButton(
-                    icon: const Icon(
-                      Icons.arrow_back_rounded,
-                      color: AppColors.primary,
-                    ),
-                    onPressed: () => Get.back(),
-                  ),
+    final initialTabIndex = _resolveInitialTabIndex();
+
+    return DismissKeyboard(
+      child: DefaultTabController(
+        length: 2,
+        initialIndex: initialTabIndex,
+        child: Scaffold(
+          backgroundColor: AppColors.surface,
+          appBar: AppBar(
+            backgroundColor: AppColors.surface,
+            surfaceTintColor: Colors.transparent,
+            elevation: 0,
+            leadingWidth: 64,
+            leading: Padding(
+              padding: const EdgeInsets.only(left: AppSizes.space8),
+              child: IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_rounded,
+                  color: AppColors.primary,
                 ),
-                titleSpacing: 0,
-                title: Text(
-                  l10n.buddyCrewTitle,
-                  style: TextStyle(
-                    fontFamily: AppTypography.serifFamily,
-                    fontSize: 18,
-                    fontStyle: FontStyle.italic,
-                    color: AppColors.primary,
-                  ),
-                ),
-                centerTitle: true,
-                actions: [
-                  SizedBox(
-                    width: 64,
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: AppSizes.space8),
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.person_add_alt_1_rounded,
-                          color: AppColors.primary,
-                        ),
-                        onPressed: () => Get.toNamed(AppRoutes.addFriend),
-                      ),
-                    ),
-                  ),
-                ],
-                bottom: TabBar(
-                  isScrollable: false,
-                  indicatorColor: AppColors.primary,
-                  labelColor: AppColors.primary,
-                  unselectedLabelColor: AppColors.onSurfaceVariant,
-                  labelStyle: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
-                  ),
-                  tabs: [
-                    Obx(
-                      () => Tab(
-                        text: ctrl.isAtFriendCap
-                            ? l10n.crewTabCountLabel(
-                                ctrl.friendCount.value,
-                                ctrl.maxFriends,
-                              )
-                            : l10n.crewTabLabel,
-                      ),
-                    ),
-                    Obx(
-                      () => Tab(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(l10n.requestsTabLabel),
-                            if (ctrl.hasPendingRequests) ...[
-                              const SizedBox(width: 6),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Text(
-                                  '${ctrl.pendingRequestCount.value}',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              body: DDResponsiveCenter(
-                maxWidth: 760,
-                child: TabBarView(
-                  children: [
-                    _FriendsList(ctrl: ctrl, spec: spec),
-                    _RequestsList(ctrl: ctrl),
-                  ],
-                ),
+                onPressed: () => Get.back(),
               ),
             ),
+            titleSpacing: 0,
+            title: Text(
+              l10n.buddyCrewTitle,
+              style: TextStyle(
+                fontFamily: AppTypography.serifFamily,
+                fontSize: 18,
+                fontStyle: FontStyle.italic,
+                color: AppColors.primary,
+              ),
+            ),
+            centerTitle: true,
+            actions: [
+              SizedBox(
+                width: 64,
+                child: Padding(
+                  padding: const EdgeInsets.only(right: AppSizes.space8),
+                  child: IconButton(
+                    icon: const Icon(
+                      Icons.person_add_alt_1_rounded,
+                      color: AppColors.primary,
+                    ),
+                    onPressed: () => Get.toNamed(AppRoutes.addFriend),
+                  ),
+                ),
+              ),
+            ],
+            bottom: TabBar(
+              isScrollable: false,
+              indicatorColor: AppColors.primary,
+              labelColor: AppColors.primary,
+              unselectedLabelColor: AppColors.onSurfaceVariant,
+              labelStyle: const TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+              ),
+              tabs: [
+                Obx(
+                  () => Tab(
+                    text: controller.isAtFriendCap
+                        ? l10n.crewTabCountLabel(
+                            controller.friendCount.value,
+                            controller.maxFriends,
+                          )
+                        : l10n.crewTabLabel,
+                  ),
+                ),
+                Obx(
+                  () => Tab(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(l10n.requestsTabLabel),
+                        if (controller.hasPendingRequests) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              '${controller.pendingRequestCount.value}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        );
-      },
+          body: DDResponsiveCenter(
+            maxWidth: 760,
+            child: TabBarView(
+              children: [
+                _FriendsList(controller: controller, spec: spec),
+                _RequestsList(controller: controller, spec: spec),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
 
 class _FriendsList extends StatelessWidget {
-  const _FriendsList({required this.ctrl, required this.spec});
-  final FriendsController ctrl;
+  const _FriendsList({required this.controller, required this.spec});
+
+  final FriendsController controller;
   final DDResponsiveSpec spec;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+
     return Obx(() {
-      if (ctrl.friendships.isEmpty) {
+      if (controller.friendships.isEmpty) {
         return LayoutBuilder(
           builder: (context, constraints) {
             final horizontalPadding = spec.horizontalPadding
@@ -226,13 +247,15 @@ class _FriendsList extends StatelessWidget {
           spec.horizontalPadding,
           AppSizes.space24,
         ),
-        itemCount: ctrl.friendships.length,
-        itemBuilder: (context, i) {
-          final friendship = ctrl.friendships[i];
-          final currentUid = ctrl.currentUserId ?? '';
+        itemCount: controller.friendships.length,
+        itemBuilder: (context, index) {
+          final friendship = controller.friendships[index];
+          final currentUid = controller.currentUserId ?? '';
           final friendId = friendship.otherUserId(currentUid);
 
           return _FriendTile(
+            controller: controller,
+            friendship: friendship,
             friendId: friendId,
           );
         },
@@ -242,73 +265,82 @@ class _FriendsList extends StatelessWidget {
 }
 
 class _RequestsList extends StatelessWidget {
-  const _RequestsList({required this.ctrl});
-  final FriendsController ctrl;
+  const _RequestsList({required this.controller, required this.spec});
+
+  final FriendsController controller;
+  final DDResponsiveSpec spec;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+
     return Obx(() {
-      final hasIncoming = ctrl.incomingRequests.isNotEmpty;
-      final hasOutgoing = ctrl.outgoingRequests.isNotEmpty;
+      final hasIncoming = controller.incomingRequests.isNotEmpty;
+      final hasOutgoing = controller.outgoingRequests.isNotEmpty;
 
       if (!hasIncoming && !hasOutgoing) {
         return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.inbox_outlined,
-                size: 56,
-                color: AppColors.outlineVariant,
-              ),
-              const SizedBox(height: AppSizes.space16),
-              Text(
-                l10n.noPendingRequestsTitle,
-                style: TextStyle(
-                  fontFamily: AppTypography.serifFamily,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.onSurface,
+          child: Padding(
+            padding: const EdgeInsets.all(AppSizes.space24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.inbox_outlined,
+                  size: 56,
+                  color: AppColors.outlineVariant,
                 ),
-              ),
-              const SizedBox(height: AppSizes.space8),
-              Text(
-                l10n.noPendingRequestsSubtitle,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppColors.onSurfaceVariant,
+                const SizedBox(height: AppSizes.space16),
+                Text(
+                  l10n.noPendingRequestsTitle,
+                  style: TextStyle(
+                    fontFamily: AppTypography.serifFamily,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.onSurface,
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: AppSizes.space8),
+                Text(
+                  l10n.noPendingRequestsSubtitle,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       }
 
       return ListView(
-        padding: const EdgeInsets.all(AppSizes.space16),
+        padding: EdgeInsets.fromLTRB(
+          spec.horizontalPadding,
+          AppSizes.space16,
+          spec.horizontalPadding,
+          AppSizes.space24,
+        ),
         children: [
           if (hasIncoming) ...[
             _SectionLabel(l10n.incomingSectionLabel),
-            ...ctrl.incomingRequests.map(
-              (req) => _RequestTile(
-                name: req.senderDisplayName ?? l10n.memberFallbackName,
-                avatarUrl: req.senderAvatarUrl,
+            ...controller.incomingRequests.map(
+              (request) => _RequestTile(
+                controller: controller,
+                request: request,
                 isIncoming: true,
-                onAccept: () => ctrl.acceptRequest(req),
-                onDecline: () => ctrl.declineRequest(req),
               ),
             ),
           ],
           if (hasOutgoing) ...[
             const SizedBox(height: AppSizes.space16),
             _SectionLabel(l10n.sentSectionLabel),
-            ...ctrl.outgoingRequests.map(
-              (req) => _RequestTile(
-                name: req.receiverId,
-                avatarUrl: null,
+            ...controller.outgoingRequests.map(
+              (request) => _RequestTile(
+                controller: controller,
+                request: request,
                 isIncoming: false,
-                onCancel: () => ctrl.cancelRequest(req),
               ),
             ),
           ],
@@ -320,6 +352,7 @@ class _RequestsList extends StatelessWidget {
 
 class _SectionLabel extends StatelessWidget {
   const _SectionLabel(this.label);
+
   final String label;
 
   @override
@@ -340,124 +373,100 @@ class _SectionLabel extends StatelessWidget {
 }
 
 class _FriendTile extends StatelessWidget {
-  const _FriendTile({required this.friendId});
+  const _FriendTile({
+    required this.controller,
+    required this.friendship,
+    required this.friendId,
+  });
 
+  final FriendsController controller;
+  final Friendship friendship;
   final String friendId;
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: Get.find<FriendsController>().friendRepo.getFriendProfile(friendId),
+    return FutureBuilder<UserProfile?>(
+      future: controller.profileFutureFor(friendId),
       builder: (context, snapshot) {
         final profile = snapshot.data;
         final name = profile?.displayName ?? context.l10n.memberFallbackName;
         final avatarUrl = profile?.avatarUrl;
+        final userCode = profile?.userCode?.trim() ?? '';
 
-        return Container(
-          margin: const EdgeInsets.only(bottom: AppSizes.space8),
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: AppSizes.space16,
-              vertical: AppSizes.space4,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: AppSizes.borderRadiusMd,
-            ),
-            tileColor: AppColors.surfaceContainerLow,
-            leading: CircleAvatar(
-              radius: 22,
-              backgroundColor: AppColors.primaryFixed,
-              backgroundImage: avatarUrl != null
-                  ? NetworkImage(avatarUrl)
-                  : null,
-              child: avatarUrl == null
-                  ? Icon(Icons.person, color: AppColors.primary, size: 20)
-                  : null,
-            ),
-            title: Text(
-              name,
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: Icon(
-                    Icons.chat_bubble_outline_rounded,
-                    color: AppColors.primary,
-                    size: 20,
-                  ),
-                  onPressed: () => Get.toNamed(
-                    AppRoutes.chat,
-                    arguments: {
-                      'buddyId': friendId,
-                      'buddyName': name,
-                      'buddyAvatarUrl': avatarUrl,
-                    },
-                  ),
-                  tooltip: context.l10n.chatOpenAction,
-                ),
-                IconButton(
-                  icon: Icon(
-                    Icons.photo_library_outlined,
-                    color: AppColors.primary,
-                    size: 20,
-                  ),
-                  onPressed: () => Get.toNamed(
-                    AppRoutes.buddyWall,
-                    arguments: {
-                      'ownerId': friendId,
-                      'ownerName': name,
-                      'ownerAvatarUrl': avatarUrl,
-                    },
-                  ),
-                  tooltip: context.l10n.buddyViewWallAction,
-                ),
-                PopupMenuButton<String>(
-                  onSelected: (value) async {
-                    if (value != 'remove') return;
-                    final l10n = context.l10n;
-                    final confirmed = await Get.dialog<bool>(
-                      AlertDialog(
-                        title: Text(l10n.removeFriendTitle),
-                        content: Text(l10n.removeFriendMessage),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Get.back(result: false),
-                            child: Text(l10n.cancelAction),
-                          ),
-                          TextButton(
-                            onPressed: () => Get.back(result: true),
-                            child: Text(
-                              l10n.removeAction,
-                              style: TextStyle(color: AppColors.error),
-                            ),
-                          ),
-                        ],
+        return _ProfileCard(
+          name: name,
+          avatarUrl: avatarUrl,
+          subtitle: userCode.isEmpty
+              ? context.l10n.crewTabLabel
+              : '${context.l10n.userIdLabel}: ${userCode.toUpperCase()}',
+          trailing: PopupMenuButton<String>(
+            onSelected: (value) async {
+              if (value != 'remove') return;
+              final l10n = context.l10n;
+              final confirmed = await Get.dialog<bool>(
+                AlertDialog(
+                  title: Text(l10n.removeFriendTitle),
+                  content: Text(l10n.removeFriendMessage),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Get.back(result: false),
+                      child: Text(l10n.cancelAction),
+                    ),
+                    TextButton(
+                      onPressed: () => Get.back(result: true),
+                      child: Text(
+                        l10n.removeAction,
+                        style: TextStyle(color: AppColors.error),
                       ),
-                    );
-                    if (confirmed == true) {
-                      final ctrl = Get.find<FriendsController>();
-                      final friendship = ctrl.friendships.firstWhere(
-                        (f) => f.otherUserId(ctrl.currentUserId ?? '') == friendId,
-                      );
-                      ctrl.removeFriend(friendship);
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    PopupMenuItem<String>(
-                      value: 'remove',
-                      child: Text(context.l10n.removeAction),
                     ),
                   ],
-                  icon: const Icon(
-                    Icons.more_horiz_rounded,
-                    color: AppColors.onSurfaceVariant,
-                    size: 20,
-                  ),
                 ),
-              ],
+              );
+              if (confirmed == true) {
+                controller.removeFriend(friendship);
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem<String>(
+                value: 'remove',
+                child: Text(context.l10n.removeAction),
+              ),
+            ],
+            icon: const Icon(
+              Icons.more_horiz_rounded,
+              color: AppColors.onSurfaceVariant,
+              size: 20,
             ),
+          ),
+          footer: Wrap(
+            spacing: AppSizes.space8,
+            runSpacing: AppSizes.space8,
+            children: [
+              _ActionPill(
+                icon: Icons.chat_bubble_outline_rounded,
+                label: context.l10n.chatOpenAction,
+                onTap: () => Get.toNamed(
+                  AppRoutes.chat,
+                  arguments: {
+                    'buddyId': friendId,
+                    'buddyName': name,
+                    'buddyAvatarUrl': avatarUrl,
+                  },
+                ),
+              ),
+              _ActionPill(
+                icon: Icons.photo_library_outlined,
+                label: context.l10n.buddyViewWallAction,
+                onTap: () => Get.toNamed(
+                  AppRoutes.buddyWall,
+                  arguments: {
+                    'ownerId': friendId,
+                    'ownerName': name,
+                    'ownerAvatarUrl': avatarUrl,
+                  },
+                ),
+              ),
+            ],
           ),
         );
       },
@@ -467,76 +476,362 @@ class _FriendTile extends StatelessWidget {
 
 class _RequestTile extends StatelessWidget {
   const _RequestTile({
+    required this.controller,
+    required this.request,
+    required this.isIncoming,
+  });
+
+  final FriendsController controller;
+  final FriendRequest request;
+  final bool isIncoming;
+
+  @override
+  Widget build(BuildContext context) {
+    final otherUserId = isIncoming ? request.senderId : request.receiverId;
+
+    return FutureBuilder<UserProfile?>(
+      future: controller.requestProfileFutureFor(otherUserId),
+      builder: (context, snapshot) {
+        final profile = snapshot.data;
+        final l10n = context.l10n;
+        final requestDisplayName = request.senderDisplayName?.trim();
+        final fallbackName = isIncoming
+            ? (requestDisplayName != null && requestDisplayName.isNotEmpty
+                  ? requestDisplayName
+                  : l10n.memberFallbackName)
+            : request.receiverId;
+        final name = profile?.displayName ?? fallbackName;
+        final avatarUrl = profile?.avatarUrl ?? request.senderAvatarUrl;
+        final userCode = profile?.userCode?.trim() ?? '';
+        return Obx(() {
+          final isBusy = controller.isRequestBusy(request.id);
+          final isAccepting = controller.isAccepting(request.id);
+          final isDeclining = controller.isDeclining(request.id);
+          final isCancelling = controller.isCancelling(request.id);
+
+          return _ProfileCard(
+            name: name,
+            avatarUrl: avatarUrl,
+            subtitle: isIncoming
+                ? l10n.friendRequestIncomingSubtitle
+                : l10n.friendRequestSentSubtitle,
+            meta: userCode.isEmpty
+                ? null
+                : _MetaPill(label: userCode.toUpperCase()),
+            footer: Wrap(
+              spacing: AppSizes.space8,
+              runSpacing: AppSizes.space8,
+              children: [
+                if (isIncoming && isAccepting)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(AppSizes.space12),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryFixed,
+                      borderRadius: AppSizes.borderRadiusMd,
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.14),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        const SizedBox(width: AppSizes.space10),
+                        Expanded(
+                          child: Text(
+                            l10n.acceptingBuddyRequestStatus,
+                            style: AppTypography.labelLarge(
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else if (isIncoming) ...[
+                  _ActionPill(
+                    icon: Icons.check_rounded,
+                    label: l10n.addFriendAction,
+                    isPrimary: true,
+                    isLoading: isAccepting,
+                    isDisabled: isBusy,
+                    onTap: () async {
+                      final tabController = DefaultTabController.maybeOf(
+                        context,
+                      );
+                      final accepted = await controller.acceptRequest(request);
+                      if (!accepted) return;
+                      tabController?.animateTo(0);
+                    },
+                  ),
+                  _ActionPill(
+                    icon: Icons.close_rounded,
+                    label: l10n.declineRequestTitle,
+                    isDestructive: true,
+                    isLoading: isDeclining,
+                    isDisabled: isBusy,
+                    onTap: () => controller.declineRequest(request),
+                  ),
+                ] else
+                  _ActionPill(
+                    icon: Icons.close_rounded,
+                    label: l10n.cancelAction,
+                    isLoading: isCancelling,
+                    isDisabled: isBusy,
+                    onTap: () => controller.cancelRequest(request),
+                  ),
+              ],
+            ),
+          );
+        });
+      },
+    );
+  }
+}
+
+class _ProfileCard extends StatelessWidget {
+  const _ProfileCard({
     required this.name,
     required this.avatarUrl,
-    required this.isIncoming,
-    this.onAccept,
-    this.onDecline,
-    this.onCancel,
+    required this.subtitle,
+    required this.footer,
+    this.trailing,
+    this.meta,
   });
 
   final String name;
   final String? avatarUrl;
-  final bool isIncoming;
-  final VoidCallback? onAccept;
-  final VoidCallback? onDecline;
-  final VoidCallback? onCancel;
+  final String subtitle;
+  final Widget footer;
+  final Widget? trailing;
+  final Widget? meta;
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
+    final metaWidgets = <Widget>[
+      Text(
+        subtitle,
+        style: TextStyle(fontSize: 12, color: AppColors.onSurfaceVariant),
+      ),
+    ];
+    if (meta != null) {
+      metaWidgets.add(meta!);
+    }
+
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSizes.space8),
+      margin: const EdgeInsets.only(bottom: AppSizes.space10),
       padding: const EdgeInsets.all(AppSizes.space16),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
-        borderRadius: AppSizes.borderRadiusMd,
+        color: AppColors.surfaceContainerLowest,
+        borderRadius: AppSizes.borderRadiusLg,
+        border: Border.all(
+          color: AppColors.outlineVariant.withValues(alpha: 0.5),
+        ),
+        boxShadow: AppColors.cardShadow,
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
-            radius: 22,
-            backgroundColor: AppColors.primaryFixed,
-            backgroundImage: avatarUrl != null
-                ? NetworkImage(avatarUrl!)
-                : null,
-            child: avatarUrl == null
-                ? Icon(Icons.person, color: AppColors.primary, size: 20)
-                : null,
-          ),
-          const SizedBox(width: AppSizes.space12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                Text(
-                  isIncoming
-                      ? l10n.friendRequestIncomingSubtitle
-                      : l10n.friendRequestSentSubtitle,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppColors.onSurfaceVariant,
-                  ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _ProfileAvatar(name: name, avatarUrl: avatarUrl),
+              const SizedBox(width: AppSizes.space12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                        color: AppColors.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: AppSizes.space4),
+                    Wrap(
+                      spacing: AppSizes.space8,
+                      runSpacing: AppSizes.space8,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: metaWidgets,
+                    ),
+                  ],
                 ),
+              ),
+              if (trailing != null) ...[
+                const SizedBox(width: AppSizes.space8),
+                trailing!,
               ],
+            ],
+          ),
+          const SizedBox(height: AppSizes.space14),
+          footer,
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileAvatar extends StatelessWidget {
+  const _ProfileAvatar({required this.name, required this.avatarUrl});
+
+  final String name;
+  final String? avatarUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final safeName = name.trim();
+    final fallback = safeName.isEmpty ? '?' : safeName[0].toUpperCase();
+
+    return CircleAvatar(
+      radius: 24,
+      backgroundColor: AppColors.primaryFixed,
+      backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl!) : null,
+      child: avatarUrl == null
+          ? Text(
+              fallback,
+              style: const TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w700,
+              ),
+            )
+          : null,
+    );
+  }
+}
+
+class _MetaPill extends StatelessWidget {
+  const _MetaPill({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSizes.space8,
+        vertical: AppSizes.space4,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.primaryFixed,
+        borderRadius: AppSizes.borderRadiusFull,
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: AppColors.primary,
+          letterSpacing: 0.4,
+        ),
+      ),
+    );
+  }
+}
+
+class _ActionPill extends StatelessWidget {
+  const _ActionPill({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.isPrimary = false,
+    this.isDestructive = false,
+    this.isLoading = false,
+    this.isDisabled = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final bool isPrimary;
+  final bool isDestructive;
+  final bool isLoading;
+  final bool isDisabled;
+
+  @override
+  Widget build(BuildContext context) {
+    final backgroundColor = isPrimary
+        ? AppColors.primary
+        : isDestructive
+        ? AppColors.error.withValues(alpha: 0.08)
+        : AppColors.surfaceContainerLow;
+    final foregroundColor = isPrimary
+        ? AppColors.onPrimary
+        : isDestructive
+        ? AppColors.error
+        : AppColors.onSurface;
+    final borderColor = isPrimary
+        ? AppColors.primary
+        : isDestructive
+        ? AppColors.error.withValues(alpha: 0.18)
+        : AppColors.outlineVariant;
+    final disabled = isDisabled || isLoading;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: disabled ? null : onTap,
+        borderRadius: BorderRadius.circular(999),
+        child: Ink(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSizes.space12,
+            vertical: AppSizes.space10,
+          ),
+          decoration: BoxDecoration(
+            color: disabled
+                ? backgroundColor.withValues(alpha: 0.55)
+                : backgroundColor,
+            borderRadius: AppSizes.borderRadiusFull,
+            border: Border.all(
+              color: disabled
+                  ? borderColor.withValues(alpha: 0.55)
+                  : borderColor,
             ),
           ),
-          if (isIncoming) ...[
-            IconButton(
-              icon: Icon(Icons.check_circle, color: AppColors.primary),
-              onPressed: onAccept,
-            ),
-            IconButton(
-              icon: Icon(Icons.cancel, color: AppColors.error),
-              onPressed: onDecline,
-            ),
-          ] else
-            IconButton(
-              icon: Icon(Icons.cancel_outlined, color: AppColors.outline),
-              onPressed: onCancel,
-            ),
-        ],
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (isLoading)
+                SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(foregroundColor),
+                  ),
+                )
+              else
+                Icon(
+                  icon,
+                  size: 16,
+                  color: disabled
+                      ? foregroundColor.withValues(alpha: 0.7)
+                      : foregroundColor,
+                ),
+              const SizedBox(width: AppSizes.space6),
+              Text(
+                label,
+                style: TextStyle(
+                  color: disabled
+                      ? foregroundColor.withValues(alpha: 0.7)
+                      : foregroundColor,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

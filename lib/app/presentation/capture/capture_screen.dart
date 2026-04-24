@@ -8,6 +8,7 @@ import 'package:done_drop/app/presentation/capture/moment_controller.dart';
 import 'package:done_drop/app/routes/app_routes.dart';
 import 'package:done_drop/core/services/analytics_service.dart';
 import 'package:done_drop/core/services/capture_camera_service.dart';
+import 'package:done_drop/core/services/capture_recovery_service.dart';
 import 'package:done_drop/core/theme/theme.dart';
 import 'package:done_drop/l10n/l10n.dart';
 
@@ -20,9 +21,12 @@ class CaptureScreen extends StatefulWidget {
 
 class _CaptureScreenState extends State<CaptureScreen>
     with WidgetsBindingObserver {
+  static const String _inlineCaptureRejectedReason = 'inline_capture_rejected';
+
   final _picker = image_picker.ImagePicker();
   final _momentController = Get.find<MomentController>();
   final _cameraService = Get.find<CaptureCameraService>();
+  final _captureRecovery = Get.find<CaptureRecoveryService>();
 
   CameraController? _cameraController;
   CameraLensDirection _lensDirection = CameraLensDirection.back;
@@ -128,18 +132,34 @@ class _CaptureScreenState extends State<CaptureScreen>
       final image = await controller.takePicture();
       if (!mounted) return;
 
-      await AnalyticsService.instance.photoSelected('camera');
-      _momentController.attachImage(image.path);
-      await _disposeCamera();
+      final validation = await _cameraService.validateCaptureFile(image.path);
       if (!mounted) return;
-      await Get.toNamed(
-        AppRoutes.preview,
-        arguments: {'imagePath': image.path},
-      );
-      if (mounted) {
-        setState(() => _isCapturing = false);
-        await _warmAndInitializeCamera();
+
+      if (!validation.isUsable) {
+        debugPrint(
+          '[CaptureScreen] Rejecting inline capture: '
+          '${validation.reason} '
+          '(avg=${validation.averageLuminance.toStringAsFixed(2)}, '
+          'dark=${validation.darkPixelRatio.toStringAsFixed(3)}, '
+          'std=${validation.luminanceStdDev.toStringAsFixed(2)})',
+        );
+
+        await _disposeCamera();
+        if (!mounted) return;
+        setState(() {
+          _isCapturing = false;
+          _cameraError = _inlineCaptureRejectedReason;
+        });
+        return;
       }
+
+      await _openPreviewWithImage(
+        image.path,
+        source: 'camera',
+        clearBusyState: () => setState(() => _isCapturing = false),
+        disposeCurrentCameraBeforePreview: true,
+        reinitializeInlineCameraAfterReturn: true,
+      );
     } catch (error) {
       if (!mounted) return;
       setState(() => _isCapturing = false);
@@ -156,6 +176,11 @@ class _CaptureScreenState extends State<CaptureScreen>
     setState(() => _isPickingGallery = true);
 
     try {
+      await _captureRecovery.stageCaptureSession(
+        activityId: _momentController.activityId,
+        activityInstanceId: _momentController.activityInstanceId,
+        completionLogId: _momentController.completionLogId,
+      );
       final image = await _picker.pickImage(
         source: image_picker.ImageSource.gallery,
         imageQuality: 82,
@@ -165,35 +190,48 @@ class _CaptureScreenState extends State<CaptureScreen>
 
       if (!mounted) return;
       if (image == null) {
+        await _captureRecovery.clearPendingCaptureSession();
         setState(() => _isPickingGallery = false);
         return;
       }
 
-      await AnalyticsService.instance.photoSelected('gallery');
-      _momentController.attachImage(image.path);
-      await Get.toNamed(
-        AppRoutes.preview,
-        arguments: {'imagePath': image.path},
+      await _openPreviewWithImage(
+        image.path,
+        source: 'gallery',
+        clearBusyState: () => setState(() => _isPickingGallery = false),
+        disposeCurrentCameraBeforePreview: false,
+        reinitializeInlineCameraAfterReturn: false,
       );
-      if (mounted) {
-        setState(() => _isPickingGallery = false);
-      }
     } catch (_) {
       if (!mounted) return;
+      await _captureRecovery.clearPendingCaptureSession();
       setState(() => _isPickingGallery = false);
       Get.snackbar(
-        context.l10n.captureUnavailableTitle,
-        context.l10n.captureUnavailableMessage,
+        currentL10n.captureUnavailableTitle,
+        currentL10n.captureUnavailableMessage,
         snackPosition: SnackPosition.BOTTOM,
       );
     }
   }
 
-  Future<void> _openSystemCameraFallback() async {
-    if (_isBusy) return;
-    setState(() => _isCapturing = true);
+  Future<bool> _openSystemCameraFallback({
+    bool force = false,
+    bool reinitializeInlineCameraAfterReturn = false,
+  }) async {
+    if (_isBusy && !force) return false;
+    if (!_isCapturing && mounted) {
+      setState(() => _isCapturing = true);
+    }
 
     try {
+      await _disposeCamera();
+      if (!mounted) return false;
+      await _captureRecovery.stageCaptureSession(
+        activityId: _momentController.activityId,
+        activityInstanceId: _momentController.activityInstanceId,
+        completionLogId: _momentController.completionLogId,
+      );
+
       final image = await _picker.pickImage(
         source: image_picker.ImageSource.camera,
         imageQuality: 82,
@@ -201,29 +239,57 @@ class _CaptureScreenState extends State<CaptureScreen>
         maxHeight: 1280,
       );
 
-      if (!mounted) return;
+      if (!mounted) return false;
       if (image == null) {
+        await _captureRecovery.clearPendingCaptureSession();
         setState(() => _isCapturing = false);
-        return;
+        return false;
       }
 
-      await AnalyticsService.instance.photoSelected('camera');
-      _momentController.attachImage(image.path);
-      await Get.toNamed(
-        AppRoutes.preview,
-        arguments: {'imagePath': image.path},
+      await _openPreviewWithImage(
+        image.path,
+        source: 'system_camera',
+        clearBusyState: () => setState(() => _isCapturing = false),
+        disposeCurrentCameraBeforePreview: false,
+        reinitializeInlineCameraAfterReturn:
+            reinitializeInlineCameraAfterReturn,
       );
-      if (mounted) {
-        setState(() => _isCapturing = false);
-      }
+      return true;
     } catch (_) {
-      if (!mounted) return;
+      if (!mounted) return false;
+      await _captureRecovery.clearPendingCaptureSession();
       setState(() => _isCapturing = false);
       Get.snackbar(
-        context.l10n.captureUnavailableTitle,
-        context.l10n.captureUnavailableMessage,
+        currentL10n.captureUnavailableTitle,
+        currentL10n.captureUnavailableMessage,
         snackPosition: SnackPosition.BOTTOM,
       );
+      return false;
+    }
+  }
+
+  Future<void> _openPreviewWithImage(
+    String imagePath, {
+    required String source,
+    required VoidCallback clearBusyState,
+    required bool disposeCurrentCameraBeforePreview,
+    required bool reinitializeInlineCameraAfterReturn,
+  }) async {
+    await _captureRecovery.clearPendingCaptureSession();
+    await AnalyticsService.instance.photoSelected(source);
+    _momentController.attachImage(imagePath);
+
+    if (disposeCurrentCameraBeforePreview) {
+      await _disposeCamera();
+      if (!mounted) return;
+    }
+
+    await Get.toNamed(AppRoutes.preview, arguments: {'imagePath': imagePath});
+    if (!mounted) return;
+
+    clearBusyState();
+    if (reinitializeInlineCameraAfterReturn) {
+      await _warmAndInitializeCamera();
     }
   }
 
@@ -301,7 +367,9 @@ class _CaptureScreenState extends State<CaptureScreen>
     if (_cameraError != null) {
       return _CameraFallbackState(
         title: l10n.captureUnavailableTitle,
-        message: l10n.captureUnavailableMessage,
+        message: _cameraError == _inlineCaptureRejectedReason
+            ? l10n.captureFallbackToSystemCameraMessage
+            : l10n.captureUnavailableMessage,
         onOpenSystemCamera: _openSystemCameraFallback,
         onOpenGallery: _showGalleryAction ? _pickFromGallery : null,
       );

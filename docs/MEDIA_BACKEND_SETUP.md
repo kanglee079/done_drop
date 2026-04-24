@@ -51,11 +51,14 @@ moments/{userId}/{momentId}/original_280x420.jpg
 
 ## App Check
 
-App Check is already activated in code.
+App Check is opt-in for release builds until the Firebase App Check API and
+provider setup are confirmed in Firebase/Google Cloud Console.
 
-- Debug Android uses the debug provider.
+Build with `--dart-define=DD_ENABLE_APP_CHECK=true` after setup is complete:
+
+- Debug Android uses the debug provider when `DD_ENABLE_DEBUG_APP_CHECK=true`.
 - Release Android uses Play Integrity.
-- Debug Apple uses the debug provider.
+- Debug Apple uses the debug provider when `DD_ENABLE_DEBUG_APP_CHECK=true`.
 - Release Apple uses App Attest with DeviceCheck fallback.
 
 If debug uploads fail after enabling App Check enforcement, register the debug token shown by Firebase in the console.

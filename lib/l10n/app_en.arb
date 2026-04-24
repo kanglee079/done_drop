@@ -62,6 +62,29 @@
   "passwordTooShort": "Password must be at least 6 characters",
   "confirmPasswordRequired": "Please confirm your password",
   "confirmPasswordMismatch": "Passwords do not match",
+  "authSigningInStatus": "Signing you in...",
+  "authLoadingProfileStatus": "Loading your account...",
+  "authCreatingAccountStatus": "Creating your account...",
+  "authPreparingProfileStatus": "Preparing your profile...",
+  "authPreparingAppStatus": "Preparing your app...",
+  "authProfileBootstrapError": "We couldn't finish preparing your account. Please try again.",
+  "authAccountNotFound": "No account found with this email address.",
+  "authWrongPassword": "Incorrect password. Please try again.",
+  "authEmailAlreadyInUse": "This email is already registered.",
+  "authAccountDisabled": "This account has been disabled.",
+  "authTooManyRequests": "Too many attempts. Please wait a bit and try again.",
+  "authNetworkError": "Network error. Check your connection and try again.",
+  "authInvalidCredentials": "Invalid credentials. Check your email and password.",
+  "authDifferentSignInMethod": "This email already uses a different sign-in method.",
+  "authProviderUnavailable": "This sign-in method is not available right now.",
+  "authRecentLoginRequired": "Please verify your identity again before this action.",
+  "authGenericError": "Authentication failed. Please try again.",
+  "googleSignInCancelled": "Google sign-in was cancelled.",
+  "googleSignInNetworkError": "Google sign-in needs a stable internet connection.",
+  "googleSignInConfigError": "Google sign-in is not ready on this build yet. Please use email login for now.",
+  "googleSignInIosLimited": "Google sign-in is live on Android. On iPhone, use email login until Sign in with Apple is shipped for App Store compliance.",
+  "googleSignInTokenMissing": "Google sign-in completed without the required token. Please try again.",
+  "googleSignInFailed": "Google sign-in could not be completed. Please try again.",
   "todayGreeting": "Hi {name}",
   "@todayGreeting": {
     "placeholders": {
@@ -112,11 +135,41 @@
   "addAction": "Add",
   "addHabitTitle": "Add a habit",
   "addHabitSubtitle": "Keep it specific enough that you know exactly what “done” means.",
+  "editHabitTitle": "Edit habit",
+  "editHabitSubtitle": "Tighten the title, timing, or category so the standard stays clear.",
   "habitNameHint": "Habit name",
   "habitCategoryHint": "Category (optional)",
+  "habitNameRequiredError": "Give this habit a clear name before saving.",
   "habitTimeLabel": "Time",
   "pickTimeAction": "Pick time",
   "createHabitAction": "Create habit",
+  "habitCreatedMessage": "New habit added to your Today list.",
+  "habitUpdatedMessage": "Habit details updated.",
+  "habitCreateFailedMessage": "We couldn't create this habit. Please try again.",
+  "habitUpdateFailedMessage": "We couldn't save the updated habit. Please try again.",
+  "habitActionMenuTooltip": "Habit actions",
+  "archiveHabitTitle": "Archive habit",
+  "archiveHabitMessage": "Archive \"{name}\" and remove it from Today for now?",
+  "@archiveHabitMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "habitArchivedMessage": "Habit archived and removed from Today.",
+  "habitArchiveFailedMessage": "We couldn't archive this habit right now.",
+  "deleteHabitTitle": "Delete habit",
+  "deleteHabitMessage": "Delete \"{name}\" and remove its habit history from DoneDrop? Proof moments stay in your archive.",
+  "@deleteHabitMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "habitDeletedMessage": "Habit deleted.",
+  "habitDeleteFailedMessage": "We couldn't delete this habit right now.",
   "emptyTodayTitle": "Start with one standard.",
   "emptyTodaySubtitle": "Create the first habit you want to prove to yourself today.",
   "createFirstHabitAction": "Create first habit",
@@ -181,6 +234,7 @@
   "deleteAccountSubtitle": "Permanently delete your profile, habits, and moments",
   "deleteAccountRemovingSubtitle": "Removing your account data...",
   "signOutAction": "Sign out",
+  "retryAction": "Retry",
   "themeSettingsSnackbarTitle": "Theme settings",
   "themeSettingsSnackbarMessage": "Theme controls are currently following your system setting.",
   "setupTitle": "Set up your first 3 habits",
@@ -202,6 +256,8 @@
   "setupMiddayDefault": "Walk for 10 minutes",
   "setupEveningDefault": "Read 20 pages",
   "saveAction": "Save",
+  "editAction": "Edit",
+  "archiveAction": "Archive",
   "closeAction": "Close",
   "cancelAction": "Cancel",
   "continueAction": "Continue",
@@ -241,6 +297,14 @@
     }
   },
   "wallSectionSubtitle": "Every proof you kept, including the ones you shared.",
+  "wallSectionSubtitleWithCount": "{count, plural, =1{1 proof this month} other{{count} proofs this month}}",
+  "@wallSectionSubtitleWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "wallLeadFallback": "A kept promise from {date}",
   "@wallLeadFallback": {
     "placeholders": {
@@ -317,6 +381,7 @@
   "sentSectionLabel": "SENT",
   "friendRequestIncomingSubtitle": "Wants to be your friend",
   "friendRequestSentSubtitle": "Friend request sent",
+  "acceptingBuddyRequestStatus": "Accepting this buddy request…",
   "friendAddedTitle": "Friend added",
   "friendAddedMessage": "{name} is now your friend",
   "@friendAddedMessage": {
@@ -345,6 +410,7 @@
   "enterUsernameError": "Enter a username",
   "usernameTooShort": "Username must be at least 3 characters",
   "ownUsernameError": "That is your own username",
+  "ownAccountSearchError": "That is your own account",
   "friendCapReachedError": "You have reached the maximum of {limit} friends.",
   "@friendCapReachedError": {
     "placeholders": {
@@ -362,6 +428,15 @@
       }
     }
   },
+  "buddySearchIdNotFoundError": "No account found with that ID.",
+  "buddySearchEmailNotFoundError": "No account found with that email.",
+  "buddySearchUsernameNotFoundError": "No account found with that username.",
+  "buddySearchGenericError": "Couldn't search for a buddy right now. Please try again.",
+  "buddySearchTimeoutError": "Buddy search is taking too long. Please try again.",
+  "buddyRequestGenericError": "Couldn't send the buddy request right now. Please try again.",
+  "buddyRequestTimeoutError": "Sending the buddy request is taking too long. Please try again.",
+  "alreadyBuddyError": "You're already buddies with this user.",
+  "buddyRequestAlreadySentError": "This buddy request has already been sent.",
   "sendBuddyRequestPrompt": "Send a buddy request?",
   "sendBuddyRequestAction": "Send Buddy Request",
   "requestSentSuccessTitle": "Request Sent!",
@@ -376,10 +451,16 @@
   "addAnotherBuddyAction": "Add Another Buddy",
   "chatOpenAction": "Message",
   "chatScreenSubtitle": "Private conversation with this buddy.",
+  "chatConnectingTitle": "Connecting your conversation",
+  "chatConnectingSubtitle": "Loading the latest messages and syncing buddy status.",
+  "chatLoadFailedTitle": "This conversation couldn't load",
+  "chatLoadFailedSubtitle": "Check your connection and try loading the chat again.",
+  "chatConnectionTimeoutMessage": "The conversation is taking too long to load. Please try again.",
   "chatEmptyTitle": "Start the conversation",
   "chatEmptySubtitle": "Keep the accountability loop private and clear.",
   "chatInputHint": "Send a message...",
   "chatSendAction": "Send",
+  "chatSendFailedMessage": "Your message couldn't be sent right now. Please try again.",
   "profileFieldDisplayName": "DISPLAY NAME",
   "profileFieldBio": "BIO",
   "profileNameHint": "Your name",
@@ -495,6 +576,74 @@
   "premiumBenefitHighResBackupsDesc": "Lossless storage for every photo you treasure.",
   "premiumUnavailableAction": "Premium unavailable in this build",
   "premiumFooterNote": "Premium is intentionally hidden until store-compliant billing is implemented end to end.",
+  "billingStatusCheckingChip": "Checking store",
+  "billingStatusActiveChip": "Premium active",
+  "billingStatusLiveChip": "Store live",
+  "billingStatusIssueChip": "Needs setup",
+  "billingPremiumActiveTitle": "Premium is active",
+  "billingPremiumActiveSubtitle": "Your {plan} entitlement is active on this account.",
+  "@billingPremiumActiveSubtitle": {
+    "placeholders": {
+      "plan": {
+        "type": "String"
+      }
+    }
+  },
+  "billingCheckingSubtitle": "Checking store products and your current premium access.",
+  "billingCheckingRestoreMessage": "Checking your existing purchases from the store.",
+  "billingPremiumReadySubtitle": "Unlock unlimited buddies with monthly, yearly, or lifetime billing.",
+  "billingCatalogSetupNeededSubtitle": "The store catalog still needs the required premium product IDs.",
+  "billingStoreUnavailableTitle": "Store unavailable",
+  "billingStoreUnavailableSubtitle": "Store billing is unavailable on this device right now.",
+  "billingStoreUnavailableMessage": "DoneDrop couldn't connect to Google Play or the App Store on this device. Check the logged-in store account, tester access, and internal testing build.",
+  "billingRetryAction": "Retry",
+  "billingCatalogMissingTitle": "Store products missing",
+  "billingCatalogMissingMessage": "DoneDrop could not find these premium product IDs in the current store catalog: {ids}",
+  "@billingCatalogMissingMessage": {
+    "placeholders": {
+      "ids": {
+        "type": "String"
+      }
+    }
+  },
+  "billingWhatUnlocksTodaySubtitle": "Premium currently unlocks one real benefit today: removing the 5-buddy cap. Monthly, yearly, and lifetime all map to the same entitlement.",
+  "billingBenefitRestoreTitle": "Restore across devices",
+  "billingBenefitRestoreDesc": "Restore the same entitlement on another device signed into the same store account.",
+  "billingBenefitLifetimeTitle": "Lifetime unlock available",
+  "billingBenefitLifetimeDesc": "Choose a one-time purchase if you prefer no renewal cycle.",
+  "billingChoosePlanTitle": "Choose a plan",
+  "billingMonthlyPlanTitle": "Monthly",
+  "billingMonthlyPlanSubtitle": "Auto-renews every month until you cancel in the store.",
+  "billingYearlyPlanTitle": "Yearly",
+  "billingYearlyPlanSubtitle": "Auto-renews every year until you cancel in the store.",
+  "billingLifetimePlanTitle": "Lifetime",
+  "billingLifetimePlanSubtitle": "One-time purchase. No renewal.",
+  "billingChoosePlanAction": "Continue for {price}",
+  "@billingChoosePlanAction": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "billingSwitchPlanAction": "Switch for {price}",
+  "@billingSwitchPlanAction": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "billingOwnedAction": "Already unlocked",
+  "billingPendingAction": "Working...",
+  "billingManageAction": "Manage subscription",
+  "billingPurchaseQueuedMessage": "Complete the purchase in the store sheet to activate Premium.",
+  "billingPurchaseStartError": "The store did not open the purchase flow. Please try again.",
+  "billingRestoreSuccessTitle": "Premium restored",
+  "billingRestoreSuccessMessage": "Your store purchase is active on this account again.",
+  "billingRestorePendingMessage": "Restore was requested. If this store account already owns Premium, it should reappear shortly.",
+  "billingManageUnavailableMessage": "No active auto-renewing subscription is available to manage yet.",
+  "billingFooterDisclosure": "Subscriptions renew automatically until cancelled in the store. Lifetime is a one-time purchase. Product IDs in this build: dd_premium_monthly, dd_premium_yearly, dd_premium_lifetime.",
   "momentSavedTitle": "Moment saved",
   "savedForSyncTitle": "Saved for sync",
   "proofCapturedMessage": "Habit completed. Proof captured.",
@@ -505,6 +654,7 @@
   "authRequiredMessage": "You must be signed in",
   "captureUnavailableTitle": "Camera unavailable",
   "captureUnavailableMessage": "We couldn't open the proof camera. Please try again.",
+  "captureFallbackToSystemCameraMessage": "The captured photo did not come through correctly on this device. Open the system camera to retake it.",
   "captureSelectBuddyError": "Pick at least one buddy before sharing.",
   "timeJustNow": "Just now",
   "timeMinutesAgo": "{count}m ago",
@@ -700,7 +850,13 @@
   "shareCodeAction": "Share my code",
   "scanAction": "Scan code",
   "myCodeCopied": "Code copied to clipboard",
+  "yourUserId": "Your ID",
+  "scanAction": "Scan code",
   "invalidCodeError": "Invalid QR code",
+  "scanCodeInvalidSubtitle": "Only a valid DoneDrop QR invite or 6-character buddy code can be scanned.",
+  "scanCameraPermissionMessage": "Camera permission is off. Allow camera access to scan a buddy QR code.",
+  "scanCameraUnsupportedMessage": "This device doesn't support QR scanning for DoneDrop.",
+  "scanCameraFailedMessage": "DoneDrop couldn't open the scanner right now. Please try again.",
   "userNotFoundError": "User not found",
   "cantMessageSelfError": "You cannot message yourself",
   "onlyFriendsCanChatError": "You can only chat with friends",
