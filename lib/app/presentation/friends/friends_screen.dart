@@ -503,87 +503,94 @@ class _RequestTile extends StatelessWidget {
         final name = profile?.displayName ?? fallbackName;
         final avatarUrl = profile?.avatarUrl ?? request.senderAvatarUrl;
         final userCode = profile?.userCode?.trim() ?? '';
-        final isBusy = controller.isRequestBusy(request.id);
+        return Obx(() {
+          final isBusy = controller.isRequestBusy(request.id);
+          final isAccepting = controller.isAccepting(request.id);
+          final isDeclining = controller.isDeclining(request.id);
+          final isCancelling = controller.isCancelling(request.id);
 
-        return _ProfileCard(
-          name: name,
-          avatarUrl: avatarUrl,
-          subtitle: isIncoming
-              ? l10n.friendRequestIncomingSubtitle
-              : l10n.friendRequestSentSubtitle,
-          meta: userCode.isEmpty
-              ? null
-              : _MetaPill(label: userCode.toUpperCase()),
-          footer: Wrap(
-            spacing: AppSizes.space8,
-            runSpacing: AppSizes.space8,
-            children: [
-              if (isIncoming && controller.isAccepting(request.id))
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(AppSizes.space12),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryFixed,
-                    borderRadius: AppSizes.borderRadiusMd,
-                    border: Border.all(
-                      color: AppColors.primary.withValues(alpha: 0.14),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppColors.primary,
-                        ),
+          return _ProfileCard(
+            name: name,
+            avatarUrl: avatarUrl,
+            subtitle: isIncoming
+                ? l10n.friendRequestIncomingSubtitle
+                : l10n.friendRequestSentSubtitle,
+            meta: userCode.isEmpty
+                ? null
+                : _MetaPill(label: userCode.toUpperCase()),
+            footer: Wrap(
+              spacing: AppSizes.space8,
+              runSpacing: AppSizes.space8,
+              children: [
+                if (isIncoming && isAccepting)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(AppSizes.space12),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryFixed,
+                      borderRadius: AppSizes.borderRadiusMd,
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.14),
                       ),
-                      const SizedBox(width: AppSizes.space10),
-                      Expanded(
-                        child: Text(
-                          l10n.acceptingBuddyRequestStatus,
-                          style: AppTypography.labelLarge(
+                    ),
+                    child: Row(
+                      children: [
+                        const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
                             color: AppColors.primary,
                           ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: AppSizes.space10),
+                        Expanded(
+                          child: Text(
+                            l10n.acceptingBuddyRequestStatus,
+                            style: AppTypography.labelLarge(
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else if (isIncoming) ...[
+                  _ActionPill(
+                    icon: Icons.check_rounded,
+                    label: l10n.addFriendAction,
+                    isPrimary: true,
+                    isLoading: isAccepting,
+                    isDisabled: isBusy,
+                    onTap: () async {
+                      final tabController = DefaultTabController.maybeOf(
+                        context,
+                      );
+                      final accepted = await controller.acceptRequest(request);
+                      if (!accepted) return;
+                      tabController?.animateTo(0);
+                    },
                   ),
-                )
-              else if (isIncoming) ...[
-                _ActionPill(
-                  icon: Icons.check_rounded,
-                  label: l10n.addFriendAction,
-                  isPrimary: true,
-                  isLoading: controller.isAccepting(request.id),
-                  isDisabled: isBusy,
-                  onTap: () async {
-                    final tabController = DefaultTabController.maybeOf(context);
-                    final accepted = await controller.acceptRequest(request);
-                    if (!accepted) return;
-                    tabController?.animateTo(0);
-                  },
-                ),
-                _ActionPill(
-                  icon: Icons.close_rounded,
-                  label: l10n.declineRequestTitle,
-                  isDestructive: true,
-                  isLoading: controller.isDeclining(request.id),
-                  isDisabled: isBusy,
-                  onTap: () => controller.declineRequest(request),
-                ),
-              ] else
-                _ActionPill(
-                  icon: Icons.close_rounded,
-                  label: l10n.cancelAction,
-                  isLoading: controller.isCancelling(request.id),
-                  isDisabled: isBusy,
-                  onTap: () => controller.cancelRequest(request),
-                ),
-            ],
-          ),
-        );
+                  _ActionPill(
+                    icon: Icons.close_rounded,
+                    label: l10n.declineRequestTitle,
+                    isDestructive: true,
+                    isLoading: isDeclining,
+                    isDisabled: isBusy,
+                    onTap: () => controller.declineRequest(request),
+                  ),
+                ] else
+                  _ActionPill(
+                    icon: Icons.close_rounded,
+                    label: l10n.cancelAction,
+                    isLoading: isCancelling,
+                    isDisabled: isBusy,
+                    onTap: () => controller.cancelRequest(request),
+                  ),
+              ],
+            ),
+          );
+        });
       },
     );
   }

@@ -168,7 +168,13 @@ class MomentRepository {
 
     return _col
         .where('ownerId', whereIn: effectiveOwnerIds)
-        .where('visibility', isEqualTo: AppConstants.visibilityAllFriends)
+        .where(
+          'visibility',
+          whereIn: const [
+            AppConstants.visibilityAllFriends,
+            AppConstants.visibilitySelectedFriends,
+          ],
+        )
         .where('isDeleted', isEqualTo: false)
         .orderBy('createdAt', descending: true)
         .limit(limit)
