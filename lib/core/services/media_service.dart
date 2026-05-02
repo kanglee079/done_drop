@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -209,6 +210,10 @@ class MediaService {
   static const int _thumbQuality = 56;
   static const int _maxAvatarSizeBytes = 5 * 1024 * 1024; // 5MB
   static const int _maxMomentSizeBytes = 10 * 1024 * 1024; // 10MB
+  static const String _mediaBackendBaseUrl = String.fromEnvironment(
+    'DD_MEDIA_BACKEND_URL',
+    defaultValue: '',
+  );
   static const bool _useServerGeneratedThumbnails = bool.fromEnvironment(
     'DD_USE_SERVER_THUMBNAILS',
     defaultValue: false,
@@ -219,6 +224,7 @@ class MediaService {
   static const int _generatedThumbnailMaxAttempts = 6;
 
   bool get usesServerGeneratedThumbnails => _useServerGeneratedThumbnails;
+  bool get usesExternalMediaBackend => _mediaBackendBaseUrl.trim().isNotEmpty;
 
   void warmMomentUpload(String localFilePath) {
     if (localFilePath.isEmpty) return;
@@ -319,6 +325,10 @@ class MediaService {
     Uint8List bytes, {
     required String mimeType,
   }) async {
+    if (usesExternalMediaBackend) {
+      return _uploadBytesToMediaBackend(path, bytes, mimeType: mimeType);
+    }
+
     final ref = _storage.ref().child(path);
 
     final metadata = SettableMetadata(
@@ -335,6 +345,64 @@ class MediaService {
       downloadUrl: downloadUrl,
       bytesUploaded: bytes.length,
     );
+  }
+
+  Future<_MediaUploadResult> _uploadBytesToMediaBackend(
+    String path,
+    Uint8List bytes, {
+    required String mimeType,
+  }) async {
+    final baseUrl = _mediaBackendBaseUrl.trim().replaceAll(RegExp(r'/$'), '');
+    final encodedPath = path.split('/').map(Uri.encodeComponent).join('/');
+    final uri = Uri.parse('$baseUrl/upload/$encodedPath');
+    final client = HttpClient();
+
+    try {
+      final request = await client.putUrl(uri);
+      request.headers.set(HttpHeaders.contentTypeHeader, mimeType);
+      request.headers.set(HttpHeaders.contentLengthHeader, bytes.length);
+      request.add(bytes);
+
+      final response = await request.close();
+      final responseBody = await utf8.decodeStream(response);
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw MediaUploadException(
+          'Media backend upload failed (${response.statusCode}): $responseBody',
+        );
+      }
+
+      final json = jsonDecode(responseBody) as Map<String, dynamic>;
+      return _MediaUploadResult(
+        storagePath: json['storagePath'] as String? ?? path,
+        downloadUrl: json['downloadUrl'] as String? ?? '',
+        bytesUploaded: bytes.length,
+      );
+    } finally {
+      client.close(force: true);
+    }
+  }
+
+  Future<void> _deleteFromMediaBackend(String path) async {
+    final baseUrl = _mediaBackendBaseUrl.trim().replaceAll(RegExp(r'/$'), '');
+    final encodedPath = path.split('/').map(Uri.encodeComponent).join('/');
+    final uri = Uri.parse('$baseUrl/file/$encodedPath');
+    final client = HttpClient();
+
+    try {
+      final request = await client.deleteUrl(uri);
+      final response = await request.close();
+      if (response.statusCode == 404) {
+        return;
+      }
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        final responseBody = await utf8.decodeStream(response);
+        throw MediaUploadException(
+          'Media backend delete failed (${response.statusCode}): $responseBody',
+        );
+      }
+    } finally {
+      client.close(force: true);
+    }
   }
 
   // ── Avatar ───────────────────────────────────────────────────────────────
@@ -374,6 +442,10 @@ class MediaService {
   /// Delete avatar from Storage.
   Future<void> deleteAvatar(String userId) async {
     try {
+      if (usesExternalMediaBackend) {
+        await _deleteFromMediaBackend('avatars/$userId/avatar.jpg');
+        return;
+      }
       await _storage.ref().child('avatars/$userId/avatar.jpg').delete();
     } catch (_) {}
   }
@@ -587,6 +659,20 @@ class MediaService {
 
   /// Delete all images for a moment.
   Future<void> deleteMomentImages(String userId, String momentId) async {
+    if (usesExternalMediaBackend) {
+      final paths = [
+        'moments/$userId/$momentId/original.jpg',
+        'moments/$userId/$momentId/thumb.jpg',
+        _generatedThumbnailPath('moments/$userId/$momentId/original.jpg'),
+      ];
+      for (final path in paths) {
+        try {
+          await _deleteFromMediaBackend(path);
+        } catch (_) {}
+      }
+      return;
+    }
+
     try {
       await _storage
           .ref()
@@ -679,9 +765,8 @@ class MediaService {
   Future<_PreparedOriginalImage> _prepareOriginalMomentImage(
     String localFilePath,
   ) async {
-    final nativePrepared = await _prepareOriginalMomentImageWithNativeCompression(
-      localFilePath,
-    );
+    final nativePrepared =
+        await _prepareOriginalMomentImageWithNativeCompression(localFilePath);
     if (nativePrepared != null) {
       return nativePrepared;
     }
@@ -774,9 +859,8 @@ class MediaService {
     }
   }
 
-  Future<_PreparedOriginalImage?> _prepareOriginalMomentImageWithNativeCompression(
-    String localFilePath,
-  ) async {
+  Future<_PreparedOriginalImage?>
+  _prepareOriginalMomentImageWithNativeCompression(String localFilePath) async {
     if (!(Platform.isAndroid || Platform.isIOS || Platform.isMacOS)) {
       return null;
     }

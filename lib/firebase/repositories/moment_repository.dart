@@ -4,6 +4,7 @@ import 'package:done_drop/core/constants/app_constants.dart';
 import 'package:done_drop/core/models/models.dart';
 import 'package:done_drop/core/models/feed_delivery.dart';
 import 'package:done_drop/core/services/feed_delivery_planner.dart';
+import 'package:done_drop/core/services/media_service.dart';
 
 /// DoneDrop Firestore Repository — Moment operations
 class MomentRepository {
@@ -61,6 +62,11 @@ class MomentRepository {
 
   /// Delete Storage files for a moment (original + thumbnail).
   Future<void> deleteMomentStorage(String ownerId, String momentId) async {
+    if (MediaService.instance.usesExternalMediaBackend) {
+      await MediaService.instance.deleteMomentImages(ownerId, momentId);
+      return;
+    }
+
     try {
       await FirebaseStorage.instance
           .ref()

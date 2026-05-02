@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: done-drop-media-backend
+    runtime: docker
+    dockerfilePath: ./Dockerfile.media-backend
+    autoDeploy: true
+    healthCheckPath: /health
+    envVars:
+      - key: DD_MEDIA_BACKEND_ROOT
+        value: /data
+      - key: DD_MEDIA_BACKEND_MAX_UPLOAD_BYTES
+        value: "15728640"
+    disk:
+      name: media-data
+      mountPath: /data
+      sizeGB: 5
