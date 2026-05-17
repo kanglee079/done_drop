@@ -74,16 +74,21 @@ flutter run -d QV7034R71H -t lib/main.dart --debug --no-resident
 ## Create IAP Products Manually (if needed)
 
 1. Play Console → **Monetize** → **Products** → **Subscriptions**
-2. Create `dd_premium_monthly`:
+2. Create `dd_premium_week`:
+   - Product ID: `dd_premium_week`
+   - Billing type: Subscription
+   - Billing period: Weekly
+   - Price: Set in Play Console
+3. Create `dd_premium_monthly`:
    - Product ID: `dd_premium_monthly`
    - Billing type: Subscription
    - Billing period: Monthly
    - Price: $1.99 USD
-3. Create `dd_premium_yearly`:
+4. Create `dd_premium_yearly`:
    - Product ID: `dd_premium_yearly`
    - Billing period: Annual
    - Price: $9.99 USD
-4. **Products** → **In-app products** → Create `dd_premium_lifetime`:
+5. **Products** → **In-app products** → Create `dd_premium_lifetime`:
    - Product ID: `dd_premium_lifetime`
    - Price: $29.99 USD
 

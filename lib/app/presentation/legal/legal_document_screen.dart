@@ -204,7 +204,7 @@ class LegalDocumentScreen extends StatelessWidget {
                   _LegalSectionContent(
                     heading: 'Thanh toán và Premium',
                     body:
-                        'Mọi gói premium trong tương lai sẽ tuân theo mức giá, chu kỳ thanh toán, điều khoản gia hạn và cách huỷ được hiển thị tại thời điểm mua qua cửa hàng ứng dụng tương ứng.',
+                        'Premium mở khoá quyền lợi trong ứng dụng như giới hạn buddy cao hơn. Giá, chu kỳ thanh toán, điều khoản tự gia hạn, lifetime và cách huỷ sẽ được hiển thị tại thời điểm mua qua cửa hàng ứng dụng tương ứng.',
                   ),
                   _LegalSectionContent(
                     heading: 'Chấm dứt',
@@ -231,7 +231,7 @@ class LegalDocumentScreen extends StatelessWidget {
                   _LegalSectionContent(
                     heading: 'Billing and Premium',
                     body:
-                        'Any future premium subscription will be governed by the pricing, billing cycle, renewal terms, and cancellation options shown at purchase time through the applicable app store.',
+                        'Premium unlocks in-app benefits such as a higher buddy limit. Pricing, billing cycle, renewal terms, lifetime purchase terms, and cancellation options are shown at purchase time through the applicable app store.',
                   ),
                   _LegalSectionContent(
                     heading: 'Termination',

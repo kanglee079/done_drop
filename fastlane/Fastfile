@@ -22,13 +22,30 @@ platform :android do
       skip_upload_images: true,
       skip_upload_screenshots: true,
       skip_metadata: true,
-      version_name: ENV["VERSION_NAME"] || "1.0.0",
-      version_code: ENV["VERSION_CODE"] || "1"
+      version_name: ENV["VERSION_NAME"] || "1.0.2",
+      version_code: ENV["VERSION_CODE"] || "3"
     )
   end
 
   desc "Create IAP products (subscriptions + one-time)"
   lane :create_products do
+    # Weekly subscription
+    create_in_app_product(
+      package_name: "com.donedrop.app",
+      product_id: "dd_premium_week",
+      product_type: "subscription",
+      default_price: "0.99",
+      prices: {
+        "US" => { "price" => 0.99, "currency" => "USD" },
+        "VN" => { "price" => 25000, "currency" => "VND" },
+      },
+      subscription_period: "P1W",
+      subscription_free_trial_period: "P0D",
+      metadata: {
+        en_US: { title: "Premium Weekly", description: "Unlock unlimited buddies and premium features for $0.99/week" }
+      }
+    )
+
     # Monthly subscription
     create_in_app_product(
       package_name: "com.donedrop.app",
@@ -108,7 +125,7 @@ platform :android do
       skip_images: true,
       skip_screenshots: true,
       skip_metadata: true,
-      version_codes_to_retain: [ENV["VERSION_CODE"] || "1"]
+      version_codes_to_retain: [ENV["VERSION_CODE"] || "3"]
     )
   end
 end

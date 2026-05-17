@@ -26,6 +26,7 @@ class PremiumController extends GetxController {
   }
 
   String planLabel(PremiumProductKind? kind) => switch (kind) {
+    PremiumProductKind.weekly => currentL10n.billingWeeklyPlanTitle,
     PremiumProductKind.monthly => currentL10n.billingMonthlyPlanTitle,
     PremiumProductKind.yearly => currentL10n.billingYearlyPlanTitle,
     PremiumProductKind.lifetime => currentL10n.billingLifetimePlanTitle,

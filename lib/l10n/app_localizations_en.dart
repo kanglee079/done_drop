@@ -1448,7 +1448,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get billingPremiumReadySubtitle =>
-      'Unlock unlimited buddies with monthly, yearly, or lifetime billing.';
+      'Unlock unlimited buddies with weekly, monthly, yearly, or lifetime billing.';
 
   @override
   String get billingCatalogSetupNeededSubtitle =>
@@ -1478,7 +1478,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get billingWhatUnlocksTodaySubtitle =>
-      'Premium currently unlocks one real benefit today: removing the 5-buddy cap. Monthly, yearly, and lifetime all map to the same entitlement.';
+      'Premium currently unlocks one real benefit today: removing the 5-buddy cap. Weekly, monthly, yearly, and lifetime all map to the same entitlement.';
 
   @override
   String get billingBenefitRestoreTitle => 'Restore across devices';
@@ -1496,6 +1496,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get billingChoosePlanTitle => 'Choose a plan';
+
+  @override
+  String get billingWeeklyPlanTitle => 'Weekly';
+
+  @override
+  String get billingWeeklyPlanSubtitle =>
+      'Auto-renews every week until you cancel in the store.';
 
   @override
   String get billingMonthlyPlanTitle => 'Monthly';
@@ -1561,7 +1568,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get billingFooterDisclosure =>
-      'Subscriptions renew automatically until cancelled in the store. Lifetime is a one-time purchase. Product IDs in this build: dd_premium_monthly, dd_premium_yearly, dd_premium_lifetime.';
+      'Subscriptions renew automatically until cancelled in the store. Lifetime is a one-time purchase. Product IDs in this build: dd_premium_week, dd_premium_monthly, dd_premium_yearly, dd_premium_lifetime.';
 
   @override
   String get momentSavedTitle => 'Moment saved';

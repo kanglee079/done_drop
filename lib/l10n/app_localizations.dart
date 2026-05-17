@@ -2687,7 +2687,7 @@ abstract class AppLocalizations {
   /// No description provided for @billingPremiumReadySubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Unlock unlimited buddies with monthly, yearly, or lifetime billing.'**
+  /// **'Unlock unlimited buddies with weekly, monthly, yearly, or lifetime billing.'**
   String get billingPremiumReadySubtitle;
 
   /// No description provided for @billingCatalogSetupNeededSubtitle.
@@ -2735,7 +2735,7 @@ abstract class AppLocalizations {
   /// No description provided for @billingWhatUnlocksTodaySubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Premium currently unlocks one real benefit today: removing the 5-buddy cap. Monthly, yearly, and lifetime all map to the same entitlement.'**
+  /// **'Premium currently unlocks one real benefit today: removing the 5-buddy cap. Weekly, monthly, yearly, and lifetime all map to the same entitlement.'**
   String get billingWhatUnlocksTodaySubtitle;
 
   /// No description provided for @billingBenefitRestoreTitle.
@@ -2767,6 +2767,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose a plan'**
   String get billingChoosePlanTitle;
+
+  /// No description provided for @billingWeeklyPlanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get billingWeeklyPlanTitle;
+
+  /// No description provided for @billingWeeklyPlanSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-renews every week until you cancel in the store.'**
+  String get billingWeeklyPlanSubtitle;
 
   /// No description provided for @billingMonthlyPlanTitle.
   ///
@@ -2873,7 +2885,7 @@ abstract class AppLocalizations {
   /// No description provided for @billingFooterDisclosure.
   ///
   /// In en, this message translates to:
-  /// **'Subscriptions renew automatically until cancelled in the store. Lifetime is a one-time purchase. Product IDs in this build: dd_premium_monthly, dd_premium_yearly, dd_premium_lifetime.'**
+  /// **'Subscriptions renew automatically until cancelled in the store. Lifetime is a one-time purchase. Product IDs in this build: dd_premium_week, dd_premium_monthly, dd_premium_yearly, dd_premium_lifetime.'**
   String get billingFooterDisclosure;
 
   /// No description provided for @momentSavedTitle.

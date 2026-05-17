@@ -84,12 +84,13 @@ Complete in Play Console:
 Products expected by app:
 
 - `dd_premium_monthly` (subscription)
+- `dd_premium_week` (subscription)
 - `dd_premium_yearly` (subscription)
 - `dd_premium_lifetime` (one-time)
 
 Before production billing:
 
-1. Create/activate all 3 products in Play Console
+1. Create/activate all 4 products in Play Console
 2. Add license testers
 3. Install app from Play test track (not local debug install) and run purchase/restore tests end-to-end
 

@@ -64,9 +64,7 @@ class SettingsController extends GetxController {
       return currentL10n.billingCheckingSubtitle;
     }
     if (hasPremiumAccess) {
-      return currentL10n.billingPremiumActiveSubtitle(
-        _activePlanLabel(),
-      );
+      return currentL10n.billingPremiumActiveSubtitle(_activePlanLabel());
     }
     if (isStoreBillingReady) {
       return currentL10n.billingPremiumReadySubtitle;
@@ -137,6 +135,7 @@ class SettingsController extends GetxController {
   }
 
   String _activePlanLabel() => switch (_billing.activeKind) {
+    PremiumProductKind.weekly => currentL10n.billingWeeklyPlanTitle,
     PremiumProductKind.monthly => currentL10n.billingMonthlyPlanTitle,
     PremiumProductKind.yearly => currentL10n.billingYearlyPlanTitle,
     PremiumProductKind.lifetime => currentL10n.billingLifetimePlanTitle,

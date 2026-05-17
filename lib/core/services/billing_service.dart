@@ -19,6 +19,10 @@ const String _sharedMonthlyProductId = String.fromEnvironment(
   'DD_IAP_PREMIUM_MONTHLY',
   defaultValue: 'dd_premium_monthly',
 );
+const String _sharedWeeklyProductId = String.fromEnvironment(
+  'DD_IAP_PREMIUM_WEEKLY',
+  defaultValue: 'dd_premium_week',
+);
 const String _sharedYearlyProductId = String.fromEnvironment(
   'DD_IAP_PREMIUM_YEARLY',
   defaultValue: 'dd_premium_yearly',
@@ -30,6 +34,10 @@ const String _sharedLifetimeProductId = String.fromEnvironment(
 const String _androidMonthlyProductId = String.fromEnvironment(
   'DD_IAP_ANDROID_PREMIUM_MONTHLY',
   defaultValue: _sharedMonthlyProductId,
+);
+const String _androidWeeklyProductId = String.fromEnvironment(
+  'DD_IAP_ANDROID_PREMIUM_WEEKLY',
+  defaultValue: _sharedWeeklyProductId,
 );
 const String _androidYearlyProductId = String.fromEnvironment(
   'DD_IAP_ANDROID_PREMIUM_YEARLY',
@@ -43,6 +51,10 @@ const String _iosMonthlyProductId = String.fromEnvironment(
   'DD_IAP_IOS_PREMIUM_MONTHLY',
   defaultValue: _sharedMonthlyProductId,
 );
+const String _iosWeeklyProductId = String.fromEnvironment(
+  'DD_IAP_IOS_PREMIUM_WEEKLY',
+  defaultValue: _sharedWeeklyProductId,
+);
 const String _iosYearlyProductId = String.fromEnvironment(
   'DD_IAP_IOS_PREMIUM_YEARLY',
   defaultValue: _sharedYearlyProductId,
@@ -52,13 +64,10 @@ const String _iosLifetimeProductId = String.fromEnvironment(
   defaultValue: _sharedLifetimeProductId,
 );
 
-enum PremiumProductKind { monthly, yearly, lifetime }
+enum PremiumProductKind { weekly, monthly, yearly, lifetime }
 
 class BillingOffer {
-  const BillingOffer({
-    required this.kind,
-    required this.productDetails,
-  });
+  const BillingOffer({required this.kind, required this.productDetails});
 
   final PremiumProductKind kind;
   final ProductDetails productDetails;
@@ -97,6 +106,7 @@ class BillingService extends GetxService {
 
   bool get hasCatalog => _offersByKind.isNotEmpty;
   bool get hasSubscriptionOffer =>
+      _offersByKind.containsKey(PremiumProductKind.weekly) ||
       _offersByKind.containsKey(PremiumProductKind.monthly) ||
       _offersByKind.containsKey(PremiumProductKind.yearly);
   bool get hasLifetimeOffer =>
@@ -126,13 +136,14 @@ class BillingService extends GetxService {
 
   ProductDetails? offerForKind(PremiumProductKind kind) => _offersByKind[kind];
 
-  PremiumProductKind? get activeKind => _kindForProductId(
-    _activeEntitlementProductId,
-  );
+  PremiumProductKind? get activeKind =>
+      _kindForProductId(_activeEntitlementProductId);
 
   String? get activeSubscriptionProductId {
     final kind = activeKind;
-    if (kind == PremiumProductKind.monthly || kind == PremiumProductKind.yearly) {
+    if (kind == PremiumProductKind.weekly ||
+        kind == PremiumProductKind.monthly ||
+        kind == PremiumProductKind.yearly) {
       return _activeEntitlementProductId;
     }
     return null;
@@ -143,6 +154,7 @@ class BillingService extends GetxService {
     if (ids.contains(_catalog.lifetime)) return _catalog.lifetime;
     if (ids.contains(_catalog.yearly)) return _catalog.yearly;
     if (ids.contains(_catalog.monthly)) return _catalog.monthly;
+    if (ids.contains(_catalog.weekly)) return _catalog.weekly;
     return null;
   }
 
@@ -172,9 +184,8 @@ class BillingService extends GetxService {
     );
 
     if (_isApplePlatform) {
-      final iosAddition =
-          _inAppPurchase
-              .getPlatformAddition<InAppPurchaseStoreKitPlatformAddition>();
+      final iosAddition = _inAppPurchase
+          .getPlatformAddition<InAppPurchaseStoreKitPlatformAddition>();
       await iosAddition.setDelegate(_BillingQueueDelegate());
     }
 
@@ -198,9 +209,7 @@ class BillingService extends GetxService {
       });
     }
 
-    await refreshCatalog(
-      triggerRestore: authController?.firebaseUser != null,
-    );
+    await refreshCatalog(triggerRestore: authController?.firebaseUser != null);
   }
 
   @override
@@ -208,9 +217,8 @@ class BillingService extends GetxService {
     _purchaseSubscription?.cancel();
     _authSubscription?.cancel();
     if (_isApplePlatform) {
-      final iosAddition =
-          _inAppPurchase
-              .getPlatformAddition<InAppPurchaseStoreKitPlatformAddition>();
+      final iosAddition = _inAppPurchase
+          .getPlatformAddition<InAppPurchaseStoreKitPlatformAddition>();
       unawaited(iosAddition.setDelegate(null));
     }
     super.onClose();
@@ -250,10 +258,7 @@ class BillingService extends GetxService {
       _offersByKind.assignAll(_resolveOfferMap(response.productDetails));
 
       if (response.error != null) {
-        _setError(
-          code: response.error!.code,
-          message: response.error!.message,
-        );
+        _setError(code: response.error!.code, message: response.error!.message);
       } else if (_offersByKind.isEmpty) {
         _setError(
           code: 'billing_products_not_found',
@@ -315,9 +320,8 @@ class BillingService extends GetxService {
 
     try {
       if (_isAndroid) {
-        final androidAddition =
-            _inAppPurchase
-                .getPlatformAddition<InAppPurchaseAndroidPlatformAddition>();
+        final androidAddition = _inAppPurchase
+            .getPlatformAddition<InAppPurchaseAndroidPlatformAddition>();
         final response = await androidAddition.queryPastPurchases(
           applicationUserName: userId,
         );
@@ -535,6 +539,7 @@ class BillingService extends GetxService {
 
   PremiumProductKind? _kindForProductId(String? productId) {
     if (productId == null || productId.isEmpty) return null;
+    if (productId == _catalog.weekly) return PremiumProductKind.weekly;
     if (productId == _catalog.monthly) return PremiumProductKind.monthly;
     if (productId == _catalog.yearly) return PremiumProductKind.yearly;
     if (productId == _catalog.lifetime) return PremiumProductKind.lifetime;
@@ -561,6 +566,7 @@ class BillingService extends GetxService {
 
 class _BillingCatalogIds {
   const _BillingCatalogIds({
+    required this.weekly,
     required this.monthly,
     required this.yearly,
     required this.lifetime,
@@ -569,6 +575,7 @@ class _BillingCatalogIds {
   factory _BillingCatalogIds.current() {
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
       return const _BillingCatalogIds(
+        weekly: _iosWeeklyProductId,
         monthly: _iosMonthlyProductId,
         yearly: _iosYearlyProductId,
         lifetime: _iosLifetimeProductId,
@@ -576,19 +583,22 @@ class _BillingCatalogIds {
     }
 
     return const _BillingCatalogIds(
+      weekly: _androidWeeklyProductId,
       monthly: _androidMonthlyProductId,
       yearly: _androidYearlyProductId,
       lifetime: _androidLifetimeProductId,
     );
   }
 
+  final String weekly;
   final String monthly;
   final String yearly;
   final String lifetime;
 
-  Set<String> get productIds => <String>{monthly, yearly, lifetime};
+  Set<String> get productIds => <String>{weekly, monthly, yearly, lifetime};
 
   String idFor(PremiumProductKind kind) => switch (kind) {
+    PremiumProductKind.weekly => weekly,
     PremiumProductKind.monthly => monthly,
     PremiumProductKind.yearly => yearly,
     PremiumProductKind.lifetime => lifetime,

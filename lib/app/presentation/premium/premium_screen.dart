@@ -43,8 +43,7 @@ class PremiumScreen extends StatelessWidget {
             final hasPremium = controller.hasPremiumAccess;
             final activeKind = billing.activeKind;
             final offers = billing.offers;
-            final hasCatalogIssue =
-                billing.missingProductIds.isNotEmpty || offers.isEmpty;
+            final hasCatalogIssue = offers.isEmpty;
 
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -84,8 +83,8 @@ class PremiumScreen extends StatelessWidget {
                   _StateCard(
                     icon: Icons.storefront_outlined,
                     title: l10n.billingStoreUnavailableTitle,
-                    message: billing.errorMessage.value?.trim().isNotEmpty ==
-                            true
+                    message:
+                        billing.errorMessage.value?.trim().isNotEmpty == true
                         ? billing.errorMessage.value!
                         : l10n.billingStoreUnavailableMessage,
                     primaryActionLabel: l10n.billingRetryAction,
@@ -194,6 +193,7 @@ class PremiumScreen extends StatelessWidget {
   String _subtitleForOffer(BuildContext context, PremiumProductKind kind) {
     final l10n = context.l10n;
     return switch (kind) {
+      PremiumProductKind.weekly => l10n.billingWeeklyPlanSubtitle,
       PremiumProductKind.monthly => l10n.billingMonthlyPlanSubtitle,
       PremiumProductKind.yearly => l10n.billingYearlyPlanSubtitle,
       PremiumProductKind.lifetime => l10n.billingLifetimePlanSubtitle,
@@ -226,9 +226,7 @@ class _TopBar extends StatelessWidget {
           ),
           child: Text(
             statusLabel,
-            style: AppTypography.labelMedium(
-              color: AppColors.onTertiaryFixed,
-            ),
+            style: AppTypography.labelMedium(color: AppColors.onTertiaryFixed),
           ),
         ),
       ],
@@ -255,7 +253,10 @@ class _InfoCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: AppTypography.titleMedium(color: AppColors.onSurface)),
+          Text(
+            title,
+            style: AppTypography.titleMedium(color: AppColors.onSurface),
+          ),
           const SizedBox(height: AppSizes.space8),
           Text(
             subtitle,
@@ -332,7 +333,10 @@ class _StateCard extends StatelessWidget {
         children: [
           Icon(icon, color: AppColors.primary, size: 24),
           const SizedBox(height: AppSizes.space12),
-          Text(title, style: AppTypography.titleMedium(color: AppColors.onSurface)),
+          Text(
+            title,
+            style: AppTypography.titleMedium(color: AppColors.onSurface),
+          ),
           const SizedBox(height: AppSizes.space8),
           Text(
             message,
@@ -487,9 +491,7 @@ class _OfferCard extends StatelessWidget {
             const SizedBox(height: AppSizes.space12),
             Text(
               details.description.trim(),
-              style: AppTypography.bodySmall(
-                color: AppColors.onSurfaceVariant,
-              ),
+              style: AppTypography.bodySmall(color: AppColors.onSurfaceVariant),
             ),
           ],
           const SizedBox(height: AppSizes.space16),

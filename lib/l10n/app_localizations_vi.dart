@@ -1451,7 +1451,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get billingPremiumReadySubtitle =>
-      'Mở khoá buddy không giới hạn với gói tháng, năm hoặc lifetime.';
+      'Mở khoá buddy không giới hạn với gói tuần, tháng, năm hoặc lifetime.';
 
   @override
   String get billingCatalogSetupNeededSubtitle =>
@@ -1481,7 +1481,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get billingWhatUnlocksTodaySubtitle =>
-      'Hiện tại Premium mở khoá một lợi ích thật đang dùng được ngay: bỏ giới hạn 5 buddy. Gói tháng, năm và lifetime đều map vào cùng một entitlement.';
+      'Hiện tại Premium mở khoá một lợi ích thật đang dùng được ngay: bỏ giới hạn 5 buddy. Gói tuần, tháng, năm và lifetime đều map vào cùng một entitlement.';
 
   @override
   String get billingBenefitRestoreTitle => 'Restore trên thiết bị khác';
@@ -1499,6 +1499,13 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get billingChoosePlanTitle => 'Chọn gói';
+
+  @override
+  String get billingWeeklyPlanTitle => 'Theo tuần';
+
+  @override
+  String get billingWeeklyPlanSubtitle =>
+      'Tự gia hạn mỗi tuần cho tới khi bạn huỷ trên store.';
 
   @override
   String get billingMonthlyPlanTitle => 'Theo tháng';
@@ -1564,7 +1571,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get billingFooterDisclosure =>
-      'Subscription sẽ tự gia hạn cho tới khi bạn huỷ trên store. Lifetime là mua một lần. Product ID mặc định của bản build này: dd_premium_monthly, dd_premium_yearly, dd_premium_lifetime.';
+      'Subscription sẽ tự gia hạn cho tới khi bạn huỷ trên store. Lifetime là mua một lần. Product ID mặc định của bản build này: dd_premium_week, dd_premium_monthly, dd_premium_yearly, dd_premium_lifetime.';
 
   @override
   String get momentSavedTitle => 'Đã lưu khoảnh khắc';
